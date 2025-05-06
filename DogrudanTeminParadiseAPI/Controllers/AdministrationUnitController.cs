@@ -1,0 +1,73 @@
+﻿using DogrudanTeminParadiseAPI.Dto;
+using DogrudanTeminParadiseAPI.Service.Abstract;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace DogrudanTeminParadiseAPI.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize(Roles = "Admin")]
+    public class AdministrationUnitController : ControllerBase
+    {
+        private readonly IAdministrationUnitService _svc;
+
+        public AdministrationUnitController(IAdministrationUnitService svc)
+        {
+            _svc = svc;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] CreateAdministrationUnitDto dto)
+        {
+            try
+            {
+                var created = await _svc.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+            => Ok(await _svc.GetAllAsync());
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            var unit = await _svc.GetByIdAsync(id);
+            return unit == null ? NotFound() : Ok(unit);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateAdministrationUnitDto dto)
+        {
+            try
+            {
+                var updated = await _svc.UpdateAsync(id, dto);
+                return updated == null ? NotFound() : Ok(updated);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            try
+            {
+                await _svc.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+        }
+    }
+}
