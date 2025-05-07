@@ -22,6 +22,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             var all = await _repo.GetAllAsync();
             if (all.Any(x => x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase)))
                 throw new InvalidOperationException("Bu isimde başka bir ünvan zaten mevcut.");
+
             var entity = _mapper.Map<Title>(dto);
             entity.Id = Guid.NewGuid();
             await _repo.InsertAsync(entity);
@@ -44,12 +45,14 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         {
             var existing = await _repo.GetByIdAsync(id);
             if (existing == null) return null;
+
             if (!existing.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase))
             {
                 var all = await _repo.GetAllAsync();
                 if (all.Any(x => x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase)))
                     throw new InvalidOperationException("Bu isimde başka bir ünvan zaten mevcut.");
             }
+
             existing.Name = dto.Name;
             await _repo.UpdateAsync(id, existing);
             return _mapper.Map<TitleDto>(existing);

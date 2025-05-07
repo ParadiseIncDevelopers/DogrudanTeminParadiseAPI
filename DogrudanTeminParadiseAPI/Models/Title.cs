@@ -10,5 +10,8 @@ namespace DogrudanTeminParadiseAPI.Models
         public Guid Id { get; set; }
 
         public string Name { get; set; }
+
+        [BsonRepresentation(BsonType.String)]
+        public Guid CreatedByAdminId { get; set; }
     }
 }
