@@ -29,16 +29,13 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task<ApproximateCostScheduleDto> GetApproximateCostScheduleAsync(Guid procurementEntryId)
         {
-            // Temin kaydını al
             var entry = await _entryRepo.GetByIdAsync(procurementEntryId)
                 ?? throw new KeyNotFoundException("Procurement entry not found.");
 
-            // Alınacak kalemler
             var items = (await _itemRepo.GetAllAsync())
                 .Where(i => i.ProcurementEntryId == procurementEntryId)
                 .ToList();
 
-            // Tüm teklif mektupları
             var offers = (await _offerRepo.GetAllAsync())
                 .Where(o => o.ProcurementEntryId == procurementEntryId)
                 .ToList();
@@ -53,7 +50,6 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             double totalSum = 0;
             foreach (var item in items)
             {
-                // Her teklif mektubundan sadece o kaleme ait OfferItem'i al
                 var bids = offers
                     .SelectMany(o => o.OfferItems
                         .Where(fi => fi.Name.Equals(item.Name, StringComparison.OrdinalIgnoreCase))
@@ -69,7 +65,6 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 double avgTotal = avgUnit * item.Quantity;
                 totalSum += avgTotal;
 
-                // Birim adını al
                 var unit = await _unitRepo.GetByIdAsync(item.UnitId);
 
                 dto.Items.Add(new ItemCostDto
@@ -95,11 +90,9 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             var offers = (await _offerRepo.GetAllAsync())
                 .Where(o => o.ProcurementEntryId == procurementEntryId)
                 .ToList();
-
             if (!offers.Any())
                 throw new InvalidOperationException("No offer letters for entry.");
 
-            // Her teklif mektubunun ortalama birim fiyatı
             var offerAverages = offers
                 .Select(o => new
                 {
@@ -110,10 +103,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 })
                 .ToList();
 
-            // Tüm tekliflerin aritmetik ortalaması
             var overallAvg = offerAverages.Average(x => x.AveragePrice);
-
-            // Ortalama veya altında kalanların en yükseğini seç
             var candidates = offerAverages.Where(x => x.AveragePrice <= overallAvg).ToList();
             var winning = candidates.Any()
                 ? candidates.OrderByDescending(x => x.AveragePrice).First().Offer
@@ -142,10 +132,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             var entry = await _entryRepo.GetByIdAsync(procurementEntryId)
                 ?? throw new KeyNotFoundException("Procurement entry not found.");
 
-            //var ent = await _entRepo.GetByIdAsync(entry.ThreeSubAdministrationUnit.AdministrationUnitId)
-            //    ?? throw new KeyNotFoundException("Entreprise not found.");
-
-            var dosyaNo = entry.DocumentDatesAndNumbers.FirstOrDefault()?.Number;
+            // İlgili üç alt birim adını almak istersen:
+            // var three = await _threeUnitRepo.GetByIdAsync(entry.ThreeSubAdministrationUnitId);
 
             var itemEntities = (await _itemRepo.GetAllAsync())
                 .Where(i => i.ProcurementEntryId == procurementEntryId)
@@ -160,14 +148,11 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
             return new InspectionAcceptanceReportDto
             {
-                //EntrepriseUnvan = ent.Unvan,
-                //ThreeSubAdministrationUnitName = entry.ThreeSubAdministrationUnit.Name,
                 ProcurementDecisionDate = entry.ProcurementDecisionDate,
                 ProcurementDecisionNumber = entry.ProcurementDecisionNumber,
-                DosyaNo = dosyaNo,
                 InvoiceDate = invoiceDate,
                 InvoiceNumber = invoiceNumber,
-                Items = [.. itemDtos]
+                Items = itemDtos.ToList()
             };
         }
     }

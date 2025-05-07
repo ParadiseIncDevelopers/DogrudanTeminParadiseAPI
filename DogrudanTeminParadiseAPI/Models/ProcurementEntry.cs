@@ -10,25 +10,41 @@ namespace DogrudanTeminParadiseAPI.Models
         [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; }
 
-        public DateTime ProcurementDecisionDate { get; set; }
-        public string ProcurementDecisionNumber { get; set; }
+        public DateTime? ProcurementDecisionDate { get; set; }
+        public string? ProcurementDecisionNumber { get; set; }
 
         [BsonRepresentation(BsonType.String)]
-        public Guid TenderResponsibleUserId { get; set; }
-        public string TenderResponsibleTitle { get; set; }
+        public Guid? TenderResponsibleUserId { get; set; }
+        public string? TenderResponsibleTitle { get; set; }
 
-        public string WorkName { get; set; }
-        public string WorkReason { get; set; }
-        public double BudgetAllocation { get; set; }
+        public string? WorkName { get; set; }
+        public string? WorkReason { get; set; }
+        public double? BudgetAllocation { get; set; }
         public bool SpecificationToBePrepared { get; set; }
         public bool ContractToBePrepared { get; set; }
 
-        public List<BelgeTarihVeSayilari> DocumentDatesAndNumbers { get; set; } = new();
+        public DateTime? PiyasaArastirmaOnayDate { get; set; }
+        public string? PiyasaArastirmaOnayNumber { get; set; }
 
-        public Guid AdministrationUnit { get; set; }
+        public DateTime? TeklifMektubuDate { get; set; }
+        public string? TeklifMektubuNumber { get; set; }
 
-        public Guid SubAdministrationUnit { get; set; }
+        public DateTime? PiyasaArastirmaBaslangicDate { get; set; }
+        public string? PiyasaArastirmaBaslangicNumber { get; set; }
 
-        public Guid ThreeSubAdministrationUnit { get; set; }
+        public DateTime? YaklasikMaliyetHesaplamaBaslangicDate { get; set; }
+        public string? YaklasikMaliyetHesaplamaBaslangicNumber { get; set; }
+
+        public DateTime? MuayeneVeKabulBelgesiDate { get; set; }
+        public string? MuayeneVeKabulBelgesiNumber { get; set; }
+
+        [BsonRepresentation(BsonType.String)]
+        public Guid? AdministrationUnitId { get; set; }
+
+        [BsonRepresentation(BsonType.String)]
+        public Guid? SubAdministrationUnitId { get; set; }
+
+        [BsonRepresentation(BsonType.String)]
+        public Guid? ThreeSubAdministrationUnitId { get; set; }
     }
 }

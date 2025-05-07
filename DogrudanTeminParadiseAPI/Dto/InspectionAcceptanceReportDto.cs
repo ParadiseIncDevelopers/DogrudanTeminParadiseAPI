@@ -4,7 +4,7 @@
     {
         public string EntrepriseUnvan { get; set; }
         public string ThreeSubAdministrationUnitName { get; set; }
-        public DateTime ProcurementDecisionDate { get; set; }
+        public DateTime? ProcurementDecisionDate { get; set; }
         public string ProcurementDecisionNumber { get; set; }
         public string DosyaNo { get; set; }
         public DateTime InvoiceDate { get; set; }

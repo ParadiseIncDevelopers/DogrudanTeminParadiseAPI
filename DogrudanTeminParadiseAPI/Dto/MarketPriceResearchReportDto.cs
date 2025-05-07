@@ -3,7 +3,7 @@
     public class MarketPriceResearchReportDto
     {
         public string ProcurementEntryName { get; set; }
-        public DateTime ProcurementDecisionDate { get; set; }
+        public DateTime? ProcurementDecisionDate { get; set; }
         public WinnerDto WinnerEntreprise { get; set; }
     }
 

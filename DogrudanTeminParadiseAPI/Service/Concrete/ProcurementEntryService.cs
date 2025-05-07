@@ -25,17 +25,9 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         public async Task<ProcurementEntryDto> CreateAsync(CreateProcurementEntryDto dto)
         {
             var all = await _repo.GetAllAsync();
-
-            if (all.Any(x => x.ProcurementDecisionNumber.Equals(dto.ProcurementDecisionNumber, StringComparison.OrdinalIgnoreCase)))
+            if (!string.IsNullOrEmpty(dto.ProcurementDecisionNumber) &&
+                all.Any(x => x.ProcurementDecisionNumber.Equals(dto.ProcurementDecisionNumber, StringComparison.OrdinalIgnoreCase)))
                 throw new InvalidOperationException("Bu satın alma karar numarası zaten mevcut.");
-
-            foreach (var doc in dto.DocumentDatesAndNumbers)
-            {
-                bool existsDoc = all.Any(e => e.DocumentDatesAndNumbers.Any(d =>
-                    d.Date == doc.Date && d.Number.Equals(doc.Number, StringComparison.OrdinalIgnoreCase)));
-                if (existsDoc)
-                    throw new InvalidOperationException($"Bu belge tarih ({doc.Date:d}) ve sayı ({doc.Number}) zaten kullanılmış.");
-            }
 
             var user = await _userRepo.GetByIdAsync(dto.TenderResponsibleUserId);
             if (user == null)
@@ -43,22 +35,15 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
             var entity = _mapper.Map<ProcurementEntry>(dto);
             entity.Id = Guid.NewGuid();
-
             await _repo.InsertAsync(entity);
             return _mapper.Map<ProcurementEntryDto>(entity);
         }
 
         public async Task<IEnumerable<ProcurementEntryDto>> GetAllAsync()
-        {
-            var list = await _repo.GetAllAsync();
-            return list.Select(x => _mapper.Map<ProcurementEntryDto>(x));
-        }
+        => (await _repo.GetAllAsync()).Select(x => _mapper.Map<ProcurementEntryDto>(x));
 
         public async Task<ProcurementEntryDto> GetByIdAsync(Guid id)
-        {
-            var e = await _repo.GetByIdAsync(id);
-            return e == null ? null : _mapper.Map<ProcurementEntryDto>(e);
-        }
+            => (await _repo.GetByIdAsync(id)) is var e && e != null ? _mapper.Map<ProcurementEntryDto>(e) : null;
 
         public async Task<ProcurementEntryDto> UpdateAsync(Guid id, UpdateProcurementEntryDto dto)
         {
@@ -66,20 +51,19 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             if (existing == null)
                 return null;
 
-            var all = await _repo.GetAllAsync();
+            // Yeni karar numarası
+            var newNumber = dto.ProcurementDecisionNumber ?? string.Empty;
 
-            if (!existing.ProcurementDecisionNumber.Equals(dto.ProcurementDecisionNumber, StringComparison.OrdinalIgnoreCase) &&
-                all.Any(x => x.ProcurementDecisionNumber.Equals(dto.ProcurementDecisionNumber, StringComparison.OrdinalIgnoreCase)))
-                throw new InvalidOperationException("Bu satın alma karar numarası zaten mevcut.");
-
-            foreach (var doc in dto.DocumentDatesAndNumbers)
+            // Eğer kullanıcı bir karar numarası göndermişse ve bu numara mevcut olandan farklıysa...
+            if (!string.IsNullOrWhiteSpace(newNumber)
+                && !string.Equals(existing.ProcurementDecisionNumber, newNumber, StringComparison.OrdinalIgnoreCase))
             {
-                bool existsDoc = all
-                    .Where(x => x.Id != id)
-                    .Any(e => e.DocumentDatesAndNumbers.Any(d =>
-                        d.Date == doc.Date && d.Number.Equals(doc.Number, StringComparison.OrdinalIgnoreCase)));
-                if (existsDoc)
-                    throw new InvalidOperationException($"Bu belge tarih ({doc.Date:d}) ve sayı ({doc.Number}) zaten kullanılmış.");
+                // ...ve başka bir kayıtta zaten aynı numara varsa
+                var all = await _repo.GetAllAsync();
+                if (all.Any(x => string.Equals(x.ProcurementDecisionNumber, newNumber, StringComparison.OrdinalIgnoreCase)))
+                {
+                    throw new InvalidOperationException("Bu satın alma karar numarası zaten mevcut.");
+                }
             }
 
             var user = await _userRepo.GetByIdAsync(dto.TenderResponsibleUserId);
@@ -95,7 +79,19 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             existing.BudgetAllocation = dto.BudgetAllocation;
             existing.SpecificationToBePrepared = dto.SpecificationToBePrepared;
             existing.ContractToBePrepared = dto.ContractToBePrepared;
-            existing.DocumentDatesAndNumbers = dto.DocumentDatesAndNumbers;
+            existing.PiyasaArastirmaOnayDate = dto.PiyasaArastirmaOnayDate;
+            existing.PiyasaArastirmaOnayNumber = dto.PiyasaArastirmaOnayNumber;
+            existing.TeklifMektubuDate = dto.TeklifMektubuDate;
+            existing.TeklifMektubuNumber = dto.TeklifMektubuNumber;
+            existing.PiyasaArastirmaBaslangicDate = dto.PiyasaArastirmaBaslangicDate;
+            existing.PiyasaArastirmaBaslangicNumber = dto.PiyasaArastirmaBaslangicNumber;
+            existing.YaklasikMaliyetHesaplamaBaslangicDate = dto.YaklasikMaliyetHesaplamaBaslangicDate;
+            existing.YaklasikMaliyetHesaplamaBaslangicNumber = dto.YaklasikMaliyetHesaplamaBaslangicNumber;
+            existing.MuayeneVeKabulBelgesiDate = dto.MuayeneVeKabulBelgesiDate;
+            existing.MuayeneVeKabulBelgesiNumber = dto.MuayeneVeKabulBelgesiNumber;
+            existing.AdministrationUnitId = dto.AdministrationUnitId;
+            existing.SubAdministrationUnitId = dto.SubAdministrationUnitId;
+            existing.ThreeSubAdministrationUnitId = dto.ThreeSubAdministrationUnitId;
 
             await _repo.UpdateAsync(id, existing);
             return _mapper.Map<ProcurementEntryDto>(existing);
