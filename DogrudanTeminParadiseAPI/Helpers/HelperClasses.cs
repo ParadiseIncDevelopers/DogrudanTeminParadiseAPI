@@ -27,4 +27,10 @@ namespace DogrudanTeminParadiseAPI.Helpers
         public string WorkName { get; set; }
         public string WorkReason { get; set; }
     }
+
+    public enum JuryType
+    {
+        MARKET_RESEARCH,
+        INSPECTION_ACCEPTANCE
+    }
 }

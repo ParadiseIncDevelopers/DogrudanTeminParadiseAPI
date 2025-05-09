@@ -62,6 +62,14 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<CreateBudgetItemDto, BudgetItem>();
             CreateMap<UpdateBudgetItemDto, BudgetItem>();
             CreateMap<BudgetItem, BudgetItemDto>();
+
+            CreateMap<CreateMarketResearchJuryDto, MarketResearchJury>();
+            CreateMap<MarketResearchJury, MarketResearchJuryDto>();
+            CreateMap<UpdateMarketResearchJuryDto, MarketResearchJury>();
+
+            CreateMap<CreateInspectionAcceptanceJuryDto, InspectionAcceptanceJury>();
+            CreateMap<InspectionAcceptanceJury, InspectionAcceptanceJuryDto>();
+            CreateMap<UpdateInspectionAcceptanceJuryDto, InspectionAcceptanceJury>();
         }
     }
 }

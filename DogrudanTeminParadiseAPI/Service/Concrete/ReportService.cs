@@ -112,14 +112,22 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             var ent = await _entRepo.GetByIdAsync(winning.EntrepriseId)
                 ?? throw new KeyNotFoundException("Winning entreprise not found.");
 
+            // Kazanan teklifin toplam tutarı
+            double totalOfferPrice = winning.OfferItems.Sum(fi => fi.TotalAmount);
+
             return new MarketPriceResearchReportDto
             {
                 ProcurementEntryName = entry.WorkName,
                 ProcurementDecisionDate = entry.ProcurementDecisionDate,
+                WorkReason = entry.WorkReason,
+                ProcurementDecisionNumber = entry.ProcurementDecisionNumber,
+                PiyasaArastirmaBaslangicDate = entry.PiyasaArastirmaBaslangicDate,
+                PiyasaArastirmaBaslangicNumber = entry.PiyasaArastirmaBaslangicNumber,
                 WinnerEntreprise = new WinnerDto
                 {
                     Vkn = ent.Vkn,
-                    Unvan = ent.Unvan
+                    Unvan = ent.Unvan,
+                    TotalOfferedPrice = totalOfferPrice
                 }
             };
         }
