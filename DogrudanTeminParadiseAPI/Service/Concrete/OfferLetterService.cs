@@ -30,36 +30,35 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task<OfferLetterDto> CreateAsync(CreateOfferLetterDto dto)
         {
+            // ProcurementEntry var mı?
             var entry = await _peRepo.GetByIdAsync(dto.ProcurementEntryId)
                 ?? throw new KeyNotFoundException("Procurement entry bulunamadı.");
-            var ent = await _entRepo.GetByIdAsync(dto.EntrepriseId)
+            // Entreprise var mı?
+            var entreprise = await _entRepo.GetByIdAsync(dto.EntrepriseId)
                 ?? throw new KeyNotFoundException("Entreprise bulunamadı.");
 
-            // İsim uniqueness kontrolü
-            var existing = (await _repo.GetAllAsync())
-                .Where(o => o.ProcurementEntryId == dto.ProcurementEntryId)
-                .SelectMany(o => o.OfferItems)
-                .Select(i => i.Name)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            // Aynı firma için bu entry'de zaten teklif mektubu var mı?
+            bool firmaExists = (await _repo.GetAllAsync())
+                .Any(o =>
+                    o.ProcurementEntryId == dto.ProcurementEntryId &&
+                    o.EntrepriseId == dto.EntrepriseId);
+            if (firmaExists)
+                throw new InvalidOperationException("Bu firma için zaten bir teklif mektubu oluşturulmuş.");
 
-            foreach (var item in dto.OfferItems)
-            {
-                if (existing.Contains(item.Name))
-                    throw new InvalidOperationException($"OfferItem adı '{item.Name}' zaten mevcut.");
-            }
-
-            // Birim validasyon
+            // Birim validasyonu
             foreach (var item in dto.OfferItems)
             {
                 if (await _unitRepo.GetByIdAsync(item.UnitId) == null)
                     throw new KeyNotFoundException($"Unit {item.UnitId} bulunamadı.");
             }
 
+            // Entity'yi map et ve OfferItem listesini çevir
             var entity = _mapper.Map<OfferLetter>(dto);
             entity.Id = Guid.NewGuid();
-            entity.Title = ent.Unvan;
-            entity.ResponsiblePerson = ent.FirmaYetkilisi;
-            entity.Vkn = ent.Vkn;
+            entity.OfferItems = _mapper.Map<List<OfferItem>>(dto.OfferItems);
+            entity.Title = dto.Title;
+            entity.ResponsiblePerson = dto.ResponsiblePerson;
+            entity.Vkn = dto.Vkn;
             entity.NotificationAddress = dto.NotificationAddress;
             entity.Email = dto.Email;
             entity.Nationality = dto.Nationality;
@@ -87,16 +86,15 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             if (existing == null)
                 return null;
 
-            // Duplicate check
-            var allItems = (await _repo.GetAllAsync())
+            // Duplicate offer item adı kontrolü
+            var otherNames = (await _repo.GetAllAsync())
                 .Where(o => o.Id != id && o.ProcurementEntryId == existing.ProcurementEntryId)
                 .SelectMany(o => o.OfferItems)
                 .Select(i => i.Name)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
             foreach (var item in dto.OfferItems)
             {
-                if (allItems.Contains(item.Name))
+                if (otherNames.Contains(item.Name))
                     throw new InvalidOperationException($"OfferItem adı '{item.Name}' zaten mevcut.");
                 if (await _unitRepo.GetByIdAsync(item.UnitId) == null)
                     throw new KeyNotFoundException($"Unit {item.UnitId} bulunamadı.");
@@ -104,8 +102,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
             existing.OfferItems = dto.OfferItems.Select(i => _mapper.Map<OfferItem>(i)).ToList();
             existing.NotificationAddress = dto.NotificationAddress;
-            existing.Email = dto.Email;
             existing.Nationality = dto.Nationality;
+            existing.ResponsiblePerson = dto.ResponsiblePerson;
 
             await _repo.UpdateAsync(id, existing);
             return _mapper.Map<OfferLetterDto>(existing);

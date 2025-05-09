@@ -8,7 +8,7 @@ namespace DogrudanTeminParadiseAPI.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.String)]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         public string Name { get; set; }
         public List<Feature> Features { get; set; } = new();

@@ -6,7 +6,7 @@ namespace DogrudanTeminParadiseAPI.Dto
     {
         public List<CreateOfferItemDto> OfferItems { get; set; } = new();
         public string NotificationAddress { get; set; }
-        public string Email { get; set; }
         public string Nationality { get; set; }
+        public string ResponsiblePerson { get; set; }
     }
 }

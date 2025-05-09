@@ -1,4 +1,7 @@
 ﻿using DogrudanTeminParadiseAPI.Helpers;
+using DogrudanTeminParadiseAPI.Models;
+using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
 
 namespace DogrudanTeminParadiseAPI.Dto
 {
@@ -10,5 +13,8 @@ namespace DogrudanTeminParadiseAPI.Dto
         public string NotificationAddress { get; set; }
         public string Email { get; set; }
         public string Nationality { get; set; }
+        public string Title { get; set; }
+        public string ResponsiblePerson { get; set; }
+        public string Vkn { get; set; }
     }
 }
