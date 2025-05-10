@@ -1,8 +1,4 @@
-﻿using DogrudanTeminParadiseAPI.Helpers;
-using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Bson;
-
-namespace DogrudanTeminParadiseAPI.Dto
+﻿namespace DogrudanTeminParadiseAPI.Dto
 {
     public class UpdateProcurementEntryDto
     {
