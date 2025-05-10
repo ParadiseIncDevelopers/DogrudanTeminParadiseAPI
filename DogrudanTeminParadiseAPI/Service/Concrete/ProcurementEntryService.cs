@@ -76,7 +76,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             existing.TenderResponsibleTitle = dto.TenderResponsibleTitle;
             existing.WorkName = dto.WorkName;
             existing.WorkReason = dto.WorkReason;
-            existing.BudgetAllocation = dto.BudgetAllocation;
+            existing.BudgetAllocationId = dto.BudgetAllocationId;
             existing.SpecificationToBePrepared = dto.SpecificationToBePrepared;
             existing.ContractToBePrepared = dto.ContractToBePrepared;
             existing.PiyasaArastirmaOnayDate = dto.PiyasaArastirmaOnayDate;

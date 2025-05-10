@@ -1,4 +1,6 @@
 ﻿using DogrudanTeminParadiseAPI.Helpers;
+using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
 
 namespace DogrudanTeminParadiseAPI.Dto
 {
@@ -10,7 +12,7 @@ namespace DogrudanTeminParadiseAPI.Dto
         public string? TenderResponsibleTitle { get; set; }
         public string? WorkName { get; set; }
         public string? WorkReason { get; set; }
-        public double? BudgetAllocation { get; set; }
+        public Guid? BudgetAllocationId { get; set; }
         public bool SpecificationToBePrepared { get; set; }
         public bool ContractToBePrepared { get; set; }
         public DateTime? PiyasaArastirmaOnayDate { get; set; }

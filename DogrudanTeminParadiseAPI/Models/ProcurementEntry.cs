@@ -19,7 +19,8 @@ namespace DogrudanTeminParadiseAPI.Models
 
         public string? WorkName { get; set; }
         public string? WorkReason { get; set; }
-        public double? BudgetAllocation { get; set; }
+        [BsonRepresentation(BsonType.String)]
+        public Guid? BudgetAllocationId { get; set; }
         public bool SpecificationToBePrepared { get; set; }
         public bool ContractToBePrepared { get; set; }
 
