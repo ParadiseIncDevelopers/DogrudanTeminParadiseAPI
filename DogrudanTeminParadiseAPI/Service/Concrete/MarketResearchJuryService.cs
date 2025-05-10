@@ -21,11 +21,19 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task<MarketResearchJuryDto> CreateAsync(CreateMarketResearchJuryDto dto)
         {
-            // tek bir jury kaydı var mı kontrol edilebilir
-            var entity = _mapper.Map<MarketResearchJury>(dto);
-            entity.Id = Guid.NewGuid();
-            await _repo.InsertAsync(entity);
-            return _mapper.Map<MarketResearchJuryDto>(entity);
+            try
+            {
+                var entity = _mapper.Map<MarketResearchJury>(dto);
+                entity.Id = Guid.NewGuid();
+                await _repo.InsertAsync(entity);
+                return _mapper.Map<MarketResearchJuryDto>(entity);
+            }
+            catch (Exception ex)
+            {
+                // ex.Message ve ex.ToString()’u console’a veya log dosyanıza yazdırın
+                Console.Error.WriteLine(ex.ToString());
+                throw;
+            }
         }
 
         public async Task<IEnumerable<MarketResearchJuryDto>> GetAllByEntryAsync(Guid entryId)

@@ -16,8 +16,15 @@ namespace DogrudanTeminParadiseAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateBudgetItemDto dto)
         {
-            try { var created = await _svc.CreateAsync(dto); return CreatedAtAction(nameof(GetById), new { id = created.Id }, created); }
-            catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
+            try 
+            { 
+                var created = await _svc.CreateAsync(dto); 
+                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created); 
+            }
+            catch (InvalidOperationException ex) 
+            { 
+                return BadRequest(new { error = ex.Message }); 
+            }
         }
 
         [HttpGet]

@@ -15,6 +15,7 @@ namespace DogrudanTeminParadiseAPI.Models
 
         public JuryType Type { get; set; } = JuryType.INSPECTION_ACCEPTANCE;
 
+        [BsonRepresentation(BsonType.String)]
         public List<Guid> UserIds { get; set; } = new();
     }
 }

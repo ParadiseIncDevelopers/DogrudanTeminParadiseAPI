@@ -13,8 +13,10 @@ namespace DogrudanTeminParadiseAPI.Models
         [BsonRepresentation(BsonType.String)]
         public Guid ProcurementEntryId { get; set; }
 
+        [BsonRepresentation(BsonType.String)]
         public JuryType Type { get; set; } = JuryType.MARKET_RESEARCH;
 
+        [BsonRepresentation(BsonType.String)]
         public List<Guid> UserIds { get; set; } = new();
     }
 }
