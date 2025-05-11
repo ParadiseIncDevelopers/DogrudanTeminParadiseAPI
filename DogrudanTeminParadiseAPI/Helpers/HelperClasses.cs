@@ -31,6 +31,21 @@ namespace DogrudanTeminParadiseAPI.Helpers
     public enum JuryType
     {
         MARKET_RESEARCH,
-        INSPECTION_ACCEPTANCE
+        INSPECTION_ACCEPTANCE,
+        SUB_INSPECTION_ACCEPTANCE
+    }
+
+    public class SelectedOfferItem
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
+        public Guid Id { get; set; } = Guid.NewGuid();
+
+        [BsonRepresentation(BsonType.String)]
+        public Guid OfferLetterId { get; set; }
+
+        public string Name { get; set; }
+        public List<Feature> Features { get; set; } = new();
+        public int Quantity { get; set; }
     }
 }

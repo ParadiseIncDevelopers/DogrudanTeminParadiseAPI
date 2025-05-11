@@ -31,6 +31,9 @@ builder.Services.AddScoped(sp => new MongoDBRepository<Category>(cfg["MongoAPI"]
 builder.Services.AddScoped(sp => new MongoDBRepository<BudgetItem>(cfg["MongoAPI"], cfg["MongoDBName"], "BudgetItems"));
 builder.Services.AddScoped(sp => new MongoDBRepository<MarketResearchJury>(cfg["MongoAPI"], cfg["MongoDBName"], "MarketResearchJuries"));
 builder.Services.AddScoped(sp => new MongoDBRepository<InspectionAcceptanceJury>(cfg["MongoAPI"], cfg["MongoDBName"], "InspectionAcceptanceJuries"));
+builder.Services.AddScoped(sp => new MongoDBRepository<InspectionAcceptanceCertificate>(cfg["MongoAPI"], cfg["MongoDBName"], "InspectionAcceptanceCertificates"));
+builder.Services.AddScoped(sp => new MongoDBRepository<AdditionalInspectionAcceptanceCertificate>(cfg["MongoAPI"], cfg["MongoDBName"], "AdditionalInspectionAcceptanceCertificates"));
+builder.Services.AddScoped(sp => new MongoDBRepository<SubInspectionAcceptanceJury>(cfg["MongoAPI"], cfg["MongoDBName"], "SubInspectionAcceptanceJuries"));
 
 // Servisler
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
@@ -52,6 +55,9 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IBudgetItemService, BudgetItemService>();
 builder.Services.AddScoped<IMarketResearchJuryService, MarketResearchJuryService>();
 builder.Services.AddScoped<IInspectionAcceptanceJuryService, InspectionAcceptanceJuryService>();
+builder.Services.AddScoped<IInspectionAcceptanceCertificateService, InspectionAcceptanceCertificateService>();
+builder.Services.AddScoped<IAdditionalInspectionAcceptanceService, AdditionalInspectionAcceptanceService>();
+builder.Services.AddScoped<ISubInspectionAcceptanceJuryService, SubInspectionAcceptanceJuryService>();
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
