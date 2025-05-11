@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using DogrudanTeminParadiseAPI.Dto;
+using DogrudanTeminParadiseAPI.Helpers;
 using DogrudanTeminParadiseAPI.Models;
 using DogrudanTeminParadiseAPI.Repositories;
 using DogrudanTeminParadiseAPI.Service.Abstract;

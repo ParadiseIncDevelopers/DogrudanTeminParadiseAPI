@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using DogrudanTeminParadiseAPI.Dto;
+using DogrudanTeminParadiseAPI.Helpers;
 using DogrudanTeminParadiseAPI.Models;
 using DogrudanTeminParadiseAPI.Repositories;
 using DogrudanTeminParadiseAPI.Service.Abstract;
@@ -62,7 +63,6 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 {
                     Id = i.Id == Guid.Empty ? Guid.NewGuid() : i.Id,
                     OfferLetterId = i.Id,
-                    Name = i.Name,
                     Features = i.Features,
                     Quantity = i.Quantity,
                     UnitId = i.UnitId,

@@ -6,7 +6,7 @@
         public Guid AdministrationUnitId { get; set; }
         public Guid SubAdministrationUnitId { get; set; }
         public Guid ThreeSubAdministrationUnitId { get; set; }
-        public List<CreateOfferItemDto> SelectedProducts { get; set; } = new();
+        public List<OfferItemDto> SelectedProducts { get; set; } = new();
         public Guid MainInspectionAcceptanceId { get; set; }
     }
 }
