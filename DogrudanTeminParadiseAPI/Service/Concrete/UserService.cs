@@ -65,6 +65,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             existing.Email = dto.Email;
             existing.Password = dto.Password;
             existing.Permissions = dto.Permissions;
+            existing.TitleId = dto.TitleId;
 
             await _repo.UpdateAsync(id, existing);
             return _mapper.Map<UserDto>(existing);

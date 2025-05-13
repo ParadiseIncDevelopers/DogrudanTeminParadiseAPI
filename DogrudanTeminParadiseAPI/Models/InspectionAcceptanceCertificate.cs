@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
 using DogrudanTeminParadiseAPI.Helpers;
+using DogrudanTeminParadiseAPI.Dto;
 
 namespace DogrudanTeminParadiseAPI.Models
 {
@@ -24,5 +25,7 @@ namespace DogrudanTeminParadiseAPI.Models
         public Guid SubAdministrationUnitId { get; set; }
         [BsonRepresentation(BsonType.String)]
         public Guid ThreeSubAdministrationUnitId { get; set; }
+        [BsonRepresentation(BsonType.String)]
+        public Guid SelectedOfferLetterId { get; set; }
     }
 }

@@ -28,7 +28,6 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 .Select(i => new SelectedOfferItem
                 {
                     Id = Guid.NewGuid(),
-                    OfferLetterId = i.Id,
                     Name = i.Name,
                     Features = i.Features,
                     Quantity = i.Quantity,
@@ -61,7 +60,6 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 .Select(i => new SelectedOfferItem
                 {
                     Id = i.Id == Guid.Empty ? Guid.NewGuid() : i.Id,
-                    OfferLetterId = i.Id,
                     Name = i.Name,
                     Features = i.Features,
                     Quantity = i.Quantity,

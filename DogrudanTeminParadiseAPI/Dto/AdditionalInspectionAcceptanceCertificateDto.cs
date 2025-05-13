@@ -10,6 +10,8 @@ namespace DogrudanTeminParadiseAPI.Dto
         public Guid SubAdministrationUnitId { get; set; }
         public Guid ThreeSubAdministrationUnitId { get; set; }
         public List<SelectedOfferItem> SelectedProducts { get; set; }
-        public Guid MainInspectionAcceptanceId { get; set; }
+        public Guid SelectedOfferLetterId { get; set; }
+        public DateTime InvoiceDate { get; set; }
+        public string InvoiceNumber { get; set; }
     }
 }

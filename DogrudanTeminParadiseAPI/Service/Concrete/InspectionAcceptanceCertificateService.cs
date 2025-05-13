@@ -4,6 +4,7 @@ using DogrudanTeminParadiseAPI.Helpers;
 using DogrudanTeminParadiseAPI.Models;
 using DogrudanTeminParadiseAPI.Repositories;
 using DogrudanTeminParadiseAPI.Service.Abstract;
+using SharpCompress.Common;
 
 namespace DogrudanTeminParadiseAPI.Service.Concrete
 {
@@ -22,22 +23,28 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task<InspectionAcceptanceCertificateDto> CreateAsync(CreateInspectionAcceptanceCertificateDto dto)
         {
-            var entity = _mapper.Map<InspectionAcceptanceCertificate>(dto);
-            entity.Id = Guid.NewGuid();
-            // Map SelectedProducts from CreateOfferItemDto to SelectedOfferItem model
-            entity.SelectedProducts = dto.SelectedProducts
-                .Select(i => new SelectedOfferItem
-                {
-                    Id = Guid.NewGuid(),
-                    OfferLetterId = i.Id, // assuming CreateOfferItemDto has Id
-                    Name = i.Name,
-                    Features = i.Features,
-                    Quantity = i.Quantity,
-                    UnitId = i.UnitId,
-                    UnitPrice = i.UnitPrice
-                }).ToList();
-            await _repo.InsertAsync(entity);
-            return _mapper.Map<InspectionAcceptanceCertificateDto>(entity);
+            try
+            {
+                var entity = _mapper.Map<InspectionAcceptanceCertificate>(dto);
+                entity.Id = Guid.NewGuid();
+                // Map SelectedProducts from CreateOfferItemDto to SelectedOfferItem model
+                entity.SelectedProducts = dto.SelectedProducts
+                    .Select(i => new SelectedOfferItem
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = i.Name,
+                        Features = i.Features,
+                        Quantity = i.Quantity,
+                        UnitId = i.UnitId,
+                        UnitPrice = i.UnitPrice
+                    }).ToList();
+                await _repo.InsertAsync(entity);
+                return _mapper.Map<InspectionAcceptanceCertificateDto>(entity);
+            }
+            catch (Exception e) 
+            {
+                return _mapper.Map<InspectionAcceptanceCertificateDto>(new InspectionAcceptanceCertificateDto());
+            }
         }
 
         public async Task<IEnumerable<InspectionAcceptanceCertificateDto>> GetAllByEntryAsync(Guid entryId)
@@ -62,7 +69,6 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 .Select(i => new SelectedOfferItem
                 {
                     Id = i.Id == Guid.Empty ? Guid.NewGuid() : i.Id,
-                    OfferLetterId = i.Id,
                     Features = i.Features,
                     Quantity = i.Quantity,
                     UnitId = i.UnitId,

@@ -41,9 +41,6 @@ namespace DogrudanTeminParadiseAPI.Helpers
         [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; } = Guid.NewGuid();
 
-        [BsonRepresentation(BsonType.String)]
-        public Guid OfferLetterId { get; set; }
-
         public string Name { get; set; }
         public List<Feature> Features { get; set; } = new();
         public int Quantity { get; set; }
@@ -52,7 +49,5 @@ namespace DogrudanTeminParadiseAPI.Helpers
         public Guid UnitId { get; set; }
 
         public double UnitPrice { get; set; }
-
-        public double TotalAmount => UnitPrice * Quantity;
     }
 }
