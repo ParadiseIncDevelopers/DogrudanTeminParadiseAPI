@@ -82,6 +82,10 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<CreateSubInspectionAcceptanceJuryDto, SubInspectionAcceptanceJury>();
             CreateMap<UpdateSubInspectionAcceptanceJuryDto, SubInspectionAcceptanceJury>();
             CreateMap<SubInspectionAcceptanceJury, SubInspectionAcceptanceJuryDto>();
+
+            CreateMap<CreateProcurementEntryEditorDto, ProcurementEntryEditor>();
+            CreateMap<UpdateProcurementEntryEditorDto, ProcurementEntryEditor>();
+            CreateMap<ProcurementEntryEditor, ProcurementEntryEditorDto>();
         }
     }
 }

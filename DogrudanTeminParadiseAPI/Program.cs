@@ -35,6 +35,8 @@ builder.Services.AddScoped(sp => new MongoDBRepository<InspectionAcceptanceCerti
 builder.Services.AddScoped(sp => new MongoDBRepository<AdditionalInspectionAcceptanceCertificate>(cfg["MongoAPI"], cfg["MongoDBName"], "AdditionalInspectionAcceptanceCertificates"));
 builder.Services.AddScoped(sp => new MongoDBRepository<SubInspectionAcceptanceJury>(cfg["MongoAPI"], cfg["MongoDBName"], "SubInspectionAcceptanceJuries"));
 
+builder.Services.AddScoped(sp => new MongoDBRepository<ProcurementEntryEditor>(cfg["MongoAPI"], cfg["MongoDBName"], "ProcurementEntryEditors"));
+
 // Servisler
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -58,6 +60,7 @@ builder.Services.AddScoped<IInspectionAcceptanceJuryService, InspectionAcceptanc
 builder.Services.AddScoped<IInspectionAcceptanceCertificateService, InspectionAcceptanceCertificateService>();
 builder.Services.AddScoped<IAdditionalInspectionAcceptanceService, AdditionalInspectionAcceptanceService>();
 builder.Services.AddScoped<ISubInspectionAcceptanceJuryService, SubInspectionAcceptanceJuryService>();
+builder.Services.AddScoped<IProcurementEntryEditorService, ProcurementEntryEditorService>();
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
