@@ -12,22 +12,19 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         private readonly MongoDBRepository<OfferLetter> _offerRepo;
         private readonly MongoDBRepository<Entreprise> _entRepo;
         private readonly MongoDBRepository<Unit> _unitRepo;
-        private readonly MongoDBRepository<ProcurementEntryEditor> _editorRepo;
 
         public ReportService(
             MongoDBRepository<ProcurementEntry> entryRepo,
             MongoDBRepository<ProcurementListItem> itemRepo,
             MongoDBRepository<OfferLetter> offerRepo,
             MongoDBRepository<Entreprise> entRepo,
-            MongoDBRepository<Unit> unitRepo,
-            MongoDBRepository<ProcurementEntryEditor> editorRepo)
+            MongoDBRepository<Unit> unitRepo)
         {
             _entryRepo = entryRepo;
             _itemRepo = itemRepo;
             _offerRepo = offerRepo;
             _entRepo = entRepo;
             _unitRepo = unitRepo;
-            _editorRepo = editorRepo;
         }
 
         public async Task<ApproximateCostScheduleDto> GetApproximateCostScheduleAsync(Guid procurementEntryId)
@@ -43,9 +40,6 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 .Where(o => o.ProcurementEntryId == procurementEntryId)
                 .ToList();
 
-            var editor = (await _editorRepo.GetAllAsync()).FirstOrDefault()
-                ?? throw new KeyNotFoundException("ProcurementEntryEditor not found.");
-
             var dto = new ApproximateCostScheduleDto
             {
                 ProcurementEntryName = entry.WorkName,
@@ -57,19 +51,14 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             foreach (var item in items)
             {
                 var bids = offers
-                    .Select(o =>
-                    {
-                        var fi = editor.OfferItems
-                            .FirstOrDefault(x => x.Id == o.OfferItemsId
-                                && x.Name.Equals(item.Name, StringComparison.OrdinalIgnoreCase));
-                        return fi == null ? null : new BidDto
+                    .SelectMany(o => o.OfferItems
+                        .Where(fi => fi.Name.Equals(item.Name, StringComparison.OrdinalIgnoreCase))
+                        .Select(fi => new BidDto
                         {
                             EntrepriseId = o.EntrepriseId,
                             UnitPrice = fi.UnitPrice,
                             TotalPrice = fi.TotalAmount
-                        };
-                    })
-                    .Where(b => b != null)
+                        }))
                     .ToList();
 
                 double avgUnit = bids.Any() ? bids.Average(b => b.UnitPrice) : 0;
@@ -104,18 +93,13 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             if (!offers.Any())
                 throw new InvalidOperationException("No offer letters for entry.");
 
-            var editor = (await _editorRepo.GetAllAsync()).FirstOrDefault()
-                ?? throw new KeyNotFoundException("ProcurementEntryEditor not found.");
-
             var offerAverages = offers
                 .Select(o => new
                 {
                     Offer = o,
-                    AveragePrice = editor.OfferItems
-                        .Where(fi => fi.Id == o.OfferItemsId)
-                        .Select(fi => fi.UnitPrice)
-                        .DefaultIfEmpty(double.MaxValue)
-                        .Average()
+                    AveragePrice = o.OfferItems.Any()
+                        ? o.OfferItems.Average(fi => fi.UnitPrice)
+                        : double.MaxValue
                 })
                 .ToList();
 
@@ -128,23 +112,14 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             var ent = await _entRepo.GetByIdAsync(winning.EntrepriseId)
                 ?? throw new KeyNotFoundException("Winning entreprise not found.");
 
-            double totalOfferPrice = editor.OfferItems
-                .Where(fi => fi.Id == winning.OfferItemsId)
-                .Sum(fi => fi.TotalAmount);
-
             return new MarketPriceResearchReportDto
             {
                 ProcurementEntryName = entry.WorkName,
                 ProcurementDecisionDate = entry.ProcurementDecisionDate,
-                WorkReason = entry.WorkReason,
-                ProcurementDecisionNumber = entry.ProcurementDecisionNumber,
-                PiyasaArastirmaBaslangicDate = entry.PiyasaArastirmaBaslangicDate,
-                PiyasaArastirmaBaslangicNumber = entry.PiyasaArastirmaBaslangicNumber,
                 WinnerEntreprise = new WinnerDto
                 {
                     Vkn = ent.Vkn,
-                    Unvan = ent.Unvan,
-                    TotalOfferedPrice = totalOfferPrice
+                    Unvan = ent.Unvan
                 }
             };
         }

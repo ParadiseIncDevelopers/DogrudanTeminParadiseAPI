@@ -42,12 +42,17 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                        && o.EntrepriseId == dto.EntrepriseId);
             if (exists)
                 throw new InvalidOperationException("Zaten oluşturulmuş.");
-
-            var entity = _mapper.Map<OfferLetter>(dto);
-            entity.Id = Guid.NewGuid();
-
-            await _repo.InsertAsync(entity);
-            return _mapper.Map<OfferLetterDto>(entity);
+            try
+            {
+                var entity = _mapper.Map<OfferLetter>(dto);
+                entity.Id = Guid.NewGuid();
+                await _repo.InsertAsync(entity);
+                return _mapper.Map<OfferLetterDto>(entity);
+            }
+            catch (Exception e) 
+            {
+                return null;
+            }
         }
 
         public async Task<IEnumerable<OfferLetterDto>> GetAllByEntryAsync(Guid procurementEntryId)

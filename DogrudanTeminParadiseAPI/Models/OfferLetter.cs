@@ -15,10 +15,7 @@ namespace DogrudanTeminParadiseAPI.Models
 
         [BsonRepresentation(BsonType.String)]
         public Guid ProcurementEntryId { get; set; }
-
-        [BsonRepresentation(BsonType.String)]
-        public Guid OfferItemsId { get; set; }
-        public string Title { get; set; }
+        public List<OfferItem> OfferItems { get; set; }
         public string ResponsiblePerson { get; set; }
         public string Vkn { get; set; }
         public string NotificationAddress { get; set; }

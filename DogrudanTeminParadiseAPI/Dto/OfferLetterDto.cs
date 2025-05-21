@@ -7,8 +7,7 @@ namespace DogrudanTeminParadiseAPI.Dto
         public Guid Id { get; set; }
         public Guid EntrepriseId { get; set; }
         public Guid ProcurementEntryId { get; set; }
-        public Guid OfferItemsId { get; set; }
-        public string Title { get; set; }
+        public List<OfferItemDto> OfferItems { get; set; }
         public string ResponsiblePerson { get; set; }
         public string Vkn { get; set; }
         public string NotificationAddress { get; set; }
