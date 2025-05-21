@@ -21,9 +21,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task<ProcurementEntryEditorDto> CreateAsync(CreateProcurementEntryEditorDto dto)
         {
-            var all = await _repo.GetAllAsync();
-            if (all.Any())
-                throw new InvalidOperationException("Sadece bir Proc. girişi editörü oluşturulabilir.");
+            if ((await _repo.GetAllAsync()).Any())
+                throw new InvalidOperationException("Sadece bir editör olabilir.");
             var entity = _mapper.Map<ProcurementEntryEditor>(dto);
             entity.Id = Guid.NewGuid();
             await _repo.InsertAsync(entity);
@@ -45,11 +44,19 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         public async Task<ProcurementEntryEditorDto> UpdateAsync(UpdateProcurementEntryEditorDto dto)
         {
             var e = (await _repo.GetAllAsync()).FirstOrDefault();
-            if (e == null)
-                return null;
+            if (e == null) return null;
             _mapper.Map(dto, e);
             await _repo.UpdateAsync(e.Id, e);
             return _mapper.Map<ProcurementEntryEditorDto>(e);
+        }
+
+        public async Task<ProcurementEntryEditorDto> GetEditorByEntryIdAsync(Guid entryId)
+        {
+            // Tüm teklif mektuplarını alıp, ilgili entryId ile filtreliyoruz
+            var allOffers = await _repo.GetAllAsync();
+            var offers = allOffers.FirstOrDefault(o => o.ProcurementEntryId == entryId);
+            // Modelden DTO’ya çevir
+            return _mapper.Map<ProcurementEntryEditorDto>(offers);
         }
     }
 }

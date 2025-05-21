@@ -8,5 +8,6 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<ProcurementEntryEditorDto> GetAsync();
         Task<ProcurementEntryEditorDto> GetByIdAsync(Guid id);
         Task<ProcurementEntryEditorDto> UpdateAsync(UpdateProcurementEntryEditorDto dto);
+        Task<ProcurementEntryEditorDto> GetEditorByEntryIdAsync(Guid entryId);
     }
 }

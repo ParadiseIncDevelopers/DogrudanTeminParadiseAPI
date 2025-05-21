@@ -29,6 +29,14 @@ namespace DogrudanTeminParadiseAPI.Controllers
             return dto == null ? NotFound() : Ok(dto);
         }
 
+        [HttpGet("entry/{entryId}")]
+        [Authorize]
+        public async Task<IActionResult> GetOfferProductsByEntry(Guid entryId)
+        {
+            var items = await _svc.GetEditorByEntryIdAsync(entryId);
+            return items == null ? NotFound() : Ok(items);
+        }
+
         // Yalnızca Admin rolü ekleyebilir ve güncelleyebilir
         [HttpPost]
         [Authorize(Roles = "Admin")]
