@@ -50,4 +50,10 @@ namespace DogrudanTeminParadiseAPI.Helpers
 
         public double UnitPrice { get; set; }
     }
+
+    public enum ProductItemType
+    {
+        PRODUCT,
+        SERVICE
+    }
 }

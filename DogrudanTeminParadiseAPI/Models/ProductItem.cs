@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
+using DogrudanTeminParadiseAPI.Helpers;
 
 namespace DogrudanTeminParadiseAPI.Models
 {
@@ -15,5 +16,7 @@ namespace DogrudanTeminParadiseAPI.Models
 
         [BsonRepresentation(BsonType.String)]
         public Guid CategoryId { get; set; }
+        [BsonRepresentation(BsonType.String)]
+        public ProductItemType Type { get; set; }
     }
 }

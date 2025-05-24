@@ -37,8 +37,15 @@ namespace DogrudanTeminParadiseAPI.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateBudgetItemDto dto)
         {
-            try { var updated = await _svc.UpdateAsync(id, dto); return updated == null ? NotFound() : Ok(updated); }
-            catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
+            try
+            { 
+                var updated = await _svc.UpdateAsync(id, dto);
+                return updated == null ? NotFound() : Ok(updated); 
+            }
+            catch (InvalidOperationException ex)
+            { 
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]
