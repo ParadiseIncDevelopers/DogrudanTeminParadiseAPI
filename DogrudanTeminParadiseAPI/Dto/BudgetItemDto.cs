@@ -7,6 +7,8 @@
         public string Description { get; set; }
         public string ItemCode { get; set; }
         public Guid CreatedByAdminId { get; set; }
+        public string FinancialCode { get; set; }
+        public string EconomyCode { get; set; }
         public List<BudgetRecordDto> Records { get; set; }
     }
 }

@@ -50,6 +50,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             existing.Name = dto.Name;
             existing.Description = dto.Description;
             existing.ItemCode = dto.ItemCode;
+            existing.EconomyCode = dto.EconomyCode;
+            existing.FinancialCode = dto.FinancialCode;
             await _repo.UpdateAsync(id, existing);
             return _mapper.Map<BudgetItemDto>(existing);
         }
