@@ -50,7 +50,13 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<CreateOfferItemDto, OfferItem>();
             CreateMap<OfferItem, OfferItemDto>();
 
+            CreateMap<UpdateOfferItemDto, OfferItem>();
+            CreateMap<OfferItem, OfferItemDto>();
+
             CreateMap<CreateOfferLetterDto, OfferLetter>();
+            CreateMap<OfferLetter, OfferLetterDto>();
+
+            CreateMap<UpdateOfferLetterDto, OfferLetter>();
             CreateMap<OfferLetter, OfferLetterDto>();
 
             CreateMap<CreateCategoryDto, Category>();
