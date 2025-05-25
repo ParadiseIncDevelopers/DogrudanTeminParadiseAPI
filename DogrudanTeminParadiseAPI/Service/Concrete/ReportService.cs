@@ -93,28 +93,25 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             if (!offers.Any())
                 throw new InvalidOperationException("No offer letters for entry.");
 
-            var offerAverages = offers
-                .Select(o => new
-                {
-                    Offer = o,
-                    AveragePrice = o.OfferItems.Any()
+            // En düşük ortalama birim fiyatı hesapla ve kazanan teklifi al
+            var winningOffer = offers
+                .OrderBy(o =>
+                    o.OfferItems.Any()
                         ? o.OfferItems.Average(fi => fi.UnitPrice)
                         : double.MaxValue
-                })
-                .ToList();
+                )
+                .First();
 
-            var overallAvg = offerAverages.Average(x => x.AveragePrice);
-            var candidates = offerAverages.Where(x => x.AveragePrice <= overallAvg).ToList();
-            var winning = candidates.Any()
-                ? candidates.OrderByDescending(x => x.AveragePrice).First().Offer
-                : offerAverages.OrderBy(x => x.AveragePrice).First().Offer;
-
-            var ent = await _entRepo.GetByIdAsync(winning.EntrepriseId)
+            var ent = await _entRepo.GetByIdAsync(winningOffer.EntrepriseId)
                 ?? throw new KeyNotFoundException("Winning entreprise not found.");
 
             return new MarketPriceResearchReportDto
             {
-                ProcurementEntryName = entry.WorkName,
+                WorkReason = entry.WorkReason ?? "",
+                ProcurementEntryName = entry.WorkName ?? "",
+                PiyasaArastirmaBaslangicDate = entry.PiyasaArastirmaBaslangicDate,
+                ProcurementDecisionNumber = entry.ProcurementDecisionNumber ?? "",
+                PiyasaArastirmaBaslangicNumber = entry.PiyasaArastirmaBaslangicNumber ?? "",
                 ProcurementDecisionDate = entry.ProcurementDecisionDate,
                 WinnerEntreprise = new WinnerDto
                 {

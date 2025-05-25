@@ -47,5 +47,19 @@ namespace DogrudanTeminParadiseAPI.Controllers
             var admins = await _svc.GetAllAsync();
             return Ok(admins);
         }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        {
+            try
+            {
+                var token = await _svc.AuthenticateAsync(dto);
+                return Ok(new { token });
+            }
+            catch
+            {
+                return Unauthorized("TC veya parola hatalı");
+            }
+        }
     }
 }
