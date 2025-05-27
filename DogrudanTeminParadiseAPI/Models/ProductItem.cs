@@ -17,6 +17,6 @@ namespace DogrudanTeminParadiseAPI.Models
         [BsonRepresentation(BsonType.String)]
         public Guid CategoryId { get; set; }
         [BsonRepresentation(BsonType.String)]
-        public ProductItemType Type { get; set; }
+        public ProductItemType ProductItemType { get; set; }
     }
 }
