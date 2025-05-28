@@ -7,7 +7,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
     public class ThreeSubAdministrationUnitController : ControllerBase
     {
         private readonly IThreeSubAdministrationUnitService _svc;
@@ -18,6 +17,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateThreeSubAdministrationUnitDto dto)
         {
             try
@@ -47,6 +47,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateThreeSubAdministrationUnitDto dto)
         {
             try
@@ -61,6 +62,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

@@ -7,13 +7,13 @@ namespace DogrudanTeminParadiseAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
     public class BudgetItemController : ControllerBase
     {
         private readonly IBudgetItemService _svc;
         public BudgetItemController(IBudgetItemService svc) => _svc = svc;
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateBudgetItemDto dto)
         {
             try 

@@ -32,6 +32,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> GetById(Guid id)
         {
             var user = await _svc.GetByIdAsync(id);
@@ -42,6 +43,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         /// Tüm admin user'ları listeler.
         /// </summary>
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAll()
         {
             var admins = await _svc.GetAllAsync();

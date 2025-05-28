@@ -6,13 +6,13 @@ namespace DogrudanTeminParadiseAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Hem Admin hem User kullanabilir
     public class ProductItemController : ControllerBase
     {
         private readonly IProductItemService _svc;
         public ProductItemController(IProductItemService svc) => _svc = svc;
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateProductItemDto dto)
         {
             try { var c = await _svc.CreateAsync(dto); return CreatedAtAction(nameof(GetById), new { id = c.Id }, c); }
@@ -28,6 +28,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
             (await _svc.GetByIdAsync(id)) is ProductItemDto dto ? Ok(dto) : NotFound();
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductItemDto dto)
         {
             try { var u = await _svc.UpdateAsync(id, dto); return u == null ? NotFound() : Ok(u); }
@@ -36,6 +37,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid id)
         {
             try { await _svc.DeleteAsync(id); return NoContent(); }

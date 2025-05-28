@@ -7,7 +7,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class UnitController : ControllerBase
     {
         private readonly IUnitService _svc;

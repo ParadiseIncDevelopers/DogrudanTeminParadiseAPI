@@ -11,7 +11,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly IUserService _svc;
@@ -24,7 +23,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
         {
             try
@@ -47,6 +45,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var callerRole = User.FindFirstValue(ClaimTypes.Role);
@@ -110,7 +109,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPut("{id}/title/{titleId}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AssignTitle(Guid id, Guid titleId)
         {
             try

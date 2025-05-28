@@ -3,7 +3,6 @@ using DogrudanTeminParadiseAPI.Dto;
 using DogrudanTeminParadiseAPI.Models;
 using DogrudanTeminParadiseAPI.Repositories;
 using DogrudanTeminParadiseAPI.Service.Abstract;
-using SharpCompress.Common;
 
 namespace DogrudanTeminParadiseAPI.Service.Concrete
 {

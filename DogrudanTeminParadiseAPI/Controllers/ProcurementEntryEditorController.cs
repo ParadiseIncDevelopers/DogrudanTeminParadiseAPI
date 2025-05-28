@@ -7,6 +7,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ProcurementEntryEditorController : ControllerBase
     {
         private readonly IProcurementEntryEditorService _svc;
@@ -14,7 +15,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
 
         // Herkes görebilir
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> Get()
         {
             var dto = await _svc.GetAsync();
@@ -22,7 +22,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize]
         public async Task<IActionResult> GetById(Guid id)
         {
             var dto = await _svc.GetByIdAsync(id);
@@ -30,7 +29,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet("entry/{entryId}")]
-        [Authorize]
         public async Task<IActionResult> GetOfferProductsByEntry(Guid entryId)
         {
             var items = await _svc.GetEditorByEntryIdAsync(entryId);
@@ -39,7 +37,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
 
         // Yalnızca Admin rolü ekleyebilir ve güncelleyebilir
         [HttpPost]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateProcurementEntryEditorDto dto)
         {
             try
@@ -54,7 +51,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPut]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update([FromBody] UpdateProcurementEntryEditorDto dto)
         {
             var updated = await _svc.UpdateAsync(dto);
