@@ -58,6 +58,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPut("Update/{id}")]
+        [Authorize(Roles = "USER")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserDto dto)
         {
             var updated = await _svc.UpdateAsync(id, dto);
@@ -67,7 +68,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "USER")]
         public async Task<IActionResult> Delete(Guid id)
         {
             await _svc.DeleteAsync(id);
@@ -109,6 +110,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPut("{id}/title/{titleId}")]
+        [Authorize(Roles = "USER")]
         public async Task<IActionResult> AssignTitle(Guid id, Guid titleId)
         {
             try

@@ -3,6 +3,7 @@ using DogrudanTeminParadiseAPI.Service.Abstract;
 using DogrudanTeminParadiseAPI.Service.Concrete;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DogrudanTeminParadiseAPI.Controllers
 {
@@ -12,7 +13,12 @@ namespace DogrudanTeminParadiseAPI.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IAdminUserService _svc;
-        public AdminController(IAdminUserService svc) => _svc = svc;
+        private readonly IUserService _userSvc;
+        public AdminController(IAdminUserService svc, IUserService userSvc) 
+        {
+            _userSvc = userSvc;
+            _svc = svc;
+        }
 
         /// <summary>
         /// Hem yeni admin, hem de yeni normal user oluşturabilir.
@@ -32,7 +38,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var user = await _svc.GetByIdAsync(id);
@@ -43,11 +49,37 @@ namespace DogrudanTeminParadiseAPI.Controllers
         /// Tüm admin user'ları listeler.
         /// </summary>
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAll()
         {
             var admins = await _svc.GetAllAsync();
             return Ok(admins);
+        }
+
+        [HttpGet("all-with-users")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllWithUsers()
+        {
+            // 1) Çağıranın ID'sini al
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdClaim, out var currentUserId))
+                return Unauthorized();
+
+            // 2) Tüm normal kullanıcıları çek
+            var normalUsers = await _userSvc.GetAllAsync();
+
+            // 3) Tüm adminleri çek, ama sadece kendisinin kaydını al
+            var allAdmins = await _svc.GetAllAsync();
+            var currentAdmin = allAdmins.FirstOrDefault(a => a.Id == currentUserId);
+
+            // 4) Sonucu dön
+            return Ok(new
+            {
+                Admins = currentAdmin != null
+                            ? new[] { currentAdmin }
+                            : Array.Empty<AdminUserDto>(),
+                Users = normalUsers
+            });
         }
 
         [HttpPost("login")]

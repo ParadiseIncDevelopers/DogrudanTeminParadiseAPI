@@ -34,6 +34,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return list.Select(x => _mapper.Map<UnitDto>(x));
         }
 
+
         public async Task<UnitDto> GetByIdAsync(Guid id)
         {
             var e = await _repo.GetByIdAsync(id);

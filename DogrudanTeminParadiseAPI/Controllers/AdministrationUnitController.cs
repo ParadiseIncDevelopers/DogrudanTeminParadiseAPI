@@ -32,10 +32,12 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAll()
             => Ok(await _svc.GetAllAsync());
 
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> GetById(Guid id)
         {
             var unit = await _svc.GetByIdAsync(id);
