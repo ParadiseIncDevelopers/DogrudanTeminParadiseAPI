@@ -1,5 +1,4 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-
+﻿
 namespace DogrudanTeminParadiseAPI.Dto
 {
     public class UpdateUserDto

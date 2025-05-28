@@ -58,28 +58,40 @@ namespace DogrudanTeminParadiseAPI.Controllers
 
         [HttpGet("all-with-users")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAllWithUsers()
+        public async Task<ActionResult<IEnumerable<AdminUserDto>>> GetAllWithUsers()
         {
             // 1) Çağıranın ID'sini al
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdClaim, out var currentUserId))
                 return Unauthorized();
 
-            // 2) Tüm normal kullanıcıları çek
-            var normalUsers = await _userSvc.GetAllAsync();
-
-            // 3) Tüm adminleri çek, ama sadece kendisinin kaydını al
+            // 2) Tüm adminleri çek, yalnızca kendisinin kaydını seç
             var allAdmins = await _svc.GetAllAsync();
-            var currentAdmin = allAdmins.FirstOrDefault(a => a.Id == currentUserId);
+            var currentAdmin = allAdmins
+                .Where(a => a.Id == currentUserId)
+                .ToList();
 
-            // 4) Sonucu dön
-            return Ok(new
+            // 3) Tüm normal kullanıcıları çek ve AdminUserDto’ya dönüştür
+            var normalUsers = await _userSvc.GetAllAsync();
+            var mappedUsers = normalUsers.Select(u => new AdminUserDto
             {
-                Admins = currentAdmin != null
-                            ? new[] { currentAdmin }
-                            : Array.Empty<AdminUserDto>(),
-                Users = normalUsers
+                Id = u.Id,
+                Name = u.Name,
+                Surname = u.Surname,
+                Email = u.Email,
+                Tcid = u.Tcid,
+                UserType = u.UserType,
+                TitleId = u.TitleId,
+                Permissions = u.Permissions,
+                PublicInstitutionName = null
             });
+
+            // 4) Birleştir ve döndür
+            var result = currentAdmin
+                .Concat(mappedUsers)
+                .ToList();
+
+            return Ok(result);
         }
 
         [HttpPost("login")]
