@@ -80,33 +80,15 @@ namespace DogrudanTeminParadiseAPI.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var allUsers = await _svc.GetAllAsync();
-            var user = await _svc.AuthenticateAsync(dto.Tcid, dto.Password);
-            if (user == null)
-                return Unauthorized(new { message = "TC veya şifre hatalı." });
-
-            // Token Üretimi
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
-
-            var tokenDescriptor = new SecurityTokenDescriptor
+            try
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Tcid),
-                new Claim(ClaimTypes.Role, "User")
-            }),
-                Expires = DateTime.UtcNow.AddMinutes(Convert.ToDouble(_config["Jwt:ExpiresInMinutes"])),
-                Issuer = _config["Jwt:Issuer"],
-                Audience = _config["Jwt:Audience"],
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var tokenString = tokenHandler.WriteToken(token);
-
-            return Ok(new { token = tokenString });
+                var token = await _svc.AuthenticateAsync(dto);
+                return Ok(new { token });
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized(new { message = "TC veya şifre hatalı." });
+            }
         }
 
         [HttpPut("{id}/title/{titleId}")]

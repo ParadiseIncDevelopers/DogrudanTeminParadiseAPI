@@ -1,8 +1,13 @@
 ﻿using AutoMapper;
 using DogrudanTeminParadiseAPI.Dto;
+using DogrudanTeminParadiseAPI.Helpers;
 using DogrudanTeminParadiseAPI.Models;
 using DogrudanTeminParadiseAPI.Repositories;
 using DogrudanTeminParadiseAPI.Service.Abstract;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace DogrudanTeminParadiseAPI.Service.Concrete
 {
@@ -10,65 +15,163 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
     {
         private readonly MongoDBRepository<User> _repo;
         private readonly IMapper _mapper;
+        private readonly IConfiguration _cfg;
+        private readonly byte[] _aesKey;
 
-        public UserService(MongoDBRepository<User> repo, IMapper mapper)
+        public UserService(
+            MongoDBRepository<User> repo,
+            IMapper mapper,
+            IConfiguration cfg)
         {
             _repo = repo;
             _mapper = mapper;
+            _cfg = cfg;
+
+            // AES anahtarı appsettings.json'dan okunur (32 karakter)
+            var keyString = _cfg["EncryptionKey"];
+            if (string.IsNullOrEmpty(keyString) || keyString.Length != 32)
+                throw new InvalidOperationException("Geçersiz AES anahtarı (32 karakter olmalı).");
+            _aesKey = Encoding.UTF8.GetBytes(keyString);
+        }
+
+        public async Task<string> AuthenticateAsync(LoginDto dto)
+        {
+            var all = await _repo.GetAllAsync();
+            var hashedPwd = Crypto.HashSha512(dto.Password);
+
+            var user = all.FirstOrDefault(u =>
+                Crypto.Decrypt(u.Tcid) == dto.Tcid &&
+                u.Password == hashedPwd);
+
+            if (user == null)
+                throw new UnauthorizedAccessException("Geçersiz TC veya parola");
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_cfg["Jwt:Key"]);
+            var token = tokenHandler.CreateToken(new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Name, Crypto.Decrypt(user.Tcid)),
+                    new Claim(ClaimTypes.Role, "User")
+                }),
+                Expires = DateTime.UtcNow.AddMinutes(int.Parse(_cfg["Jwt:ExpiresInMinutes"])),
+                Issuer = _cfg["Jwt:Issuer"],
+                Audience = _cfg["Jwt:Audience"],
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256)
+            });
+
+            return tokenHandler.WriteToken(token);
         }
 
         public async Task<UserDto> CreateAsync(CreateUserDto dto)
         {
             var allUsers = await _repo.GetAllAsync();
 
-            // Email ve Tcid çakışma kontrolü
-            bool emailExists = allUsers.Any(u => u.Email.Equals(dto.Email, StringComparison.OrdinalIgnoreCase));
-            bool tcidExists = allUsers.Any(u => u.Tcid == dto.Tcid);
+            // Encrypt ve hash
+            var encTcid = Crypto.Encrypt(dto.Tcid);
+            var encEmail = Crypto.Encrypt(dto.Email);
+            var encName = Crypto.Encrypt(dto.Name);
+            var encSurname = Crypto.Encrypt(dto.Surname);
+            var hashedPwd = Crypto.HashSha512(dto.Password);
 
-            if (emailExists)
-                throw new InvalidOperationException("Bu e-posta adresi başka bir kullanıcı tarafından kullanılıyor.");
-            if (tcidExists)
-                throw new InvalidOperationException("Bu TC Kimlik Numarası başka bir kullanıcı tarafından kullanılıyor.");
+            // Uniqueness check
+            if (allUsers.Any(u => u.Tcid == encTcid))
+                throw new InvalidOperationException("Bu TC Kimlik Numarası zaten kayıtlı.");
+            if (allUsers.Any(u => u.Email == encEmail))
+                throw new InvalidOperationException("Bu e-posta zaten kayıtlı.");
 
+            // Entity oluştur
             var entity = _mapper.Map<User>(dto);
             entity.Id = Guid.NewGuid();
+            entity.Tcid = encTcid;
+            entity.Email = encEmail;
+            entity.Name = encName;
+            entity.Surname = encSurname;
+            entity.Password = hashedPwd;
 
             await _repo.InsertAsync(entity);
-            return _mapper.Map<UserDto>(entity);
+
+            // Decrypted DTO
+            return new UserDto
+            {
+                Id = entity.Id,
+                Name = Crypto.Decrypt(entity.Name),
+                Surname = Crypto.Decrypt(entity.Surname),
+                Email = Crypto.Decrypt(entity.Email),
+                Tcid = Crypto.Decrypt(entity.Tcid),
+                UserType = entity.UserType,
+                Permissions = entity.Permissions,
+                TitleId = entity.TitleId
+            };
         }
 
         public async Task<IEnumerable<UserDto>> GetAllAsync()
         {
-            var all = await _repo.GetAllAsync();
-            return all.Select(u => _mapper.Map<UserDto>(u));
+            var list = await _repo.GetAllAsync();
+            return list.Select(e => new UserDto
+            {
+                Id = e.Id,
+                Name = Crypto.Decrypt(e.Name),
+                Surname = Crypto.Decrypt(e.Surname),
+                Email = Crypto.Decrypt(e.Email),
+                Tcid = Crypto.Decrypt(e.Tcid),
+                UserType = e.UserType,
+                Permissions = e.Permissions,
+                TitleId = e.TitleId
+            });
         }
 
         public async Task<UserDto> GetByIdAsync(Guid id)
         {
-            var u = await _repo.GetByIdAsync(id);
-            return u == null ? null : _mapper.Map<UserDto>(u);
+            var e = await _repo.GetByIdAsync(id);
+            if (e == null) return null;
+
+            return new UserDto
+            {
+                Id = e.Id,
+                Name = Crypto.Decrypt(e.Name),
+                Surname = Crypto.Decrypt(e.Surname),
+                Email = Crypto.Decrypt(e.Email),
+                Tcid = Crypto.Decrypt(e.Tcid),
+                UserType = e.UserType,
+                Permissions = e.Permissions,
+                TitleId = e.TitleId
+            };
         }
 
         public async Task<UserDto> GetProfileAsync(Guid userId)
-        {
-            return await GetByIdAsync(userId);
-        }
+            => await GetByIdAsync(userId);
 
         public async Task<UserDto> UpdateAsync(Guid id, UpdateUserDto dto)
         {
             var existing = await _repo.GetByIdAsync(id);
-            if (existing == null)
-                return null;
+            if (existing == null) return null;
 
-            existing.Name = dto.Name;
-            existing.Surname = dto.Surname;
-            existing.Email = dto.Email;
-            existing.Password = dto.Password;
+            // Encrypt ve hash
+            existing.Name = Crypto.Encrypt(dto.Name);
+            existing.Surname = Crypto.Encrypt(dto.Surname);
+            existing.Email = Crypto.Encrypt(dto.Email);
+            existing.Password = Crypto.HashSha512(dto.Password);
             existing.Permissions = dto.Permissions;
             existing.TitleId = dto.TitleId;
 
             await _repo.UpdateAsync(id, existing);
-            return _mapper.Map<UserDto>(existing);
+
+            return new UserDto
+            {
+                Id = existing.Id,
+                Name = Crypto.Decrypt(existing.Name),
+                Surname = Crypto.Decrypt(existing.Surname),
+                Email = Crypto.Decrypt(existing.Email),
+                Tcid = Crypto.Decrypt(existing.Tcid),
+                UserType = existing.UserType,
+                Permissions = existing.Permissions,
+                TitleId = existing.TitleId
+            };
         }
 
         public async Task DeleteAsync(Guid id)
@@ -78,23 +181,26 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             await _repo.DeleteAsync(id);
         }
 
-        public async Task<User> AuthenticateAsync(string tcid, string password)
-        {
-            var users = await _repo.GetAllAsync();
-            return users.FirstOrDefault(u => u.Tcid == tcid && u.Password == password);
-        }
-
         public async Task<UserDto> AssignTitleAsync(Guid userId, Guid titleId)
         {
             var user = await _repo.GetByIdAsync(userId);
-            if (user == null) throw new KeyNotFoundException("Kullanıcı bulunamadı.");
-
-            var title = await _repo.GetByIdAsync(titleId);
-            if (title == null) throw new KeyNotFoundException("Ünvan bulunamadı.");
+            if (user == null)
+                throw new KeyNotFoundException("Kullanıcı bulunamadı.");
 
             user.TitleId = titleId;
             await _repo.UpdateAsync(userId, user);
-            return _mapper.Map<UserDto>(user);
+
+            return new UserDto
+            {
+                Id = user.Id,
+                Name = Crypto.Decrypt(user.Name),
+                Surname = Crypto.Decrypt(user.Surname),
+                Email = Crypto.Decrypt(user.Email),
+                Tcid = Crypto.Decrypt(user.Tcid),
+                UserType = user.UserType,
+                Permissions = user.Permissions,
+                TitleId = user.TitleId
+            };
         }
     }
 }

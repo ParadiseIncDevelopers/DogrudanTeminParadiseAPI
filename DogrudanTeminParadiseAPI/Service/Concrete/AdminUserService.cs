@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using DogrudanTeminParadiseAPI.Dto;
+using DogrudanTeminParadiseAPI.Helpers;
 using DogrudanTeminParadiseAPI.Models;
 using DogrudanTeminParadiseAPI.Repositories;
 using DogrudanTeminParadiseAPI.Service.Abstract;
@@ -28,26 +29,26 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task<string> AuthenticateAsync(LoginDto dto)
         {
-            // Hem Admin hem User’ı aynı koleksiyonda arıyoruz
             var all = await _repo.GetAllAsync();
+            var hashedInputPwd = Crypto.HashSha512(dto.Password);
+
             var user = all.FirstOrDefault(u =>
-                u.Tcid == dto.Tcid &&
-                u.Password == dto.Password);
+                Crypto.Decrypt(u.Tcid) == dto.Tcid &&
+                u.Password == hashedInputPwd);
 
             if (user == null)
                 throw new UnauthorizedAccessException("Geçersiz TC veya parola");
 
-            // Token üretimi
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_cfg["Jwt:Key"]);
             var token = tokenHandler.CreateToken(new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Tcid),
-                new Claim(ClaimTypes.Role, user.UserType)    // "Admin" veya "User"
-            }),
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Name, Crypto.Decrypt(user.Tcid)),
+                    new Claim(ClaimTypes.Role, user.UserType)
+                }),
                 Expires = DateTime.UtcNow.AddMinutes(int.Parse(_cfg["Jwt:ExpiresInMinutes"])),
                 Issuer = _cfg["Jwt:Issuer"],
                 Audience = _cfg["Jwt:Audience"],
@@ -63,37 +64,93 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         {
             var allUsers = await _repo.GetAllAsync();
 
-            // 1. TC Kimlik No kontrolü
-            bool tcidExists = allUsers.Any(u => u.Tcid == dto.Tcid);
+            // AES ile şifreleyeceğimiz alanlar
+            var encTcid = Crypto.Encrypt(dto.Tcid);
+            var encEmail = Crypto.Encrypt(dto.Email);
+            var encName = Crypto.Encrypt(dto.Name);
+            var encSurname = Crypto.Encrypt(dto.Surname);
+            var encPublicInstitution =
+                string.IsNullOrEmpty(dto.PublicInstitutionName)
+                    ? null
+                    : Crypto.Encrypt(dto.PublicInstitutionName);
 
-            // 2. E-mail kontrolü
-            bool emailExists = allUsers.Any(u => u.Email.Equals(dto.Email, StringComparison.OrdinalIgnoreCase));
+            var hashedPwd = Crypto.HashSha512(dto.Password);
 
-            if (tcidExists)
+            if (allUsers.Any(u => u.Tcid == encTcid))
                 throw new InvalidOperationException("Bu TC Kimlik Numarası zaten sistemde kayıtlı.");
-
-            if (emailExists)
+            if (allUsers.Any(u => u.Email == encEmail))
                 throw new InvalidOperationException("Bu e-posta adresi zaten sistemde kayıtlı.");
 
-            // Eğer sorun yoksa kullanıcıyı ekle
-            var entity = _mapper.Map<AdminUser>(dto);
-            entity.Id = Guid.NewGuid();
+            var entity = new AdminUser
+            {
+                Id = Guid.NewGuid(),
+                Name = encName,
+                Surname = encSurname,
+                Email = encEmail,
+                Tcid = encTcid,
+                Password = hashedPwd,
+                UserType = dto.UserType,
+                Permissions = dto.Permissions,
+                TitleId = dto.TitleId,
+                PublicInstitutionName = encPublicInstitution
+            };
 
             await _repo.InsertAsync(entity);
 
-            return _mapper.Map<AdminUserDto>(entity);
+            return new AdminUserDto
+            {
+                Id = entity.Id,
+                Name = Crypto.Decrypt(entity.Name),
+                Surname = Crypto.Decrypt(entity.Surname),
+                Email = Crypto.Decrypt(entity.Email),
+                Tcid = Crypto.Decrypt(entity.Tcid),
+                UserType = entity.UserType,
+                TitleId = entity.TitleId,
+                Permissions = entity.Permissions,
+                PublicInstitutionName = entity.PublicInstitutionName == null
+                                            ? null
+                                            : Crypto.Decrypt(entity.PublicInstitutionName)
+            };
         }
 
         public async Task<AdminUserDto> GetByIdAsync(Guid id)
         {
-            var entity = await _repo.GetByIdAsync(id);
-            return entity == null ? null : _mapper.Map<AdminUserDto>(entity);
+            var e = await _repo.GetByIdAsync(id);
+            if (e == null) return null;
+
+            return new AdminUserDto
+            {
+                Id = e.Id,
+                Name = Crypto.Decrypt(e.Name),
+                Surname = Crypto.Decrypt(e.Surname),
+                Email = Crypto.Decrypt(e.Email),
+                Tcid = Crypto.Decrypt(e.Tcid),
+                UserType = e.UserType,
+                TitleId = e.TitleId,
+                Permissions = e.Permissions,
+                PublicInstitutionName = string.IsNullOrEmpty(e.PublicInstitutionName)
+                                            ? null
+                                            : Crypto.Decrypt(e.PublicInstitutionName)
+            };
         }
 
         public async Task<IEnumerable<AdminUserDto>> GetAllAsync()
         {
             var list = await _repo.GetAllAsync();
-            return list.Select(e => _mapper.Map<AdminUserDto>(e));
+            return list.Select(e => new AdminUserDto
+            {
+                Id = e.Id,
+                Name = Crypto.Decrypt(e.Name),
+                Surname = Crypto.Decrypt(e.Surname),
+                Email = Crypto.Decrypt(e.Email),
+                Tcid = Crypto.Decrypt(e.Tcid),
+                UserType = e.UserType,
+                TitleId = e.TitleId,
+                Permissions = e.Permissions,
+                PublicInstitutionName = string.IsNullOrEmpty(e.PublicInstitutionName)
+                                            ? null
+                                            : e.PublicInstitutionName
+            });
         }
     }
 }

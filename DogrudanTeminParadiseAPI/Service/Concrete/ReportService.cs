@@ -99,7 +99,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             if (!offers.Any())
                 throw new InvalidOperationException("No offer letters for entry.");
 
-            // En düşük ortalama birim fiyatı hesapla ve kazanan teklifi al
+            // 1) En düşük ortalama birim fiyatı veren offer'ı seç
             var winningOffer = offers
                 .OrderBy(o =>
                     o.OfferItems.Any()
@@ -108,9 +108,16 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 )
                 .First();
 
+            // 2) Kazanan offer'ın toplam teklif tutarını hesapla
+            double totalOfferedPrice = winningOffer.OfferItems.Any()
+                ? winningOffer.OfferItems.Sum(fi => fi.TotalAmount)
+                : 0;
+
+            // 3) Entreprise bilgisi
             var ent = await _entRepo.GetByIdAsync(winningOffer.EntrepriseId)
                 ?? throw new KeyNotFoundException("Winning entreprise not found.");
 
+            // 4) DTO'yu oluştur ve döndür
             return new MarketPriceResearchReportDto
             {
                 WorkReason = entry.WorkReason ?? "",
@@ -119,10 +126,12 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 ProcurementDecisionNumber = entry.ProcurementDecisionNumber ?? "",
                 PiyasaArastirmaBaslangicNumber = entry.PiyasaArastirmaBaslangicNumber ?? "",
                 ProcurementDecisionDate = entry.ProcurementDecisionDate,
+
                 WinnerEntreprise = new WinnerDto
                 {
                     Vkn = ent.Vkn,
-                    Unvan = ent.Unvan
+                    Unvan = ent.Unvan,
+                    TotalOfferedPrice = totalOfferedPrice
                 }
             };
         }

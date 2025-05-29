@@ -102,7 +102,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
                 var token = await _svc.AuthenticateAsync(dto);
                 return Ok(new { token });
             }
-            catch
+            catch(Exception ex)
             {
                 return Unauthorized("TC veya parola hatalı");
             }
