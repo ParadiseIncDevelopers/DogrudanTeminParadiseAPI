@@ -1,4 +1,5 @@
-﻿using DogrudanTeminParadiseAPI.Service.Abstract;
+﻿using DogrudanTeminParadiseAPI.Parameters;
+using DogrudanTeminParadiseAPI.Service.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -48,6 +49,42 @@ namespace DogrudanTeminParadiseAPI.Controllers
             {
                 return NotFound(new { error = ex.Message });
             }
+        }
+
+        [HttpGet("dashboard/inspection-price-sum")]
+        public async Task<IActionResult> GetInspectionPriceSum([FromQuery] StatsQueryParameters q)
+        {
+            if (q.Days <= 0) return BadRequest(new { error = "Days must be > 0" });
+            var stats = await _svc.GetInspectionPriceSumAsync(q.Days);
+            return Ok(stats);
+        }
+
+        [HttpGet("dashboard/budget-item-stats")]
+        public async Task<IActionResult> GetBudgetItemStats([FromQuery] StatsQueryParameters query)
+        {
+            if (query.Days <= 0)
+                return BadRequest(new { error = "Days must be > 0" });
+
+            var stats = await _svc.GetBudgetItemCountsAsync(query.Days);
+            return Ok(stats);
+        }
+
+        [HttpGet("dashboard/top-inspection-products")]
+        public async Task<IActionResult> GetTopInspectionProducts([FromQuery] StatsQueryParameters q)
+        {
+            if (q.Days <= 0 || q.Top <= 0)
+                return BadRequest(new { error = "Days and Top must be > 0" });
+
+            var list = await _svc.GetTopInspectionProductsAsync(q.Days, q.Top);
+            return Ok(list);
+        }
+
+        [HttpGet("dashboard/top-inspection-firms")]
+        public async Task<IActionResult> GetTopInspectionFirms([FromQuery] int top = 5)
+        {
+            if (top <= 0) return BadRequest(new { error = "Top must be > 0" });
+            var list = await _svc.GetTopInspectionFirmsMonthlyAsync(top);
+            return Ok(list);
         }
     }
 }
