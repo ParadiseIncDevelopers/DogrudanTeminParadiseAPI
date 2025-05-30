@@ -1,3 +1,5 @@
+using DogrudanTeminParadiseAPI.Factory.Abstract;
+using DogrudanTeminParadiseAPI.Factory.Concrete;
 using DogrudanTeminParadiseAPI.Mapping;
 using DogrudanTeminParadiseAPI.Models;
 using DogrudanTeminParadiseAPI.Repositories;
@@ -61,6 +63,9 @@ builder.Services.AddScoped<IInspectionAcceptanceCertificateService, InspectionAc
 builder.Services.AddScoped<IAdditionalInspectionAcceptanceService, AdditionalInspectionAcceptanceService>();
 builder.Services.AddScoped<ISubInspectionAcceptanceJuryService, SubInspectionAcceptanceJuryService>();
 builder.Services.AddScoped<IProcurementEntryEditorService, ProcurementEntryEditorService>();
+// Factoryler
+builder.Services.AddSingleton<ITeminApiExceptionFactory, TeminApiExceptionFactory>();
+
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
@@ -84,7 +89,10 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<TeminApiExceptionFilter>();
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
