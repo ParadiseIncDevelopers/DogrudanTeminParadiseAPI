@@ -130,7 +130,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 Permissions = e.Permissions,
                 PublicInstitutionName = string.IsNullOrEmpty(e.PublicInstitutionName)
                                             ? null
-                                            : Crypto.Decrypt(e.PublicInstitutionName)
+                                            : e.PublicInstitutionName
             };
         }
 

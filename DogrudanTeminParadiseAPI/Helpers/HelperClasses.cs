@@ -32,7 +32,8 @@ namespace DogrudanTeminParadiseAPI.Helpers
     {
         MARKET_RESEARCH,
         INSPECTION_ACCEPTANCE,
-        SUB_INSPECTION_ACCEPTANCE
+        SUB_INSPECTION_ACCEPTANCE,
+        APPROXIMATE_COST
     }
 
     public class SelectedOfferItem

@@ -73,6 +73,10 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<MarketResearchJury, MarketResearchJuryDto>();
             CreateMap<UpdateMarketResearchJuryDto, MarketResearchJury>();
 
+            CreateMap<CreateApproximateCostJuryDto, ApproximateCostJury>();
+            CreateMap<ApproximateCostJury, ApproximateCostJuryDto>();
+            CreateMap<UpdateApproximateCostJuryDto, ApproximateCostJury>();
+
             CreateMap<CreateInspectionAcceptanceJuryDto, InspectionAcceptanceJury>();
             CreateMap<InspectionAcceptanceJury, InspectionAcceptanceJuryDto>();
             CreateMap<UpdateInspectionAcceptanceJuryDto, InspectionAcceptanceJury>();
