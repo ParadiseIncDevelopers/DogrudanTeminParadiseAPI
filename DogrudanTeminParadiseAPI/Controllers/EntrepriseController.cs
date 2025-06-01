@@ -63,7 +63,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
             try
             {
                 await _svc.DeleteAsync(id);
-                return NoContent(); // 204 No Content
+                return NoContent();
             }
             catch (KeyNotFoundException ex)
             {
