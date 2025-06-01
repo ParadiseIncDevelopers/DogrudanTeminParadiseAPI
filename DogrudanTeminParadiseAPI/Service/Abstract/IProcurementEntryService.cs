@@ -14,6 +14,7 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<IEnumerable<ProcurementEntryWithUnitFilterDto>> GetByAdministrativeUnitsAsync(ProcurementEntryWithUnitFilterDto query);
         Task<IEnumerable<ProcurementEntryDto>> GetByVknAsync(string vkn);
         Task<IEnumerable<ProcurementEntryDto>> GetByInspectionAcceptanceAsync();
+        Task<IEnumerable<ProcurementEntryDto>> GetByRequesterAsync(Guid requesterId, bool isAdmin);
 
     }
 }

@@ -3,6 +3,7 @@ using DogrudanTeminParadiseAPI.Service.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DogrudanTeminParadiseAPI.Controllers
 {
@@ -108,6 +109,20 @@ namespace DogrudanTeminParadiseAPI.Controllers
             {
                 return NotFound(new { error = ex.Message });
             }
+        }
+
+        [HttpGet("by-requester")]
+        public async Task<IActionResult> GetByRequester()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdClaim, out var userId))
+                return Unauthorized();
+
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            var isAdmin = string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
+
+            var result = await _entrySvc.GetByRequesterAsync(userId, isAdmin);
+            return Ok(result);
         }
     }
 }

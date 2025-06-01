@@ -10,6 +10,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
     {
         private readonly MongoDBRepository<ProcurementEntry> _repo;
         private readonly MongoDBRepository<User> _userRepo;
+        private readonly MongoDBRepository<AdminUser> _adminRepo;
         private readonly IOfferLetterService _offerSvc;
         private readonly IInspectionAcceptanceCertificateService _inspectionSvc;
         private readonly IMapper _mapper;
@@ -289,6 +290,29 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 .ToList();
 
             return filteredEntries;
+        }
+
+        public async Task<IEnumerable<ProcurementEntryDto>> GetByRequesterAsync(Guid requesterId, bool isAdmin)
+        {
+            var allEntries = await _repo.GetAllAsync();
+            if (isAdmin)
+            {
+                var allAdminIds = (await _adminRepo.GetAllAsync()).Select(a => a.Id).ToHashSet();
+                return allEntries
+                    .Where(e =>
+                        // include if created by a normal user
+                        !allAdminIds.Contains(e.TenderResponsibleUserId.GetValueOrDefault())
+                        // or created by this same admin
+                        || e.TenderResponsibleUserId == requesterId
+                    )
+                    .Select(e => _mapper.Map<ProcurementEntryDto>(e));
+            }
+            else
+            {
+                return allEntries
+                    .Where(e => e.TenderResponsibleUserId == requesterId)
+                    .Select(e => _mapper.Map<ProcurementEntryDto>(e));
+            }
         }
     }
 }
