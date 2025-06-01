@@ -9,11 +9,23 @@ using DogrudanTeminParadiseAPI.Service.Concrete;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using MongoDB.Driver;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 var cfg = builder.Configuration;
+
+//CORS
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowMyClient", policy =>
+    {
+        policy
+          .WithOrigins("https://localhost:44379") 
+          .AllowAnyHeader()
+          .AllowAnyMethod();
+    });
+});
 
 // MongoDBRepository kayıtları
 builder.Services.AddScoped(sp => new MongoDBRepository<AdminUser>(cfg["MongoAPI"], cfg["MongoDBName"], "AdminUsers"));
@@ -120,12 +132,10 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-
-// Hata burada! Eksik olan `UseRouting()` ekleyelim.
+app.UseHttpsRedirection();
 app.UseRouting();
+app.UseCors("AllowMyClient");
 
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -133,9 +143,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

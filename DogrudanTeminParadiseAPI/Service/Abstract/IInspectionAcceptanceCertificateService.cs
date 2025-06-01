@@ -9,5 +9,6 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<InspectionAcceptanceCertificateDto> GetByIdAsync(Guid id);
         Task<InspectionAcceptanceCertificateDto> UpdateAsync(Guid id, UpdateInspectionAcceptanceCertificateDto dto);
         Task DeleteAsync(Guid id);
+        Task<IEnumerable<InspectionAcceptanceCertificateDto>> GetAllAsync();
     }
 }

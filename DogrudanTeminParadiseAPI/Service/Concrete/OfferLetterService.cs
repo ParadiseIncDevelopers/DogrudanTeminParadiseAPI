@@ -62,10 +62,16 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return list.Select(o => _mapper.Map<OfferLetterDto>(o));
         }
 
-        public async Task<OfferLetterDto> GetByIdAsync(Guid id)
+        public async Task<IEnumerable<OfferLetterDto>> GetAllAsync()
         {
-            var e = await _repo.GetByIdAsync(id);
-            return e == null ? null : _mapper.Map<OfferLetterDto>(e);
+            var list = await _repo.GetAllAsync();
+            return _mapper.Map<IEnumerable<OfferLetterDto>>(list);
+        }
+
+        public async Task<OfferLetterDto> GetByIdAsync(Guid id) 
+        {
+            var offerLetter = await _repo.GetByIdAsync(id);
+            return _mapper.Map<OfferLetterDto>(offerLetter);
         }
 
         public async Task<OfferLetterDto> UpdateAsync(Guid id, UpdateOfferLetterDto dto)

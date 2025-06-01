@@ -1,6 +1,7 @@
 ﻿using DogrudanTeminParadiseAPI.Dto;
 using DogrudanTeminParadiseAPI.Service.Abstract;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DogrudanTeminParadiseAPI.Controllers
@@ -8,17 +9,25 @@ namespace DogrudanTeminParadiseAPI.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
+    [EnableCors("AllowMyClient")]
+
     public class ProcurementEntryController : ControllerBase
     {
-        private readonly IProcurementEntryService _svc;
-        public ProcurementEntryController(IProcurementEntryService svc) => _svc = svc;
+        private readonly IProcurementEntryService _entrySvc;
+        private readonly IOfferLetterService _offerSvc;
+
+        public ProcurementEntryController(IProcurementEntryService entrySvc, IOfferLetterService offerSvc) 
+        {
+            _entrySvc = entrySvc;
+            _offerSvc = offerSvc;
+        }
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateProcurementEntryDto dto)
         {
             try
             {
-                var created = await _svc.CreateAsync(dto);
+                var created = await _entrySvc.CreateAsync(dto);
                 return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
             }
             catch (KeyNotFoundException ex)
@@ -32,12 +41,12 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll() => Ok(await _svc.GetAllAsync());
+        public async Task<IActionResult> GetAll() => Ok(await _entrySvc.GetAllAsync());
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var item = await _svc.GetByIdAsync(id);
+            var item = await _entrySvc.GetByIdAsync(id);
             return item == null ? NotFound() : Ok(item);
         }
 
@@ -46,7 +55,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         {
             try
             {
-                var updated = await _svc.UpdateAsync(id, dto);
+                var updated = await _entrySvc.UpdateAsync(id, dto);
                 return updated == null ? NotFound() : Ok(updated);
             }
             catch (KeyNotFoundException ex)
@@ -59,12 +68,40 @@ namespace DogrudanTeminParadiseAPI.Controllers
             }
         }
 
+        [HttpGet("filter-inspection-price")]
+        public async Task<IActionResult> GetInspectionPriceRange([FromQuery] ProcurementEntryInspectionPriceDto query)
+        {
+            var result = await _entrySvc.GetInspectionPriceRangeAsync(query);
+            return Ok(result);
+        }
+
+        [HttpGet("filter-by-offer-count")]
+        public async Task<IActionResult> GetByOfferCount([FromQuery] ProcurementEntryWithOfferCountDto query)
+        {
+            var result = await _entrySvc.GetByOfferCountAsync(query);
+            return Ok(result);
+        }
+
+        [HttpGet("filter-by-units")]
+        public async Task<IActionResult> GetByAdministrativeUnits([FromQuery] ProcurementEntryWithUnitFilterDto query)
+        {
+            var result = await _entrySvc.GetByAdministrativeUnitsAsync(query);
+            return Ok(result);
+        }
+
+        [HttpGet("filter-by-vkn")]
+        public async Task<IActionResult> GetByVkn([FromQuery] string vkn)
+        {
+            var result = await _entrySvc.GetByVknAsync(vkn);
+            return Ok(result);
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
             try
             {
-                await _svc.DeleteAsync(id);
+                await _entrySvc.DeleteAsync(id);
                 return NoContent();
             }
             catch (KeyNotFoundException ex)
