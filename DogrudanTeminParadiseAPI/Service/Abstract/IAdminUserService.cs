@@ -7,9 +7,9 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<string> AuthenticateAsync(LoginDto dto);
         Task<AdminUserDto> CreateAsync(CreateUserDto dto);
         Task<AdminUserDto> GetByIdAsync(Guid id);
-        /// <summary>
-        /// Tüm admin user'ları listeler.
-        /// </summary>
         Task<IEnumerable<AdminUserDto>> GetAllAsync();
+
+        Task ChangePasswordAsync(Guid userId, UpdateAdminPasswordDto dto);
+        Task AssignTitleAsync(Guid userId, Guid titleId);
     }
 }

@@ -107,5 +107,39 @@ namespace DogrudanTeminParadiseAPI.Controllers
                 return Unauthorized("TC veya parola hatalı");
             }
         }
+
+        [HttpPut("change-password")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ChangePassword([FromBody] UpdateAdminPasswordDto dto)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdClaim, out var userId))
+                return Unauthorized();
+
+            try
+            {
+                await _svc.ChangePasswordAsync(userId, dto);
+                return NoContent();
+            }
+            catch (Exception ex) when (ex is UnauthorizedAccessException || ex is InvalidOperationException || ex is KeyNotFoundException)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPut("{id}/assign-title/{titleId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AssignTitle(Guid id, Guid titleId)
+        {
+            try
+            {
+                await _svc.AssignTitleAsync(id, titleId);
+                return NoContent();
+            }
+            catch (Exception ex) when (ex is KeyNotFoundException)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+        }
     }
 }
