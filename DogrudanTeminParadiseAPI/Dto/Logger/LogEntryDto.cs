@@ -8,7 +8,7 @@
         public string LogDescription { get; set; }
         public string LogObject { get; set; }
         public string LogIP { get; set; }
-        public Guid? UserId { get; set; }
-        public string Token { get; set; }
+        public Guid? UserId { get; set; } = Guid.Empty;
+        public string Token { get; set; } = "null";
     }
 }
