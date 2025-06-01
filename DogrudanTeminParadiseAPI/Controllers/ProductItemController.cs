@@ -1,4 +1,5 @@
 ﻿using DogrudanTeminParadiseAPI.Dto;
+using DogrudanTeminParadiseAPI.Helpers.Attributes;
 using DogrudanTeminParadiseAPI.Service.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +7,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [CallLogs]
     public class ProductItemController : ControllerBase
     {
         private readonly IProductItemService _svc;

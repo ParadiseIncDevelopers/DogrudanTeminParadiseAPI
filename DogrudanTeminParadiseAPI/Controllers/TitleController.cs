@@ -1,4 +1,5 @@
 ﻿using DogrudanTeminParadiseAPI.Dto;
+using DogrudanTeminParadiseAPI.Helpers.Attributes;
 using DogrudanTeminParadiseAPI.Service.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +8,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [CallLogs]
     public class TitleController : ControllerBase
     {
         private readonly ITitleService _svc;

@@ -1,6 +1,8 @@
 using DogrudanTeminParadiseAPI.Factory.Abstract;
 using DogrudanTeminParadiseAPI.Factory.Concrete;
 using DogrudanTeminParadiseAPI.Factory.Main;
+using DogrudanTeminParadiseAPI.Filter;
+using DogrudanTeminParadiseAPI.Helpers.Options;
 using DogrudanTeminParadiseAPI.Mapping;
 using DogrudanTeminParadiseAPI.Models;
 using DogrudanTeminParadiseAPI.Repositories;
@@ -14,8 +16,16 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 var cfg = builder.Configuration;
 
-//CORS
+builder.Services.Configure<LoggerApiOptions>(
+    builder.Configuration.GetSection("LoggerApi"));
 
+// Register HttpClient for logger
+builder.Services.AddHttpClient("LoggerApi", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["LoggerApi:BaseUrl"]);
+});
+
+//CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowMyClient", policy =>
@@ -99,6 +109,12 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(cfg["Jwt:Key"]))
     };
 });
+
+// Register HttpContextAccessor
+builder.Services.AddHttpContextAccessor();
+
+// Register LogActionFilter for DI
+builder.Services.AddScoped<LogActionFilter>();
 
 builder.Services.AddControllers(options =>
 {

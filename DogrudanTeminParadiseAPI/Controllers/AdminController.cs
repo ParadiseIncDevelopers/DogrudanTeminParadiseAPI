@@ -1,4 +1,5 @@
 ﻿using DogrudanTeminParadiseAPI.Dto;
+using DogrudanTeminParadiseAPI.Helpers.Attributes;
 using DogrudanTeminParadiseAPI.Service.Abstract;
 using DogrudanTeminParadiseAPI.Service.Concrete;
 using Microsoft.AspNetCore.Authorization;
@@ -10,6 +11,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
     // Controllers/AdminController.cs
     [ApiController]
     [Route("api/[controller]")]
+    [CallLogs]
     public class AdminController : ControllerBase
     {
         private readonly IAdminUserService _svc;

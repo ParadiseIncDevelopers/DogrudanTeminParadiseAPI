@@ -1,4 +1,5 @@
 ﻿using DogrudanTeminParadiseAPI.Dto;
+using DogrudanTeminParadiseAPI.Helpers.Attributes;
 using DogrudanTeminParadiseAPI.Service.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -11,7 +12,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
     [Route("api/[controller]")]
     [Authorize]
     [EnableCors("AllowMyClient")]
-
+    [CallLogs]
     public class ProcurementEntryController : ControllerBase
     {
         private readonly IProcurementEntryService _entrySvc;

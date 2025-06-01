@@ -1,4 +1,5 @@
-﻿using DogrudanTeminParadiseAPI.Parameters;
+﻿using DogrudanTeminParadiseAPI.Helpers.Attributes;
+using DogrudanTeminParadiseAPI.Parameters;
 using DogrudanTeminParadiseAPI.Service.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
+    [CallLogs]
     public class ReportController : ControllerBase
     {
         private readonly IReportService _svc;
