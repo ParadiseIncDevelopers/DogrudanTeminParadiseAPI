@@ -15,14 +15,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         private readonly MongoDBRepository<InspectionAcceptanceCertificate> _inspectionRepo;
         private readonly MongoDBRepository<AdditionalInspectionAcceptanceCertificate> _addInspectionRepo;
 
-        public ReportService(
-            MongoDBRepository<ProcurementEntry> entryRepo,
-            MongoDBRepository<ProcurementListItem> itemRepo,
-            MongoDBRepository<OfferLetter> offerRepo,
-            MongoDBRepository<Entreprise> entRepo,
-            MongoDBRepository<Unit> unitRepo,
-            MongoDBRepository<InspectionAcceptanceCertificate> inspectionRepo,
-            MongoDBRepository<AdditionalInspectionAcceptanceCertificate> addInspectionRepo)
+        public ReportService(MongoDBRepository<ProcurementEntry> entryRepo, MongoDBRepository<ProcurementListItem> itemRepo, MongoDBRepository<OfferLetter> offerRepo, MongoDBRepository<Entreprise> entRepo, MongoDBRepository<Unit> unitRepo, MongoDBRepository<InspectionAcceptanceCertificate> inspectionRepo, MongoDBRepository<AdditionalInspectionAcceptanceCertificate> addInspectionRepo)
         {
             _entryRepo = entryRepo;
             _itemRepo = itemRepo;

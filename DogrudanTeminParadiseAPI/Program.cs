@@ -41,7 +41,6 @@ builder.Services.AddScoped(sp => new MongoDBRepository<Title>(cfg["MongoAPI"], c
 builder.Services.AddScoped(sp => new MongoDBRepository<ProcurementListItem>(cfg["MongoAPI"], cfg["MongoDBName"], "ProcurementListItems"));
 builder.Services.AddScoped(sp => new MongoDBRepository<Unit>(cfg["MongoAPI"], cfg["MongoDBName"], "Units"));
 builder.Services.AddScoped(sp => new MongoDBRepository<OfferLetter>(cfg["MongoAPI"], cfg["MongoDBName"], "OfferLetters"));
-builder.Services.AddScoped(sp => new MongoDBRepository<AssignedPersonnel>(cfg["MongoAPI"], cfg["MongoDBName"], "AssignedPersonnel"));
 builder.Services.AddScoped(sp => new MongoDBRepository<Category>(cfg["MongoAPI"], cfg["MongoDBName"], "Categories"));
 builder.Services.AddScoped(sp => new MongoDBRepository<BudgetItem>(cfg["MongoAPI"], cfg["MongoDBName"], "BudgetItems"));
 builder.Services.AddScoped(sp => new MongoDBRepository<MarketResearchJury>(cfg["MongoAPI"], cfg["MongoDBName"], "MarketResearchJuries"));
@@ -65,7 +64,6 @@ builder.Services.AddScoped<IProcurementEntryService, ProcurementEntryService>();
 builder.Services.AddScoped<ITitleService, TitleService>();
 builder.Services.AddScoped<IProcurementListItemService, ProcurementListItemService>();
 builder.Services.AddScoped<IUnitService, UnitService>();
-builder.Services.AddScoped<IAssignedPersonnelService, AssignedPersonnelService>();
 builder.Services.AddScoped<IOfferLetterService, OfferLetterService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
