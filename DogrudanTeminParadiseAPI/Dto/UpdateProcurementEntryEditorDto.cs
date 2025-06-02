@@ -3,7 +3,6 @@
     public class UpdateProcurementEntryEditorDto
     {
         public Guid ProcurementEntryId { get; set; }
-        public string EntryHTML { get; set; }
         public List<CreateOfferItemDto> OfferItems { get; set; } = new();
     }
 }

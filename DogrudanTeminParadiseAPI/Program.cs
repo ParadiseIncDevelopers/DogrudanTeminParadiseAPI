@@ -57,8 +57,7 @@ builder.Services.AddScoped(sp => new MongoDBRepository<MarketResearchJury>(cfg["
 builder.Services.AddScoped(sp => new MongoDBRepository<InspectionAcceptanceJury>(cfg["MongoAPI"], cfg["MongoDBName"], "InspectionAcceptanceJuries"));
 builder.Services.AddScoped(sp => new MongoDBRepository<InspectionAcceptanceCertificate>(cfg["MongoAPI"], cfg["MongoDBName"], "InspectionAcceptanceCertificates"));
 builder.Services.AddScoped(sp => new MongoDBRepository<AdditionalInspectionAcceptanceCertificate>(cfg["MongoAPI"], cfg["MongoDBName"], "AdditionalInspectionAcceptanceCertificates"));
-builder.Services.AddScoped(sp => new MongoDBRepository<SubInspectionAcceptanceJury>(cfg["MongoAPI"], cfg["MongoDBName"], "SubInspectionAcceptanceJuries"));
-
+builder.Services.AddScoped(sp => new MongoDBRepository<ApproximateCostJury>(cfg["MongoAPI"], cfg["MongoDBName"], "ApproximateCostJuries"));
 builder.Services.AddScoped(sp => new MongoDBRepository<ProcurementEntryEditor>(cfg["MongoAPI"], cfg["MongoDBName"], "ProcurementEntryEditors"));
 
 // Servisler
@@ -82,7 +81,7 @@ builder.Services.AddScoped<IMarketResearchJuryService, MarketResearchJuryService
 builder.Services.AddScoped<IInspectionAcceptanceJuryService, InspectionAcceptanceJuryService>();
 builder.Services.AddScoped<IInspectionAcceptanceCertificateService, InspectionAcceptanceCertificateService>();
 builder.Services.AddScoped<IAdditionalInspectionAcceptanceService, AdditionalInspectionAcceptanceService>();
-builder.Services.AddScoped<ISubInspectionAcceptanceJuryService, SubInspectionAcceptanceJuryService>();
+builder.Services.AddScoped<IApproximateCostJuryService, ApproximateCostJuryService>();
 builder.Services.AddScoped<IProcurementEntryEditorService, ProcurementEntryEditorService>();
 // Factoryler
 builder.Services.AddSingleton<ITeminApiExceptionFactory, TeminApiExceptionFactory>();
