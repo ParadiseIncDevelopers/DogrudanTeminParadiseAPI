@@ -18,12 +18,14 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         public ProcurementEntryService(
             MongoDBRepository<ProcurementEntry> repo,
             MongoDBRepository<User> userRepo,
+            MongoDBRepository<AdminUser> adminRepo,
             IOfferLetterService offerSvc,
             IInspectionAcceptanceCertificateService inspectionSvc,
             IMapper mapper)
         {
             _repo = repo;
             _userRepo = userRepo;
+            _adminRepo = adminRepo;
             _offerSvc = offerSvc;
             _inspectionSvc = inspectionSvc;
             _mapper = mapper;

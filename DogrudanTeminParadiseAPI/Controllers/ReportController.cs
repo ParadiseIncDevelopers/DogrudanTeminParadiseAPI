@@ -85,13 +85,13 @@ namespace DogrudanTeminParadiseAPI.Controllers
             return Ok(stats);
         }
 
-        [HttpGet("dashboard/budget-item-stats")]
-        public async Task<IActionResult> GetBudgetItemStats([FromQuery] StatsQueryParameters query)
+        [HttpGet("top-budget-allocations")]
+        public async Task<IActionResult> GetTopBudgetAllocations([FromQuery] Guid tenderResponsibleUserId, [FromQuery] int top = 5)
         {
-            if (query.Days <= 0)
-                return BadRequest(new { error = "Days must be > 0" });
+            if (top <= 0)
+                return BadRequest(new { error = "Top must be > 0" });
 
-            var stats = await _svc.GetBudgetItemCountsAsync(query.Days);
+            var stats = await _svc.GetTopBudgetAllocationsAsync(tenderResponsibleUserId, top);
             return Ok(stats);
         }
 

@@ -17,8 +17,9 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         private readonly MongoDBRepository<AdditionalInspectionAcceptanceCertificate> _addInspectionRepo;
         private readonly IInspectionAcceptanceCertificateService _inspectionSvc;
         private readonly IAdditionalInspectionAcceptanceService _addInspectionSvc;
+        private readonly IBudgetItemService _budgetItemSvc;
 
-        public ReportService(MongoDBRepository<ProcurementEntry> entryRepo, MongoDBRepository<ProcurementListItem> itemRepo, MongoDBRepository<OfferLetter> offerRepo, MongoDBRepository<Entreprise> entRepo, MongoDBRepository<Unit> unitRepo, MongoDBRepository<InspectionAcceptanceCertificate> inspectionRepo, MongoDBRepository<AdditionalInspectionAcceptanceCertificate> addInspectionRepo, IInspectionAcceptanceCertificateService inspectionSvc, IAdditionalInspectionAcceptanceService addInspectionSvc)
+        public ReportService(MongoDBRepository<ProcurementEntry> entryRepo, MongoDBRepository<ProcurementListItem> itemRepo, MongoDBRepository<OfferLetter> offerRepo, MongoDBRepository<Entreprise> entRepo, MongoDBRepository<Unit> unitRepo, MongoDBRepository<InspectionAcceptanceCertificate> inspectionRepo, MongoDBRepository<AdditionalInspectionAcceptanceCertificate> addInspectionRepo, IInspectionAcceptanceCertificateService inspectionSvc, IAdditionalInspectionAcceptanceService addInspectionSvc, IBudgetItemService budgetItemSvc)
         {
             _entryRepo = entryRepo;
             _itemRepo = itemRepo;
@@ -29,6 +30,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             _addInspectionRepo = addInspectionRepo;
             _inspectionSvc = inspectionSvc;
             _addInspectionSvc = addInspectionSvc;
+            _budgetItemSvc = budgetItemSvc;
+
         }
 
         public async Task<ApproximateCostScheduleDto> GetApproximateCostScheduleAsync(Guid procurementEntryId)
@@ -160,51 +163,48 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             };
         }
 
-        public async Task<List<BudgetItemStatsDto>> GetBudgetItemCountsAsync(int days)
+        public async Task<List<TopUnitDto>> GetTopBudgetAllocationsAsync(Guid tenderResponsibleUserId, int top)
         {
-            var entries = (await _entryRepo.GetAllAsync())
-                .Where(e => e.BudgetAllocationId.HasValue)
+            // 1) İlgili kullanıcının ProcurementEntry’lerini al
+            var allEntries = await _entryRepo.GetAllAsync();
+            var userEntries = allEntries
+                .Where(e => e.TenderResponsibleUserId == tenderResponsibleUserId && e.BudgetAllocationId.HasValue)
                 .ToList();
 
-            var end = DateTime.UtcNow.Date;
-            var start = end.AddDays(-days + 1);
+            if (!userEntries.Any())
+                return new List<TopUnitDto>();
 
-            // build date range
-            var dates = Enumerable.Range(0, days)
-                .Select(offset => start.AddDays(offset))
+            // 2) BudgetAllocationId bazında grupla ve say
+            var counts = userEntries
+                .GroupBy(e => e.BudgetAllocationId.Value)
+                .Select(g => new { BudgetId = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
                 .ToList();
 
-            // group entries by budget allocation and date
-            var grouped = entries
-                .Where(e => e.ProcurementDecisionDate.HasValue)
-                .Select(e => new
-                {
-                    Id = e.BudgetAllocationId.Value,
-                    e.ProcurementDecisionDate.Value.Date
-                })
-                .Where(x => x.Date >= start && x.Date <= end)
-                .GroupBy(x => new { x.Id, x.Date })
-                .ToDictionary(g => (g.Key.Id, g.Key.Date), g => g.Count());
+            // 3) En çok alan ilk ‘top’ kadar, gerisini “Diğer” grubuna ekle
+            var topList = counts.Take(top).ToList();
+            var otherCount = counts.Skip(top).Sum(x => x.Count);
 
-            // get distinct BudgetAllocationIds
-            var budgetIds = entries
-                .Select(e => e.BudgetAllocationId.Value)
-                .Distinct()
-                .ToList();
-
-            var result = new List<BudgetItemStatsDto>();
-            foreach (var bid in budgetIds)
+            var result = new List<TopUnitDto>();
+            foreach (var item in topList)
             {
-                var dataPoints = new List<TimeSeriesPointDto>();
-                foreach (var date in dates)
+                // BudgetItemService’den adını al
+                var budgetItem = await _budgetItemSvc.GetByIdAsync(item.BudgetId);
+                var name = budgetItem?.Name ?? "Bilinmeyen";
+
+                result.Add(new TopUnitDto
                 {
-                    grouped.TryGetValue((bid, date), out var count);
-                    dataPoints.Add(new TimeSeriesPointDto { Date = date, Count = count });
-                }
-                result.Add(new BudgetItemStatsDto
+                    UnitName = name,
+                    Count = item.Count
+                });
+            }
+
+            if (otherCount > 0)
+            {
+                result.Add(new TopUnitDto
                 {
-                    BudgetAllocationId = bid,
-                    DataPoints = dataPoints
+                    UnitName = "Diğer",
+                    Count = otherCount
                 });
             }
 
