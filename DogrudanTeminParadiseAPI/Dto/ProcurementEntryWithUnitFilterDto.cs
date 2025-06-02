@@ -12,9 +12,5 @@ namespace DogrudanTeminParadiseAPI.Dto
 
         [BsonIgnore]
         public Guid? ThreeSubAdministrationUnitId { get; set; }
-
-        public Guid ProcurementEntryId { get; set; }
-
-        public string WorkName { get; set; }
     }
 }

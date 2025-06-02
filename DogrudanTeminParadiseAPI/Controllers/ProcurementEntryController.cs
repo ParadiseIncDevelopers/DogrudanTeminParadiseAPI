@@ -70,18 +70,18 @@ namespace DogrudanTeminParadiseAPI.Controllers
             }
         }
 
-        [HttpGet("filter-inspection-price")]
+        [HttpGet("filter-by-price")]
         public async Task<IActionResult> GetInspectionPriceRange([FromQuery] ProcurementEntryInspectionPriceDto query)
         {
-            var result = await _entrySvc.GetInspectionPriceRangeAsync(query);
-            return Ok(result);
+            var entries = await _entrySvc.GetInspectionPriceRangeAsync(query);
+            return Ok(entries);
         }
 
         [HttpGet("filter-by-offer-count")]
         public async Task<IActionResult> GetByOfferCount([FromQuery] ProcurementEntryWithOfferCountDto query)
         {
-            var result = await _entrySvc.GetByOfferCountAsync(query);
-            return Ok(result);
+            var entries = await _entrySvc.GetByOfferCountAsync(query);
+            return Ok(entries);
         }
 
         [HttpGet("filter-by-units")]

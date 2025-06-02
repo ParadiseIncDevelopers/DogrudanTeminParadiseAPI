@@ -5,15 +5,9 @@ namespace DogrudanTeminParadiseAPI.Dto
     public class ProcurementEntryWithOfferCountDto
     {
         [BsonIgnore]
-        public int? MinCount { get; set; }
+        public int? MinOfferPrice { get; set; }
 
         [BsonIgnore]
-        public int? MaxCount { get; set; }
-
-        public Guid ProcurementEntryId { get; set; }
-
-        public string WorkName { get; set; }
-
-        public int OfferCount { get; set; }
+        public int? MaxOfferPrice { get; set; }
     }
 }

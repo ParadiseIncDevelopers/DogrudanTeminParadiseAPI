@@ -11,17 +11,12 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         private readonly MongoDBRepository<ProcurementEntry> _repo;
         private readonly MongoDBRepository<User> _userRepo;
         private readonly MongoDBRepository<AdminUser> _adminRepo;
+        private readonly IAdditionalInspectionAcceptanceService _additionalInspectionRepo;
         private readonly IOfferLetterService _offerSvc;
         private readonly IInspectionAcceptanceCertificateService _inspectionSvc;
         private readonly IMapper _mapper;
 
-        public ProcurementEntryService(
-            MongoDBRepository<ProcurementEntry> repo,
-            MongoDBRepository<User> userRepo,
-            MongoDBRepository<AdminUser> adminRepo,
-            IOfferLetterService offerSvc,
-            IInspectionAcceptanceCertificateService inspectionSvc,
-            IMapper mapper)
+        public ProcurementEntryService(MongoDBRepository<ProcurementEntry> repo, MongoDBRepository<User> userRepo, MongoDBRepository<AdminUser> adminRepo, IOfferLetterService offerSvc, IInspectionAcceptanceCertificateService inspectionSvc,  IMapper mapper, IAdditionalInspectionAcceptanceService additionalInspectionRepo)
         {
             _repo = repo;
             _userRepo = userRepo;
@@ -29,6 +24,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             _offerSvc = offerSvc;
             _inspectionSvc = inspectionSvc;
             _mapper = mapper;
+            _additionalInspectionRepo = additionalInspectionRepo;
         }
 
         public async Task<ProcurementEntryDto> CreateAsync(CreateProcurementEntryDto dto)
@@ -115,114 +111,128 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             await _repo.DeleteAsync(id);
         }
 
-        public async Task<IEnumerable<ProcurementEntryInspectionPriceDto>> GetInspectionPriceRangeAsync(ProcurementEntryInspectionPriceDto query)
+        public async Task<IEnumerable<ProcurementEntryDto>> GetInspectionPriceRangeAsync(ProcurementEntryInspectionPriceDto query)
         {
+            // 1) Tüm temin girişlerini al
             var allEntries = await _repo.GetAllAsync();
-            var allInspections = await _inspectionSvc.GetAllAsync();
-            var inspectedEntryIds = allInspections
-                .Select(i => i.ProcurementEntryId)
-                .Distinct()
-                .ToHashSet();
 
-            var allOffers = await _offerSvc.GetAllAsync();
-            var offersForInspected = allOffers
-                .Where(o => inspectedEntryIds.Contains(o.ProcurementEntryId))
-                .Select(o => new
+            // 2) Tüm muayene kabul ve ek muayene kabul kayıtlarını al
+            var inspections = (await _inspectionSvc.GetAllAsync()).ToList();
+            var additionals = (await _additionalInspectionRepo.GetAllAsync()).ToList();
+
+            // 3) Her sertifika için toplam fiyatı hesapla (SelectedProducts üzerinden)
+            var inspectionTotals = inspections
+                .Select(c => new
                 {
-                    o.ProcurementEntryId,
-                    TotalPrice = (o.OfferItems != null && o.OfferItems.Any())
-                        ? o.OfferItems.Sum(fi => fi.TotalAmount)
-                        : 0.0
+                    EntryId = c.ProcurementEntryId,
+                    Total = c.SelectedProducts.Sum(p => p.UnitPrice * p.Quantity)
                 });
 
-            var priceRanges = offersForInspected
-                .GroupBy(x => x.ProcurementEntryId)
+            var additionalTotals = additionals
+                .Select(c => new
+                {
+                    EntryId = c.ProcurementEntryId,
+                    Total = c.SelectedProducts.Sum(p => p.UnitPrice * p.Quantity)
+                });
+
+            // 4) EntryId başına en düşük toplam fiyatı bul
+            var combined = inspectionTotals.Concat(additionalTotals);
+            var minPricesByEntry = combined
+                .GroupBy(x => x.EntryId)
                 .Select(g => new
                 {
-                    ProcurementEntryId = g.Key,
-                    PriceMin = g.Min(x => x.TotalPrice),
-                    PriceMax = g.Max(x => x.TotalPrice)
+                    EntryId = g.Key,
+                    MinTotal = g.Min(x => x.Total)
                 })
-                .ToList();
+                .ToDictionary(x => x.EntryId, x => x.MinTotal);
 
-            var filtered = priceRanges.Where(p =>
+            // 5) Filtre koşulunu uygula
+            var filteredEntryIds = new HashSet<Guid>();
+            foreach (var kvp in minPricesByEntry)
             {
-                if (!query.MinPrice.HasValue && !query.MaxPrice.HasValue)
-                    return true;
-
-                if (query.MinPrice.HasValue && query.MaxPrice.HasValue)
-                    return p.PriceMin >= query.MinPrice.Value && p.PriceMin <= query.MaxPrice.Value;
-
-                if (query.MinPrice.HasValue)
-                    return p.PriceMin >= query.MinPrice.Value;
-
-                return query.MaxPrice.HasValue && p.PriceMin <= query.MaxPrice.Value;
-            });
-
-            var result = filtered
-                .Select(p => new ProcurementEntryInspectionPriceDto
+                var price = kvp.Value;
+                // Eğer hem MinPrice hem MaxPrice sağlanmışsa
+                if (query.MinOfferPrice.HasValue && query.MaxOfferPrice.HasValue)
                 {
-                    ProcurementEntryId = p.ProcurementEntryId,
-                    PriceMin = p.PriceMin,
-                    PriceMax = p.PriceMax
-                })
+                    if (price >= query.MinOfferPrice.Value && price <= query.MaxOfferPrice.Value)
+                        filteredEntryIds.Add(kvp.Key);
+                }
+                else if (query.MinOfferPrice.HasValue) // Sadece MinPrice varsa
+                {
+                    if (price >= query.MinOfferPrice.Value)
+                        filteredEntryIds.Add(kvp.Key);
+                }
+                else if (query.MaxOfferPrice.HasValue) // Sadece MaxPrice varsa
+                {
+                    if (price <= query.MaxOfferPrice.Value)
+                        filteredEntryIds.Add(kvp.Key);
+                }
+                else // Hiç filter yoksa, tüm entry’leri al
+                {
+                    filteredEntryIds.Add(kvp.Key);
+                }
+            }
+
+            // 6) EntryId’si sertifika barındıran ve filtreye uyanları DTO’ya çevir
+            var result = allEntries
+                .Where(e => filteredEntryIds.Contains(e.Id))
+                .Select(e => _mapper.Map<ProcurementEntryDto>(e))
                 .ToList();
 
             return result;
         }
 
-        public async Task<IEnumerable<ProcurementEntryWithOfferCountDto>> GetByOfferCountAsync(ProcurementEntryWithOfferCountDto query)
+        public async Task<IEnumerable<ProcurementEntryDto>> GetByOfferCountAsync(ProcurementEntryWithOfferCountDto query)
         {
-            var allEntries = await GetAllAsync();
             var allOffers = await _offerSvc.GetAllAsync();
+            var allEntries = await _repo.GetAllAsync();
 
-            var entryToEntreprisePairs = allOffers.Select(o => new
-            {
-                o.ProcurementEntryId,
-                o.EntrepriseId
-            });
-
-            var countsPerEntry = entryToEntreprisePairs
-                .Distinct()
-                .GroupBy(x => x.ProcurementEntryId)
+            // EntryId başına düşen offer sayısını hesapla
+            var offerCounts = allOffers
+                .GroupBy(o => o.ProcurementEntryId)
                 .Select(g => new
                 {
                     ProcurementEntryId = g.Key,
-                    OfferCount = g.Count()
+                    Count = g.Count()
                 })
-                .ToList();
+                .ToDictionary(x => x.ProcurementEntryId, x => x.Count);
 
-            var filtered = countsPerEntry.Where(p =>
-            {
-                if (!query.MinCount.HasValue && !query.MaxCount.HasValue)
+            // Filtre koşullarına göre EntryId listesi oluştur
+            var filteredEntryIds = offerCounts
+                .Where(kvp =>
+                {
+                    var count = kvp.Value;
+                    if (query.MinOfferPrice.HasValue && count < query.MinOfferPrice.Value)
+                        return false;
+                    if (query.MaxOfferPrice.HasValue && count > query.MaxOfferPrice.Value)
+                        return false;
                     return true;
+                })
+                .Select(kvp => kvp.Key)
+                .ToHashSet();
 
-                if (query.MinCount.HasValue && query.MaxCount.HasValue)
-                    return p.OfferCount >= query.MinCount.Value && p.OfferCount <= query.MaxCount.Value;
+            // Eklenecek: offerCounts’da hiç kayıt yoksa Count = 0 kabul edilebilir. 
+            // Eğer MinCount == 0 veya MaxCount >= 0 isteniyorsa, aşağıdaki satırı ekleyerek sıfır offer’lı entry’ler de dahil edilir:
+            if (query.MinOfferPrice.HasValue && query.MinOfferPrice.Value == 0)
+            {
+                var zeroOfferIds = allEntries
+                    .Where(e => !offerCounts.ContainsKey(e.Id))
+                    .Select(e => e.Id);
 
-                if (query.MinCount.HasValue)
-                    return p.OfferCount >= query.MinCount.Value;
+                foreach (var id in zeroOfferIds)
+                    filteredEntryIds.Add(id);
+            }
 
-                return query.MaxCount.HasValue && p.OfferCount <= query.MaxCount.Value;
-            });
-
-            var result = filtered
-                .Join(
-                    allEntries,
-                    info => info.ProcurementEntryId,
-                    entryDto => entryDto.Id,
-                    (info, entryDto) => new ProcurementEntryWithOfferCountDto
-                    {
-                        ProcurementEntryId = entryDto.Id,
-                        WorkName = entryDto.WorkName,
-                        OfferCount = info.OfferCount
-                    })
+            // Son olarak eşleşen ProcurementEntry’leri al ve DTO’ya map et
+            var result = allEntries
+                .Where(e => filteredEntryIds.Contains(e.Id))
+                .Select(e => _mapper.Map<ProcurementEntryDto>(e))
                 .ToList();
 
             return result;
         }
 
-        public async Task<IEnumerable<ProcurementEntryWithUnitFilterDto>> GetByAdministrativeUnitsAsync(ProcurementEntryWithUnitFilterDto query)
+        public async Task<IEnumerable<ProcurementEntryDto>> GetByAdministrativeUnitsAsync(ProcurementEntryWithUnitFilterDto query)
         {
             var allEntries = await GetAllAsync();
 
@@ -243,14 +253,9 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 return true;
             });
 
-            var result = filtered.Select(entry => new ProcurementEntryWithUnitFilterDto
-            {
-                ProcurementEntryId = entry.Id,
-                WorkName = entry.WorkName,
-                AdministrationUnitId = entry.AdministrationUnitId,
-                SubAdministrationUnitId = entry.SubAdministrationUnitId,
-                ThreeSubAdministrationUnitId = entry.ThreeSubAdministrationUnitId
-            }).ToList();
+            var result = filtered
+                .Select(e => _mapper.Map<ProcurementEntryDto>(e))
+                .ToList();
 
             return result;
         }
