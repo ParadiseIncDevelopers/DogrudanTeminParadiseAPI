@@ -51,6 +51,12 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return e == null ? null : _mapper.Map<AdditionalInspectionAcceptanceCertificateDto>(e);
         }
 
+        public async Task<IEnumerable<AdditionalInspectionAcceptanceCertificateDto>> GetAllAsync()
+        {
+            var e = await _repo.GetAllAsync();
+            return _mapper.Map<IEnumerable<AdditionalInspectionAcceptanceCertificateDto>>(e);
+        }
+
         public async Task<AdditionalInspectionAcceptanceCertificateDto> UpdateAsync(Guid id, UpdateAdditionalInspectionAcceptanceCertificateDto dto)
         {
             var existing = await _repo.GetByIdAsync(id);

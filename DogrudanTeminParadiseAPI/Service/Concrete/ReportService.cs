@@ -2,6 +2,7 @@
 using DogrudanTeminParadiseAPI.Models;
 using DogrudanTeminParadiseAPI.Repositories;
 using DogrudanTeminParadiseAPI.Service.Abstract;
+using System.Globalization;
 
 namespace DogrudanTeminParadiseAPI.Service.Concrete
 {
@@ -14,8 +15,10 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         private readonly MongoDBRepository<Unit> _unitRepo;
         private readonly MongoDBRepository<InspectionAcceptanceCertificate> _inspectionRepo;
         private readonly MongoDBRepository<AdditionalInspectionAcceptanceCertificate> _addInspectionRepo;
+        private readonly IInspectionAcceptanceCertificateService _inspectionSvc;
+        private readonly IAdditionalInspectionAcceptanceService _addInspectionSvc;
 
-        public ReportService(MongoDBRepository<ProcurementEntry> entryRepo, MongoDBRepository<ProcurementListItem> itemRepo, MongoDBRepository<OfferLetter> offerRepo, MongoDBRepository<Entreprise> entRepo, MongoDBRepository<Unit> unitRepo, MongoDBRepository<InspectionAcceptanceCertificate> inspectionRepo, MongoDBRepository<AdditionalInspectionAcceptanceCertificate> addInspectionRepo)
+        public ReportService(MongoDBRepository<ProcurementEntry> entryRepo, MongoDBRepository<ProcurementListItem> itemRepo, MongoDBRepository<OfferLetter> offerRepo, MongoDBRepository<Entreprise> entRepo, MongoDBRepository<Unit> unitRepo, MongoDBRepository<InspectionAcceptanceCertificate> inspectionRepo, MongoDBRepository<AdditionalInspectionAcceptanceCertificate> addInspectionRepo, IInspectionAcceptanceCertificateService inspectionSvc, IAdditionalInspectionAcceptanceService addInspectionSvc)
         {
             _entryRepo = entryRepo;
             _itemRepo = itemRepo;
@@ -24,6 +27,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             _unitRepo = unitRepo;
             _inspectionRepo = inspectionRepo;
             _addInspectionRepo = addInspectionRepo;
+            _inspectionSvc = inspectionSvc;
+            _addInspectionSvc = addInspectionSvc;
         }
 
         public async Task<ApproximateCostScheduleDto> GetApproximateCostScheduleAsync(Guid procurementEntryId)
@@ -333,6 +338,367 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             }
 
             return result;
+        }
+
+        public async Task<List<LastJobsDto>> GetLast10JobsAsync(Guid tenderResponsibleId)
+        {
+            var allEntries = await _entryRepo.GetAllAsync();
+            var userEntries = allEntries
+                .Where(e => e.TenderResponsibleUserId == tenderResponsibleId)
+                .ToList();
+
+            if (!userEntries.Any())
+                return [];
+
+            var inspectionTasks = userEntries
+                .Select(e => _inspectionSvc.GetAllByEntryAsync(e.Id));
+            var additionalTasks = userEntries
+                .Select(e => _addInspectionSvc.GetAllByEntryAsync(e.Id));
+
+            var inspectionResults = await Task.WhenAll(inspectionTasks);
+            var additionalResults = await Task.WhenAll(additionalTasks);
+
+            var lastJobs = new List<LastJobsDto>();
+
+            foreach (var entry in userEntries)
+            {
+                var workName = entry.WorkName;
+
+                var inspections = inspectionResults
+                    .SelectMany(list => list)
+                    .Where(i => i.ProcurementEntryId == entry.Id);
+
+                foreach (var cert in inspections)
+                {
+                    lastJobs.Add(new LastJobsDto
+                    {
+                        WorkName = workName,
+                        InvoiceNumber = cert.InvoiceNumber,
+                        InvoiceDate = cert.InvoiceDate
+                    });
+                }
+
+                var additionals = additionalResults
+                    .SelectMany(list => list)
+                    .Where(a => a.ProcurementEntryId == entry.Id);
+
+                foreach (var cert in additionals)
+                {
+                    lastJobs.Add(new LastJobsDto
+                    {
+                        WorkName = workName,
+                        InvoiceNumber = cert.InvoiceNumber,
+                        InvoiceDate = cert.InvoiceDate
+                    });
+                }
+            }
+
+            return lastJobs
+                .OrderByDescending(j => j.InvoiceDate)
+                .Take(10)
+                .ToList();
+        }
+
+        public async Task<List<TopUnitDto>> GetTopAdministrationUnitsAsync(Guid tenderResponsibleId)
+        {
+            var allEntries = await _entryRepo.GetAllAsync();
+            var userEntryIds = allEntries
+                .Where(e => e.TenderResponsibleUserId == tenderResponsibleId)
+                .Select(e => e.Id)
+                .ToHashSet();
+
+            if (!userEntryIds.Any())
+                return new List<TopUnitDto>();
+
+            var inspections = await _inspectionRepo.GetAllAsync();
+            var additionals = await _addInspectionRepo.GetAllAsync();
+
+            var allCertificates = inspections
+                .Where(i => userEntryIds.Contains(i.ProcurementEntryId))
+                .Select(i => i.AdministrationUnitId)
+                .Concat(additionals
+                    .Where(a => userEntryIds.Contains(a.ProcurementEntryId))
+                    .Select(a => a.AdministrationUnitId));
+
+            var counts = allCertificates
+                .GroupBy(id => id)
+                .Select(g => new { UnitId = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .ToList();
+
+            if (!counts.Any())
+                return new List<TopUnitDto>();
+
+            var topFive = counts.Take(5).ToList();
+            var otherCount = counts.Skip(5).Sum(x => x.Count);
+
+            var result = new List<TopUnitDto>();
+            foreach (var item in topFive)
+            {
+                // UnitName burada zaten dto’da doldurulacak controller’da
+                result.Add(new TopUnitDto
+                {
+                    UnitName = item.UnitId.ToString(),
+                    Count = item.Count
+                });
+            }
+
+            if (otherCount > 0)
+            {
+                result.Add(new TopUnitDto
+                {
+                    UnitName = "Diğer",
+                    Count = otherCount
+                });
+            }
+
+            return result;
+        }
+
+        public async Task<List<TopUnitDto>> GetTopSubAdministrationUnitsAsync(Guid tenderResponsibleId)
+        {
+            var allEntries = await _entryRepo.GetAllAsync();
+            var userEntryIds = allEntries
+                .Where(e => e.TenderResponsibleUserId == tenderResponsibleId)
+                .Select(e => e.Id)
+                .ToHashSet();
+
+            if (!userEntryIds.Any())
+                return new List<TopUnitDto>();
+
+            var inspections = await _inspectionRepo.GetAllAsync();
+            var additionals = await _addInspectionRepo.GetAllAsync();
+
+            var allCertificates = inspections
+                .Where(i => userEntryIds.Contains(i.ProcurementEntryId))
+                .Select(i => i.SubAdministrationUnitId)
+                .Concat(additionals
+                    .Where(a => userEntryIds.Contains(a.ProcurementEntryId))
+                    .Select(a => a.SubAdministrationUnitId));
+
+            var counts = allCertificates
+                .GroupBy(id => id)
+                .Select(g => new { UnitId = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .ToList();
+
+            if (!counts.Any())
+                return new List<TopUnitDto>();
+
+            var topFive = counts.Take(5).ToList();
+            var otherCount = counts.Skip(5).Sum(x => x.Count);
+
+            var result = new List<TopUnitDto>();
+            foreach (var item in topFive)
+            {
+                result.Add(new TopUnitDto
+                {
+                    UnitName = item.UnitId.ToString(),
+                    Count = item.Count
+                });
+            }
+
+            if (otherCount > 0)
+            {
+                result.Add(new TopUnitDto
+                {
+                    UnitName = "Diğer",
+                    Count = otherCount
+                });
+            }
+
+            return result;
+        }
+
+        public async Task<List<TopUnitDto>> GetTopThreeSubAdministrationUnitsAsync(Guid tenderResponsibleId)
+        {
+            var allEntries = await _entryRepo.GetAllAsync();
+            var userEntryIds = allEntries
+                .Where(e => e.TenderResponsibleUserId == tenderResponsibleId)
+                .Select(e => e.Id)
+                .ToHashSet();
+
+            if (!userEntryIds.Any())
+                return new List<TopUnitDto>();
+
+            var inspections = await _inspectionRepo.GetAllAsync();
+            var additionals = await _addInspectionRepo.GetAllAsync();
+
+            var allCertificates = inspections
+                .Where(i => userEntryIds.Contains(i.ProcurementEntryId))
+                .Select(i => i.ThreeSubAdministrationUnitId)
+                .Concat(additionals
+                    .Where(a => userEntryIds.Contains(a.ProcurementEntryId))
+                    .Select(a => a.ThreeSubAdministrationUnitId));
+
+            var counts = allCertificates
+                .GroupBy(id => id)
+                .Select(g => new { UnitId = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .ToList();
+
+            if (!counts.Any())
+                return new List<TopUnitDto>();
+
+            var topFive = counts.Take(5).ToList();
+            var otherCount = counts.Skip(5).Sum(x => x.Count);
+
+            var result = new List<TopUnitDto>();
+            foreach (var item in topFive)
+            {
+                result.Add(new TopUnitDto
+                {
+                    UnitName = item.UnitId.ToString(),
+                    Count = item.Count
+                });
+            }
+
+            if (otherCount > 0)
+            {
+                result.Add(new TopUnitDto
+                {
+                    UnitName = "Diğer",
+                    Count = otherCount
+                });
+            }
+
+            return result;
+        }
+
+        public async Task<SpendingReportDto> GetSpendingReportAsync(Guid tenderResponsibleId)
+        {
+            var allEntries = await _entryRepo.GetAllAsync();
+            var userEntries = allEntries
+                .Where(e => e.TenderResponsibleUserId == tenderResponsibleId)
+                .ToList();
+
+            if (!userEntries.Any())
+                return new SpendingReportDto
+                {
+                    Weekly = new List<TimeSeriesDataDto>(),
+                    Monthly = new List<TimeSeriesDataDto>(),
+                    Quarterly = new List<TimeSeriesDataDto>(),
+                    Yearly = new List<TimeSeriesDataDto>()
+                };
+
+            var entryIdSet = userEntries.Select(e => e.Id).ToHashSet();
+
+            var inspections = await _inspectionRepo.GetAllAsync();
+            var additionals = await _addInspectionRepo.GetAllAsync();
+
+            var relevantInspections = inspections
+                .Where(i => entryIdSet.Contains(i.ProcurementEntryId))
+                .ToList();
+            var relevantAdditionals = additionals
+                .Where(a => entryIdSet.Contains(a.ProcurementEntryId))
+                .ToList();
+
+            var records = new List<(DateTime Date, double Amount)>();
+
+            foreach (var cert in relevantInspections)
+            {
+                var total = cert.SelectedProducts.Sum(p => p.UnitPrice * p.Quantity);
+                records.Add((cert.InvoiceDate.Date, total));
+            }
+
+            foreach (var cert in relevantAdditionals)
+            {
+                var total = cert.SelectedProducts.Sum(p => p.UnitPrice * p.Quantity);
+                records.Add((cert.InvoiceDate.Date, total));
+            }
+
+            if (!records.Any())
+                return new SpendingReportDto
+                {
+                    Weekly = new List<TimeSeriesDataDto>(),
+                    Monthly = new List<TimeSeriesDataDto>(),
+                    Quarterly = new List<TimeSeriesDataDto>(),
+                    Yearly = new List<TimeSeriesDataDto>()
+                };
+
+            // Haftalık
+            var weeklyGroups = records
+                .GroupBy(r =>
+                {
+                    var ci = CultureInfo.CurrentCulture;
+                    var week = ci.Calendar.GetWeekOfYear(r.Date, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+                    return (Year: r.Date.Year, Week: week);
+                })
+                .Select(g =>
+                {
+                    var firstDay = FirstDateOfWeekISO8601(g.Key.Year, g.Key.Week);
+                    return new TimeSeriesDataDto
+                    {
+                        Period = firstDay.ToString("yyyy-MM-dd"),
+                        Total = g.Sum(x => x.Amount)
+                    };
+                })
+                .OrderBy(x => x.Period)
+                .ToList();
+
+            // Aylık
+            var monthlyGroups = records
+                .GroupBy(r => new { r.Date.Year, r.Date.Month })
+                .Select(g => new TimeSeriesDataDto
+                {
+                    Period = $"{g.Key.Month:00}-{g.Key.Year}",
+                    Total = g.Sum(x => x.Amount)
+                })
+                .OrderBy(x =>
+                {
+                    var parts = x.Period.Split('-');
+                    return new DateTime(int.Parse(parts[1]), int.Parse(parts[0]), 1);
+                })
+                .ToList();
+
+            // Çeyreklik
+            var quarterlyGroups = records
+                .GroupBy(r =>
+                {
+                    var quarter = (r.Date.Month - 1) / 3 + 1;
+                    return new { r.Date.Year, Quarter = quarter };
+                })
+                .Select(g => new TimeSeriesDataDto
+                {
+                    Period = $"Q{g.Key.Quarter}-{g.Key.Year}",
+                    Total = g.Sum(x => x.Amount)
+                })
+                .OrderBy(x =>
+                {
+                    var parts = x.Period.Split('-', StringSplitOptions.RemoveEmptyEntries);
+                    var q = int.Parse(parts[0].TrimStart('Q'));
+                    var y = int.Parse(parts[1]);
+                    return (y, q);
+                })
+                .ToList();
+
+            // Yıllık
+            var yearlyGroups = records
+                .GroupBy(r => r.Date.Year)
+                .Select(g => new TimeSeriesDataDto
+                {
+                    Period = g.Key.ToString(),
+                    Total = g.Sum(x => x.Amount)
+                })
+                .OrderBy(x => int.Parse(x.Period))
+                .ToList();
+
+            return new SpendingReportDto
+            {
+                Weekly = weeklyGroups,
+                Monthly = monthlyGroups,
+                Quarterly = quarterlyGroups,
+                Yearly = yearlyGroups
+            };
+        }
+
+        private static DateTime FirstDateOfWeekISO8601(int year, int weekOfYear)
+        {
+            var jan4 = new DateTime(year, 1, 4);
+            var weekday = (int)jan4.DayOfWeek;
+            if (weekday == 0) weekday = 7;
+            var start = jan4.AddDays(1 - weekday);
+            return start.AddDays((weekOfYear - 1) * 7);
         }
     }
 }

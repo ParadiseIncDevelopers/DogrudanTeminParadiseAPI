@@ -11,5 +11,11 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<InspectionPriceStatsDto> GetInspectionPriceSumAsync(int days);
         Task<List<ProductPriceStatDto>> GetTopInspectionProductsAsync(int days, int top);
         Task<List<FirmStatDto>> GetTopInspectionFirmsMonthlyAsync(int top);
+        Task<List<LastJobsDto>> GetLast10JobsAsync(Guid tenderResponsibleId);
+        Task<List<TopUnitDto>> GetTopAdministrationUnitsAsync(Guid tenderResponsibleId);
+        Task<List<TopUnitDto>> GetTopSubAdministrationUnitsAsync(Guid tenderResponsibleId);
+        Task<List<TopUnitDto>> GetTopThreeSubAdministrationUnitsAsync(Guid tenderResponsibleId);
+        Task<SpendingReportDto> GetSpendingReportAsync(Guid tenderResponsibleId);
+
     }
 }

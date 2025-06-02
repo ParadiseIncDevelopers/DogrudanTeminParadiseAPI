@@ -16,19 +16,14 @@ namespace DogrudanTeminParadiseAPI.Filter
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly LoggerApiOptions _options;
 
-        public LogActionFilter(
-            IHttpClientFactory httpClientFactory,
-            IHttpContextAccessor httpContextAccessor,
-            IOptions<LoggerApiOptions> options)
+        public LogActionFilter(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor, IOptions<LoggerApiOptions> options)
         {
             _httpClientFactory = httpClientFactory;
             _httpContextAccessor = httpContextAccessor;
             _options = options.Value;
         }
 
-        public async Task OnActionExecutionAsync(
-            ActionExecutingContext context,
-            ActionExecutionDelegate next)
+        public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             var executedContext = await next();
             var httpContext = _httpContextAccessor.HttpContext;
