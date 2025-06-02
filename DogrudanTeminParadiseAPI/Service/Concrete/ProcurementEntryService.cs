@@ -299,6 +299,69 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return filteredEntries;
         }
 
+        public async Task<IEnumerable<ProcurementEntryDto>> GetByBudgetAllocationAsync(Guid budgetAllocationId)
+        {
+            var allEntries = await _repo.GetAllAsync();
+            var filtered = allEntries
+                .Where(e => e.BudgetAllocationId.HasValue && e.BudgetAllocationId.Value == budgetAllocationId)
+                .Select(e => _mapper.Map<ProcurementEntryDto>(e))
+                .ToList();
+            return filtered;
+        }
+
+        public async Task<IEnumerable<ProcurementEntryDto>> GetByInspectionDateRangeAsync(ProcurementEntryDateRangeDto query)
+        {
+            // Öncelikle tüm girişleri al
+            var allEntries = await _repo.GetAllAsync();
+
+            // Tüm muayene kabul ve ek muayene kabul kayıtlarını al
+            var inspections = (await _inspectionSvc.GetAllAsync()).ToList();
+            var additionals = (await _additionalInspectionRepo.GetAllAsync()).ToList();
+
+            // Tarih filtre validasyonu: Eğer her ikisi de varsa ve EndDate < StartDate ise hata
+            if (query.StartDate.HasValue && query.EndDate.HasValue &&
+                query.EndDate.Value.Date < query.StartDate.Value.Date)
+            {
+                throw new ArgumentException("Bitiş tarihi, başlangıç tarihinden önce olamaz.");
+            }
+
+            // Belirlenen aralığa göre sertifikaları filtrele
+            IEnumerable<Guid> matchingEntryIds = [];
+
+            if (query.StartDate.HasValue || query.EndDate.HasValue)
+            {
+                var start = query.StartDate?.Date ?? DateTime.MinValue;
+                var end = query.EndDate?.Date ?? DateTime.MaxValue;
+
+                // InspectionAcceptance
+                var inspIds = inspections
+                    .Where(c => c.InvoiceDate.Date >= start && c.InvoiceDate.Date <= end)
+                    .Select(c => c.ProcurementEntryId);
+
+                // AdditionalInspectionAcceptance
+                var addIds = additionals
+                    .Where(c => c.InvoiceDate.Date >= start && c.InvoiceDate.Date <= end)
+                    .Select(c => c.ProcurementEntryId);
+
+                matchingEntryIds = inspIds.Concat(addIds).Distinct();
+            }
+            else
+            {
+                // Hiç tarih ayarlanmadıysa, tüm girişleri alabilmek için sertifika sahip olan EntryId’ler
+                var inspIds = inspections.Select(c => c.ProcurementEntryId);
+                var addIds = additionals.Select(c => c.ProcurementEntryId);
+                matchingEntryIds = inspIds.Concat(addIds).Distinct();
+            }
+
+            // Eşleşen EntryId’leri DTO’ya map et
+            var result = allEntries
+                .Where(e => matchingEntryIds.Contains(e.Id))
+                .Select(e => _mapper.Map<ProcurementEntryDto>(e))
+                .ToList();
+
+            return result;
+        }
+
         public async Task<IEnumerable<ProcurementEntryDto>> GetByRequesterAsync(Guid requesterId, bool isAdmin)
         {
             var allEntries = await _repo.GetAllAsync();

@@ -98,6 +98,27 @@ namespace DogrudanTeminParadiseAPI.Controllers
             return Ok(result);
         }
 
+        [HttpGet("filter-by-budget")]
+        public async Task<IActionResult> GetByBudgetAllocation([FromQuery] Guid budgetAllocationId)
+        {
+            var entries = await _entrySvc.GetByBudgetAllocationAsync(budgetAllocationId);
+            return Ok(entries);
+        }
+
+        [HttpGet("filter-by-inspection-date")]
+        public async Task<IActionResult> GetByInspectionDateRange([FromQuery] ProcurementEntryDateRangeDto query)
+        {
+            try
+            {
+                var entries = await _entrySvc.GetByInspectionDateRangeAsync(query);
+                return Ok(entries);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
