@@ -39,7 +39,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> GetById(Guid id)
         {
             var user = await _svc.GetByIdAsync(id);
@@ -50,7 +50,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         /// Tüm admin user'ları listeler.
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> GetAll()
         {
             var admins = await _svc.GetAllAsync();
@@ -58,7 +58,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet("all-with-users")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<AdminUserDto>>> GetAllWithUsers()
         {
             // 1) Çağıranın ID'sini al
@@ -111,7 +111,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPut("change-password")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> ChangePassword([FromBody] UpdateAdminPasswordDto dto)
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -130,7 +130,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPut("{id}/assign-title/{titleId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> AssignTitle(Guid id, Guid titleId)
         {
             try

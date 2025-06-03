@@ -39,7 +39,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> GetAll()
         {
             var users = await _svc.GetAllAsync();
@@ -47,7 +47,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> GetById(Guid id)
         {
             var callerRole = User.FindFirstValue(ClaimTypes.Role);
@@ -60,7 +60,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPut("Update/{id}")]
-        [Authorize(Roles = "USER")]
+        [Authorize]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserDto dto)
         {
             var updated = await _svc.UpdateAsync(id, dto);
@@ -70,7 +70,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "USER")]
+        [Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
             await _svc.DeleteAsync(id);
@@ -93,16 +93,35 @@ namespace DogrudanTeminParadiseAPI.Controllers
             }
         }
 
-        [HttpPut("{id}/title/{titleId}")]
-        [Authorize(Roles = "USER")]
+        [HttpPut("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] UpdateUserPasswordDto dto)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdClaim, out var userId))
+                return Unauthorized();
+
+            try
+            {
+                await _svc.ChangePasswordAsync(userId, dto);
+                return NoContent();
+            }
+            catch (Exception ex) when (ex is UnauthorizedAccessException || ex is InvalidOperationException || ex is KeyNotFoundException)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPut("{id}/assign-title/{titleId}")]
+        [Authorize]
         public async Task<IActionResult> AssignTitle(Guid id, Guid titleId)
         {
             try
             {
-                var updated = await _svc.AssignTitleAsync(id, titleId);
-                return Ok(updated);
+                await _svc.AssignTitleAsync(id, titleId);
+                return NoContent();
             }
-            catch (KeyNotFoundException ex)
+            catch (Exception ex) when (ex is KeyNotFoundException)
             {
                 return NotFound(new { error = ex.Message });
             }

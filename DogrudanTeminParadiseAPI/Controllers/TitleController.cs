@@ -15,7 +15,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         public TitleController(ITitleService svc) => _svc = svc;
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Create([FromBody] CreateTitleDto dto)
         {
             try
@@ -42,7 +42,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTitleDto dto)
         {
             try
@@ -57,7 +57,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

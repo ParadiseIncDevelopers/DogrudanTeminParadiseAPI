@@ -19,7 +19,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Create([FromBody] CreateEntrepriseDto dto)
         {
             var created = await _svc.CreateAsync(dto);
@@ -41,7 +41,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateEntrepriseDto dto)
         {
             try
@@ -59,7 +59,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

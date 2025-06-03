@@ -15,7 +15,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         public ProductController(IProductService svc) => _svc = svc;
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Create([FromBody] CreateProductDto dto)
         {
             try { var c = await _svc.CreateAsync(dto); return CreatedAtAction(nameof(GetById), new { id = c.Id }, c); }
@@ -33,7 +33,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
             (await _svc.GetByIdAsync(id)) is ProductDto dto ? Ok(dto) : NotFound();
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductDto dto)
         {
             try { var u = await _svc.UpdateAsync(id, dto); return u == null ? NotFound() : Ok(u); }
@@ -42,7 +42,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
             try { await _svc.DeleteAsync(id); return NoContent(); }

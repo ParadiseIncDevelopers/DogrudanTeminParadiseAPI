@@ -15,7 +15,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         public BudgetItemController(IBudgetItemService svc) => _svc = svc;
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Create([FromBody] CreateBudgetItemDto dto)
         {
             try 
@@ -39,7 +39,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
             => (await _svc.GetByIdAsync(id)) is BudgetItemDto dto ? Ok(dto) : NotFound();
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateBudgetItemDto dto)
         {
             try
@@ -54,7 +54,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
             try { await _svc.DeleteAsync(id); return NoContent(); }
