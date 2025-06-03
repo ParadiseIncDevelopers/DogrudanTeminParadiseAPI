@@ -206,5 +206,30 @@ namespace DogrudanTeminParadiseAPI.Controllers
             var report = await _svc.GetSpendingReportAsync(tenderResponsibleId);
             return Ok(report);
         }
+
+        [HttpGet("top-firms-spending")]
+        public async Task<IActionResult> GetTopFirmsSpending()
+        {
+            var chartData = await _svc.GetTopFirmsSpendingAsync();
+            return Ok(chartData);
+        }
+
+        [HttpGet("top-responsible-users")]
+        public async Task<IActionResult> GetTopResponsibleUsers([FromQuery] int top = 3)
+        {
+            if (top <= 0)
+                return BadRequest(new { error = "Top must be > 0" });
+            var data = await _svc.GetTopResponsibleUsersAsync(top);
+            return Ok(data);
+        }
+
+        [HttpGet("bottom-responsible-users")]
+        public async Task<IActionResult> GetBottomResponsibleUsers([FromQuery] int bottom = 3)
+        {
+            if (bottom <= 0)
+                return BadRequest(new { error = "Bottom must be > 0" });
+            var data = await _svc.GetBottomResponsibleUsersAsync(bottom);
+            return Ok(data);
+        }
     }
 }

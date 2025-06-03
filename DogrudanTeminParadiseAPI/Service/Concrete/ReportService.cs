@@ -1,8 +1,10 @@
 ﻿using DogrudanTeminParadiseAPI.Dto;
+using DogrudanTeminParadiseAPI.Helpers;
 using DogrudanTeminParadiseAPI.Models;
 using DogrudanTeminParadiseAPI.Repositories;
 using DogrudanTeminParadiseAPI.Service.Abstract;
 using System.Globalization;
+using ZstdSharp.Unsafe;
 
 namespace DogrudanTeminParadiseAPI.Service.Concrete
 {
@@ -13,19 +15,21 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         private readonly MongoDBRepository<OfferLetter> _offerRepo;
         private readonly MongoDBRepository<Entreprise> _entRepo;
         private readonly MongoDBRepository<Unit> _unitRepo;
+        private readonly MongoDBRepository<User> _userRepo;
         private readonly MongoDBRepository<InspectionAcceptanceCertificate> _inspectionRepo;
         private readonly MongoDBRepository<AdditionalInspectionAcceptanceCertificate> _addInspectionRepo;
         private readonly IInspectionAcceptanceCertificateService _inspectionSvc;
         private readonly IAdditionalInspectionAcceptanceService _addInspectionSvc;
         private readonly IBudgetItemService _budgetItemSvc;
 
-        public ReportService(MongoDBRepository<ProcurementEntry> entryRepo, MongoDBRepository<ProcurementListItem> itemRepo, MongoDBRepository<OfferLetter> offerRepo, MongoDBRepository<Entreprise> entRepo, MongoDBRepository<Unit> unitRepo, MongoDBRepository<InspectionAcceptanceCertificate> inspectionRepo, MongoDBRepository<AdditionalInspectionAcceptanceCertificate> addInspectionRepo, IInspectionAcceptanceCertificateService inspectionSvc, IAdditionalInspectionAcceptanceService addInspectionSvc, IBudgetItemService budgetItemSvc)
+        public ReportService(MongoDBRepository<ProcurementEntry> entryRepo, MongoDBRepository<ProcurementListItem> itemRepo, MongoDBRepository<OfferLetter> offerRepo, MongoDBRepository<Entreprise> entRepo, MongoDBRepository<Unit> unitRepo, MongoDBRepository<InspectionAcceptanceCertificate> inspectionRepo, MongoDBRepository<User> userRepo, MongoDBRepository<AdditionalInspectionAcceptanceCertificate> addInspectionRepo, IInspectionAcceptanceCertificateService inspectionSvc, IAdditionalInspectionAcceptanceService addInspectionSvc, IBudgetItemService budgetItemSvc)
         {
             _entryRepo = entryRepo;
             _itemRepo = itemRepo;
             _offerRepo = offerRepo;
             _entRepo = entRepo;
             _unitRepo = unitRepo;
+            _userRepo = userRepo;
             _inspectionRepo = inspectionRepo;
             _addInspectionRepo = addInspectionRepo;
             _inspectionSvc = inspectionSvc;
@@ -372,6 +376,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 {
                     lastJobs.Add(new LastJobsDto
                     {
+                        ProcurementEntryId = cert.ProcurementEntryId,
                         WorkName = workName,
                         InvoiceNumber = cert.InvoiceNumber,
                         InvoiceDate = cert.InvoiceDate
@@ -386,6 +391,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 {
                     lastJobs.Add(new LastJobsDto
                     {
+                        ProcurementEntryId = cert.ProcurementEntryId,
                         WorkName = workName,
                         InvoiceNumber = cert.InvoiceNumber,
                         InvoiceDate = cert.InvoiceDate
@@ -690,6 +696,221 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 Quarterly = quarterlyGroups,
                 Yearly = yearlyGroups
             };
+        }
+
+        public async Task<SpendingByFirmDto> GetTopFirmsSpendingAsync()
+        {
+            // 1) Son 12 ayın listesi
+            var now = DateTime.UtcNow;
+            var months = Enumerable.Range(0, 12)
+                .Select(i => now.AddMonths(-i))
+                .Select(dt => new DateTime(dt.Year, dt.Month, 1))
+                .Reverse() // Kronolojik sırada
+                .ToList();
+
+            var monthKeys = months.Select(dt => dt.ToString("yyyy-MM")).ToList();
+
+            // 2) Tüm sertifikaları al
+            var inspections = (await _inspectionRepo.GetAllAsync()).ToList();
+            var additionals = (await _addInspectionRepo.GetAllAsync()).ToList();
+            var allOffers = (await _offerRepo.GetAllAsync()).ToList();
+
+            // 3) Sertifikalardan (Inspection + Additional) EntryId ve InvoiceDate, SelectedOfferLetterId al, 
+            //    toplam harcamayı hesapla
+            var combinedCerts = inspections.Select(c => new
+            {
+                c.ProcurementEntryId,
+                c.InvoiceDate,
+                c.SelectedOfferLetterId,
+                Total = c.SelectedProducts.Sum(p => p.UnitPrice * p.Quantity)
+            })
+            .Concat(additionals.Select(c => new
+            {
+                c.ProcurementEntryId,
+                c.InvoiceDate,
+                c.SelectedOfferLetterId,
+                Total = c.SelectedProducts.Sum(p => p.UnitPrice * p.Quantity)
+            }))
+            .ToList();
+
+            // 4) Son 12 aya düşenleri filtrele
+            var earliest = months.First();
+            var latest = months.Last().AddMonths(1).AddDays(-1); // son ayın son günü
+            var filteredCerts = combinedCerts
+                .Where(c => c.InvoiceDate.Date >= earliest && c.InvoiceDate.Date <= latest)
+                .ToList();
+
+            // 5) Firma bazında (EntrepriseId) ay ve toplam harcamaları grupla
+            var spendByFirmMonth = new Dictionary<Guid, Dictionary<string, double>>();
+            foreach (var cert in filteredCerts)
+            {
+                // OfferLetter’dan EntrepriseId al
+                var offer = allOffers.FirstOrDefault(o => o.Id == cert.SelectedOfferLetterId);
+                if (offer == null) continue;
+                var firmId = offer.EntrepriseId;
+
+                // Sertifika tarihine göre yıl-ay anahtarını al
+                var key = cert.InvoiceDate.ToString("yyyy-MM");
+
+                if (!spendByFirmMonth.ContainsKey(firmId))
+                    spendByFirmMonth[firmId] = monthKeys.ToDictionary(m => m, m => 0.0);
+
+                if (!spendByFirmMonth[firmId].ContainsKey(key))
+                    spendByFirmMonth[firmId][key] = 0.0;
+
+                spendByFirmMonth[firmId][key] += cert.Total;
+            }
+
+            // 6) Her firmayı toplam harcamaya göre sırala, ilk 5’i al, geri kalan “Diğer”e aktar
+            var firmTotals = spendByFirmMonth
+                .Select(kvp => new { FirmId = kvp.Key, Total = kvp.Value.Values.Sum() })
+                .OrderByDescending(x => x.Total)
+                .ToList();
+
+            var top5 = firmTotals.Take(5).Select(x => x.FirmId).ToList();
+            var otherIds = firmTotals.Skip(5).Select(x => x.FirmId).ToList();
+
+            // 7) Series oluştur
+            var series = new List<ChartSeriesDto>();
+
+            // Top 5 firmalar
+            foreach (var firmId in top5)
+            {
+                var firm = await _entRepo.GetByIdAsync(firmId);
+                var name = firm?.Unvan ?? "Bilinmeyen";
+
+                var data = monthKeys
+                    .Select(mk => spendByFirmMonth[firmId].ContainsKey(mk) ? spendByFirmMonth[firmId][mk] : 0.0)
+                    .ToList();
+
+                series.Add(new ChartSeriesDto
+                {
+                    Name = name,
+                    Data = data
+                });
+            }
+
+            // "Diğer" grubu
+            if (otherIds.Count != 0)
+            {
+                var otherData = monthKeys
+                    .Select(monthKey =>
+                        otherIds.Sum(firmId =>
+                            spendByFirmMonth.ContainsKey(firmId) && spendByFirmMonth[firmId].ContainsKey(monthKey)
+                                ? spendByFirmMonth[firmId][monthKey]
+                                : 0.0
+                        )
+                    )
+                    .ToList();
+
+                series.Add(new ChartSeriesDto
+                {
+                    Name = "Diğer",
+                    Data = otherData
+                });
+            }
+
+            return new SpendingByFirmDto
+            {
+                Months = monthKeys.Select(mk =>
+                {
+                    var dt = DateTime.ParseExact(mk + "-01", "yyyy-MM-dd", null);
+                    return dt.ToString("MMM yyyy");
+                }).ToList(),
+                Series = series
+            };
+        }
+
+        public async Task<IEnumerable<UserCountDto>> GetTopResponsibleUsersAsync(int top = 3)
+        {
+            // Tüm procurement entry'leri al
+            var allEntries = await _entryRepo.GetAllAsync();
+
+            // Kullanıcı bazında sayaç oluştur
+            var counts = allEntries
+                .Where(e => e.TenderResponsibleUserId.HasValue)
+                .GroupBy(e => e.TenderResponsibleUserId.Value)
+                .Select(g => new { UserId = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .ToList();
+
+            if (!counts.Any())
+                return Array.Empty<UserCountDto>();
+
+            // İlk top kadar kullanıcı
+            var topList = counts.Take(top).ToList();
+            var otherCount = counts.Skip(top).Sum(x => x.Count);
+
+            var result = new List<UserCountDto>();
+            foreach (var item in topList)
+            {
+                var user = await _userRepo.GetByIdAsync(item.UserId);
+                var name = user != null
+                    ? $"{Crypto.Decrypt(user.Name)} {Crypto.Decrypt(user.Surname)}"
+                    : "Bilinmeyen";
+                result.Add(new UserCountDto
+                {
+                    UserName = name,
+                    Count = item.Count
+                });
+            }
+
+            if (otherCount > 0)
+            {
+                result.Add(new UserCountDto
+                {
+                    UserName = "Diğer",
+                    Count = otherCount
+                });
+            }
+
+            return result;
+        }
+
+        public async Task<IEnumerable<UserCountDto>> GetBottomResponsibleUsersAsync(int bottom = 3)
+        {
+            // Tüm procurement entry'leri al
+            var allEntries = await _entryRepo.GetAllAsync();
+
+            // Kullanıcı bazında sayaç oluştur
+            var counts = allEntries
+                .Where(e => e.TenderResponsibleUserId.HasValue)
+                .GroupBy(e => e.TenderResponsibleUserId.Value)
+                .Select(g => new { UserId = g.Key, Count = g.Count() })
+                .OrderBy(x => x.Count)
+                .ToList();
+
+            if (!counts.Any())
+                return Array.Empty<UserCountDto>();
+
+            // İlk bottom kadar (en az sayıya sahip) kullanıcı
+            var bottomList = counts.Take(bottom).ToList();
+            var otherCount = counts.Skip(bottom).Sum(x => x.Count);
+
+            var result = new List<UserCountDto>();
+            foreach (var item in bottomList)
+            {
+                var user = await _userRepo.GetByIdAsync(item.UserId);
+                var name = user != null
+                    ? $"{Crypto.Decrypt(user.Name)} {Crypto.Decrypt(user.Surname)}"
+                    : "Bilinmeyen";
+                result.Add(new UserCountDto
+                {
+                    UserName = name,
+                    Count = item.Count
+                });
+            }
+
+            if (otherCount > 0)
+            {
+                result.Add(new UserCountDto
+                {
+                    UserName = "Diğer",
+                    Count = otherCount
+                });
+            }
+
+            return result;
         }
 
         private static DateTime FirstDateOfWeekISO8601(int year, int weekOfYear)
