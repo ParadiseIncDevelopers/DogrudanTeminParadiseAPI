@@ -92,6 +92,54 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<CreateProcurementEntryEditorDto, ProcurementEntryEditor>();
             CreateMap<UpdateProcurementEntryEditorDto, ProcurementEntryEditor>();
             CreateMap<ProcurementEntryEditor, ProcurementEntryEditorDto>();
+
+            // 1. Entity → DTO (decrypt / expose)
+            CreateMap<SuperAdminUser, SuperAdminDto>()
+                .ForMember(dest => dest.Name,
+                           opt => opt.MapFrom(src => Crypto.Decrypt(src.Name)))
+                .ForMember(dest => dest.Surname,
+                           opt => opt.MapFrom(src => Crypto.Decrypt(src.Surname)))
+                .ForMember(dest => dest.Email,
+                           opt => opt.MapFrom(src => Crypto.Decrypt(src.Email)))
+                .ForMember(dest => dest.Tcid,
+                           opt => opt.MapFrom(src => Crypto.Decrypt(src.Tcid)))
+                .ForMember(dest => dest.UserType,
+                           opt => opt.MapFrom(src => src.UserType));
+
+            // 2. DTO → Entity (encrypt / hash, Id ataması)
+            CreateMap<CreateSuperAdminDto, SuperAdminUser>()
+                .ForMember(dest => dest.Id,
+                           opt => opt.MapFrom(_ => Guid.NewGuid()))
+                .ForMember(dest => dest.Name,
+                           opt => opt.MapFrom(src => Crypto.Encrypt(src.Name)))
+                .ForMember(dest => dest.Surname,
+                           opt => opt.MapFrom(src => Crypto.Encrypt(src.Surname)))
+                .ForMember(dest => dest.Email,
+                           opt => opt.MapFrom(src => Crypto.Encrypt(src.Email)))
+                .ForMember(dest => dest.Tcid,
+                           opt => opt.MapFrom(src => Crypto.Encrypt(src.Tcid)))
+                .ForMember(dest => dest.Password,
+                           opt => opt.MapFrom(src => Crypto.HashSha512(src.Password)))
+                .ForMember(dest => dest.UserType,
+                           opt => opt.MapFrom(_ => "SUPER_ADMIN"));
+
+            // 3. Güncelleme DTO’su → Mevcut Entity 
+            //    (UpdateAsync metodunda manuel güncelleme yaptığımız için burada map kullanmayacağız; 
+            //     yine de bir örnek vermek gerekirse aşağıdaki gibi tanımlanabilir:)
+            CreateMap<UpdateSuperAdminDto, SuperAdminUser>()
+                .ForMember(dest => dest.Name,
+                           opt => opt.MapFrom(src => Crypto.Encrypt(src.Name)))
+                .ForMember(dest => dest.Surname,
+                           opt => opt.MapFrom(src => Crypto.Encrypt(src.Surname)))
+                // E-posta veya TC boş gelirse var olan kaydın değerini koru:
+                .ForMember(dest => dest.Email,
+                           opt => opt.Condition(src => !string.IsNullOrEmpty(src.Email)))
+                .ForMember(dest => dest.Email,
+                           opt => opt.MapFrom(src => Crypto.Encrypt(src.Email)))
+                .ForMember(dest => dest.Tcid,
+                           opt => opt.Condition(src => !string.IsNullOrEmpty(src.Tcid)))
+                .ForMember(dest => dest.Tcid,
+                           opt => opt.MapFrom(src => Crypto.Encrypt(src.Tcid)));
         }
     }
 }

@@ -39,6 +39,7 @@ builder.Services.AddCors(options =>
 
 // MongoDBRepository kayıtları
 builder.Services.AddScoped(sp => new MongoDBRepository<AdminUser>(cfg["MongoAPI"], cfg["MongoDBName"], "AdminUsers"));
+builder.Services.AddScoped(sp => new MongoDBRepository<SuperAdminUser>(cfg["MongoAPI"], cfg["MongoDBName"], "SuperAdmin"));
 builder.Services.AddScoped(sp => new MongoDBRepository<User>(cfg["MongoAPI"], cfg["MongoDBName"], "Users"));
 builder.Services.AddScoped(sp => new MongoDBRepository<Entreprise>(cfg["MongoAPI"], cfg["MongoDBName"], "Entreprises"));
 builder.Services.AddScoped(sp => new MongoDBRepository<ProductItem>(cfg["MongoAPI"], cfg["MongoDBName"], "ProductItems"));
@@ -83,6 +84,7 @@ builder.Services.AddScoped<IInspectionAcceptanceCertificateService, InspectionAc
 builder.Services.AddScoped<IAdditionalInspectionAcceptanceService, AdditionalInspectionAcceptanceService>();
 builder.Services.AddScoped<IApproximateCostJuryService, ApproximateCostJuryService>();
 builder.Services.AddScoped<IProcurementEntryEditorService, ProcurementEntryEditorService>();
+builder.Services.AddScoped<ISuperAdminService, SuperAdminService>();
 // Factoryler
 builder.Services.AddSingleton<ITeminApiExceptionFactory, TeminApiExceptionFactory>();
 

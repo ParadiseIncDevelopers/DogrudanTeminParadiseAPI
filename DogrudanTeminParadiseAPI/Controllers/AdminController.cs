@@ -1,7 +1,6 @@
 ﻿using DogrudanTeminParadiseAPI.Dto;
 using DogrudanTeminParadiseAPI.Helpers.Attributes;
 using DogrudanTeminParadiseAPI.Service.Abstract;
-using DogrudanTeminParadiseAPI.Service.Concrete;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
