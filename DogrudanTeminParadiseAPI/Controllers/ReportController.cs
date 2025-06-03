@@ -207,10 +207,13 @@ namespace DogrudanTeminParadiseAPI.Controllers
             return Ok(report);
         }
 
+        /// <summary>
+        /// periodType: "weekly", "monthly", "quarterly", "yearly"
+        /// </summary>
         [HttpGet("top-firms-spending")]
-        public async Task<IActionResult> GetTopFirmsSpending()
+        public async Task<IActionResult> GetTopFirmsSpending([FromQuery] string periodType = "monthly")
         {
-            var chartData = await _svc.GetTopFirmsSpendingAsync();
+            var chartData = await _svc.GetTopFirmsSpendingAsync(periodType);
             return Ok(chartData);
         }
 

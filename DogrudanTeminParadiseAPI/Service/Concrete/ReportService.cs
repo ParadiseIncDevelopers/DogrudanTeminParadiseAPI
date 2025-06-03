@@ -581,10 +581,10 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             if (!userEntries.Any())
                 return new SpendingReportDto
                 {
-                    Weekly = new List<TimeSeriesDataDto>(),
-                    Monthly = new List<TimeSeriesDataDto>(),
-                    Quarterly = new List<TimeSeriesDataDto>(),
-                    Yearly = new List<TimeSeriesDataDto>()
+                    Weekly = [],
+                    Monthly = [],
+                    Quarterly = [],
+                    Yearly = []
                 };
 
             var entryIdSet = userEntries.Select(e => e.Id).ToHashSet();
@@ -616,10 +616,10 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             if (!records.Any())
                 return new SpendingReportDto
                 {
-                    Weekly = new List<TimeSeriesDataDto>(),
-                    Monthly = new List<TimeSeriesDataDto>(),
-                    Quarterly = new List<TimeSeriesDataDto>(),
-                    Yearly = new List<TimeSeriesDataDto>()
+                    Weekly = [],
+                    Monthly = [],
+                    Quarterly = [],
+                    Yearly = []
                 };
 
             // Haftalık
@@ -628,7 +628,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 {
                     var ci = CultureInfo.CurrentCulture;
                     var week = ci.Calendar.GetWeekOfYear(r.Date, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
-                    return (Year: r.Date.Year, Week: week);
+                    return (r.Date.Year, Week: week);
                 })
                 .Select(g =>
                 {
@@ -698,71 +698,114 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             };
         }
 
-        public async Task<SpendingByFirmDto> GetTopFirmsSpendingAsync()
+        public async Task<SpendingByFirmDto> GetTopFirmsSpendingAsync(string periodType)
         {
-            // 1) Son 12 ayın listesi
+            // 1) Dönem tipine göre anahtarları (period keys) oluştur
             var now = DateTime.UtcNow;
-            var months = Enumerable.Range(0, 12)
-                .Select(i => now.AddMonths(-i))
-                .Select(dt => new DateTime(dt.Year, dt.Month, 1))
-                .Reverse() // Kronolojik sırada
-                .ToList();
+            List<string> periodKeys = new();
+            List<(DateTime start, DateTime end)> ranges = new();
 
-            var monthKeys = months.Select(dt => dt.ToString("yyyy-MM")).ToList();
+            switch (periodType.ToLower())
+            {
+                case "weekly":
+                    // Son 12 hafta
+                    for (int i = 11; i >= 0; i--)
+                    {
+                        var weekStart = now.Date.AddDays(-7 * i).StartOfWeek(DayOfWeek.Monday);
+                        var weekEnd = weekStart.AddDays(6);
+                        ranges.Add((weekStart, weekEnd));
+                        periodKeys.Add($"W{CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(weekStart, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday)} '{weekStart:yy}");
+                    }
+                    break;
+
+                case "quarterly":
+                    // Son 12 çeyrek
+                    var currentQuarter = (now.Month - 1) / 3 + 1;
+                    for (int i = 11; i >= 0; i--)
+                    {
+                        var q = currentQuarter - i;
+                        var yearOffset = 0;
+                        while (q <= 0)
+                        {
+                            q += 4;
+                            yearOffset++;
+                        }
+                        var quarterYear = now.AddYears(-yearOffset).Year;
+                        var startMonth = (q - 1) * 3 + 1;
+                        var qStart = new DateTime(quarterYear, startMonth, 1);
+                        var qEnd = qStart.AddMonths(3).AddDays(-1);
+                        ranges.Add((qStart, qEnd));
+                        periodKeys.Add($"Q{q} {quarterYear}");
+                    }
+                    break;
+
+                case "yearly":
+                    // Son 12 yıl
+                    for (int i = 11; i >= 0; i--)
+                    {
+                        var year = now.Year - i;
+                        var yStart = new DateTime(year, 1, 1);
+                        var yEnd = new DateTime(year, 12, 31);
+                        ranges.Add((yStart, yEnd));
+                        periodKeys.Add(year.ToString());
+                    }
+                    break;
+
+                case "monthly":
+                default:
+                    // Son 12 ay
+                    for (int i = 11; i >= 0; i--)
+                    {
+                        var monthStart = new DateTime(now.Year, now.Month, 1).AddMonths(-i);
+                        var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+                        ranges.Add((monthStart, monthEnd));
+                        periodKeys.Add(monthStart.ToString("MMM yyyy", CultureInfo.CurrentCulture));
+                    }
+                    break;
+            }
 
             // 2) Tüm sertifikaları al
             var inspections = (await _inspectionRepo.GetAllAsync()).ToList();
             var additionals = (await _addInspectionRepo.GetAllAsync()).ToList();
             var allOffers = (await _offerRepo.GetAllAsync()).ToList();
 
-            // 3) Sertifikalardan (Inspection + Additional) EntryId ve InvoiceDate, SelectedOfferLetterId al, 
-            //    toplam harcamayı hesapla
+            // 3) Sertifikalardan (Inspection + Additional) toplam harcamayı hesapla
             var combinedCerts = inspections.Select(c => new
             {
-                c.ProcurementEntryId,
                 c.InvoiceDate,
                 c.SelectedOfferLetterId,
                 Total = c.SelectedProducts.Sum(p => p.UnitPrice * p.Quantity)
             })
             .Concat(additionals.Select(c => new
             {
-                c.ProcurementEntryId,
                 c.InvoiceDate,
                 c.SelectedOfferLetterId,
                 Total = c.SelectedProducts.Sum(p => p.UnitPrice * p.Quantity)
             }))
             .ToList();
 
-            // 4) Son 12 aya düşenleri filtrele
-            var earliest = months.First();
-            var latest = months.Last().AddMonths(1).AddDays(-1); // son ayın son günü
-            var filteredCerts = combinedCerts
-                .Where(c => c.InvoiceDate.Date >= earliest && c.InvoiceDate.Date <= latest)
-                .ToList();
-
-            // 5) Firma bazında (EntrepriseId) ay ve toplam harcamaları grupla
-            var spendByFirmMonth = new Dictionary<Guid, Dictionary<string, double>>();
-            foreach (var cert in filteredCerts)
+            // 4) Dönemlere düşenleri firma bazında grupla
+            var spendByFirmPeriod = new Dictionary<Guid, Dictionary<string, double>>();
+            foreach (var cert in combinedCerts)
             {
-                // OfferLetter’dan EntrepriseId al
+                // Dönem aralığına hangi key düşer?
+                var periodKey = FindPeriodKey(cert.InvoiceDate, ranges, periodKeys);
+                if (string.IsNullOrEmpty(periodKey))
+                    continue;
+
+                // İlgili OfferLetter’dan EntrepriseId al
                 var offer = allOffers.FirstOrDefault(o => o.Id == cert.SelectedOfferLetterId);
                 if (offer == null) continue;
                 var firmId = offer.EntrepriseId;
 
-                // Sertifika tarihine göre yıl-ay anahtarını al
-                var key = cert.InvoiceDate.ToString("yyyy-MM");
+                if (!spendByFirmPeriod.ContainsKey(firmId))
+                    spendByFirmPeriod[firmId] = periodKeys.ToDictionary(pk => pk, pk => 0.0);
 
-                if (!spendByFirmMonth.ContainsKey(firmId))
-                    spendByFirmMonth[firmId] = monthKeys.ToDictionary(m => m, m => 0.0);
-
-                if (!spendByFirmMonth[firmId].ContainsKey(key))
-                    spendByFirmMonth[firmId][key] = 0.0;
-
-                spendByFirmMonth[firmId][key] += cert.Total;
+                spendByFirmPeriod[firmId][periodKey] += cert.Total;
             }
 
-            // 6) Her firmayı toplam harcamaya göre sırala, ilk 5’i al, geri kalan “Diğer”e aktar
-            var firmTotals = spendByFirmMonth
+            // 5) Firma toplamlarını hesapla, en çok 5, kalan “Diğer”
+            var firmTotals = spendByFirmPeriod
                 .Select(kvp => new { FirmId = kvp.Key, Total = kvp.Value.Values.Sum() })
                 .OrderByDescending(x => x.Total)
                 .ToList();
@@ -770,17 +813,17 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             var top5 = firmTotals.Take(5).Select(x => x.FirmId).ToList();
             var otherIds = firmTotals.Skip(5).Select(x => x.FirmId).ToList();
 
-            // 7) Series oluştur
+            // 6) Series oluştur
             var series = new List<ChartSeriesDto>();
 
-            // Top 5 firmalar
+            // En çok 5 firma
             foreach (var firmId in top5)
             {
                 var firm = await _entRepo.GetByIdAsync(firmId);
                 var name = firm?.Unvan ?? "Bilinmeyen";
 
-                var data = monthKeys
-                    .Select(mk => spendByFirmMonth[firmId].ContainsKey(mk) ? spendByFirmMonth[firmId][mk] : 0.0)
+                var data = periodKeys
+                    .Select(pk => spendByFirmPeriod[firmId].ContainsKey(pk) ? spendByFirmPeriod[firmId][pk] : 0.0)
                     .ToList();
 
                 series.Add(new ChartSeriesDto
@@ -790,14 +833,14 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 });
             }
 
-            // "Diğer" grubu
-            if (otherIds.Count != 0)
+            // “Diğer” grubu
+            if (otherIds.Any())
             {
-                var otherData = monthKeys
-                    .Select(monthKey =>
-                        otherIds.Sum(firmId =>
-                            spendByFirmMonth.ContainsKey(firmId) && spendByFirmMonth[firmId].ContainsKey(monthKey)
-                                ? spendByFirmMonth[firmId][monthKey]
+                var otherData = periodKeys
+                    .Select(pk =>
+                        otherIds.Sum(fid =>
+                            spendByFirmPeriod.ContainsKey(fid) && spendByFirmPeriod[fid].ContainsKey(pk)
+                                ? spendByFirmPeriod[fid][pk]
                                 : 0.0
                         )
                     )
@@ -812,13 +855,24 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
             return new SpendingByFirmDto
             {
-                Months = monthKeys.Select(mk =>
-                {
-                    var dt = DateTime.ParseExact(mk + "-01", "yyyy-MM-dd", null);
-                    return dt.ToString("MMM yyyy");
-                }).ToList(),
+                Periods = periodKeys,
                 Series = series
             };
+        }
+
+        // Tarihi uygun döneme eşleyip anahtarı döndürür
+        private static string FindPeriodKey(
+            DateTime invoiceDate,
+            List<(DateTime start, DateTime end)> ranges,
+            List<string> keys)
+        {
+            for (int i = 0; i < ranges.Count; i++)
+            {
+                var (start, end) = ranges[i];
+                if (invoiceDate.Date >= start.Date && invoiceDate.Date <= end.Date)
+                    return keys[i];
+            }
+            return null;
         }
 
         public async Task<IEnumerable<UserCountDto>> GetTopResponsibleUsersAsync(int top = 3)
@@ -834,8 +888,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 .OrderByDescending(x => x.Count)
                 .ToList();
 
-            if (!counts.Any())
-                return Array.Empty<UserCountDto>();
+            if (counts.Count == 0)
+                return [];
 
             // İlk top kadar kullanıcı
             var topList = counts.Take(top).ToList();
@@ -880,8 +934,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 .OrderBy(x => x.Count)
                 .ToList();
 
-            if (!counts.Any())
-                return Array.Empty<UserCountDto>();
+            if (counts.Count == 0)
+                return [];
 
             // İlk bottom kadar (en az sayıya sahip) kullanıcı
             var bottomList = counts.Take(bottom).ToList();

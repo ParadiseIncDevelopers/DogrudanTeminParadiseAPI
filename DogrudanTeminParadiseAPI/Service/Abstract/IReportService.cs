@@ -16,7 +16,7 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<List<TopUnitDto>> GetTopSubAdministrationUnitsAsync(Guid tenderResponsibleId);
         Task<List<TopUnitDto>> GetTopThreeSubAdministrationUnitsAsync(Guid tenderResponsibleId);
         Task<SpendingReportDto> GetSpendingReportAsync(Guid tenderResponsibleId);
-        Task<SpendingByFirmDto> GetTopFirmsSpendingAsync();
+        Task<SpendingByFirmDto> GetTopFirmsSpendingAsync(string periodType);
         Task<IEnumerable<UserCountDto>> GetTopResponsibleUsersAsync(int top = 3);
         Task<IEnumerable<UserCountDto>> GetBottomResponsibleUsersAsync(int bottom = 3);
     }
