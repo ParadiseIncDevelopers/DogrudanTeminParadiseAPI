@@ -12,7 +12,8 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<UserDto> GetProfileAsync(Guid userId);
         Task<UserDto> UpdateAsync(Guid id, UpdateUserDto dto);
         Task DeleteAsync(Guid id);
-        Task<UserDto> AssignTitleAsync(Guid userId, Guid titleId);
+        Task ChangePasswordAsync(Guid userId, UpdateUserPasswordDto dto);
+        Task AssignTitleAsync(Guid userId, Guid titleId);
 
     }
 }

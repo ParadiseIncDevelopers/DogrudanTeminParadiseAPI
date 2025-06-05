@@ -14,17 +14,20 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
     public class UserService : IUserService
     {
         private readonly MongoDBRepository<User> _repo;
+        private readonly MongoDBRepository<Title> _titleRepo;
         private readonly IMapper _mapper;
         private readonly IConfiguration _cfg;
         private readonly byte[] _aesKey;
 
         public UserService(
             MongoDBRepository<User> repo,
+            MongoDBRepository<Title> titleRepo,
             IMapper mapper,
             IConfiguration cfg)
         {
             _repo = repo;
             _mapper = mapper;
+            _titleRepo = titleRepo;
             _cfg = cfg;
 
             // AES anahtarı appsettings.json'dan okunur (32 karakter)
@@ -181,26 +184,35 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             await _repo.DeleteAsync(id);
         }
 
-        public async Task<UserDto> AssignTitleAsync(Guid userId, Guid titleId)
+        public async Task ChangePasswordAsync(Guid userId, UpdateUserPasswordDto dto)
+        {
+            if (dto.NewPassword != dto.ConfirmPassword)
+                throw new InvalidOperationException("Yeni parola ve onay eşleşmiyor.");
+
+            var user = await _repo.GetByIdAsync(userId);
+            if (user == null)
+                throw new KeyNotFoundException("Kullanıcı bulunamadı.");
+
+            var hashedCurrent = Crypto.HashSha512(dto.CurrentPassword);
+            if (user.Password != hashedCurrent)
+                throw new UnauthorizedAccessException("Mevcut parola yanlış.");
+
+            user.Password = Crypto.HashSha512(dto.NewPassword);
+            await _repo.UpdateAsync(userId, user);
+        }
+
+        public async Task AssignTitleAsync(Guid userId, Guid titleId)
         {
             var user = await _repo.GetByIdAsync(userId);
             if (user == null)
                 throw new KeyNotFoundException("Kullanıcı bulunamadı.");
 
+            var title = await _titleRepo.GetByIdAsync(titleId);
+            if (title == null)
+                throw new KeyNotFoundException("Ünvan bulunamadı.");
+
             user.TitleId = titleId;
             await _repo.UpdateAsync(userId, user);
-
-            return new UserDto
-            {
-                Id = user.Id,
-                Name = Crypto.Decrypt(user.Name),
-                Surname = Crypto.Decrypt(user.Surname),
-                Email = Crypto.Decrypt(user.Email),
-                Tcid = Crypto.Decrypt(user.Tcid),
-                UserType = user.UserType,
-                Permissions = user.Permissions,
-                TitleId = user.TitleId
-            };
         }
     }
 }
