@@ -4,6 +4,7 @@ using DogrudanTeminParadiseAPI.Helpers;
 using DogrudanTeminParadiseAPI.Models;
 using DogrudanTeminParadiseAPI.Repositories;
 using DogrudanTeminParadiseAPI.Service.Abstract;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -14,130 +15,111 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
     public class SuperAdminService : ISuperAdminService
     {
         private readonly MongoDBRepository<SuperAdminUser> _repo;
+        private readonly MongoDBRepository<AdminUser> _adminRepo;  // to load all admins for status initialization
         private readonly IMapper _mapper;
+        private readonly SuperAdminSettings _settings;
         private readonly IConfiguration _cfg;
 
-        public SuperAdminService(
-            MongoDBRepository<SuperAdminUser> repo,
-            IMapper mapper,
-            IConfiguration cfg)
+        public SuperAdminService(MongoDBRepository<SuperAdminUser> repo, MongoDBRepository<AdminUser> adminRepo, IMapper mapper, IOptions<SuperAdminSettings> opts, IConfiguration cfg)
         {
             _repo = repo;
+            _adminRepo = adminRepo;
             _mapper = mapper;
+            _settings = opts.Value;
             _cfg = cfg;
         }
 
-        public async Task<string> AuthenticateAsync(LoginDto dto)
+        public async Task<string> AuthenticateAsync(SuperAdminLoginDto dto)
         {
-            // 1) Tüm super-admin kullanıcıları çek
-            var all = await _repo.GetAllAsync();
-            var hashedInputPwd = Crypto.HashSha512(dto.Password);
+            var hashedInput = Crypto.HashSha512(dto.Password);
+            if (_settings.Username != dto.Username || _settings.PasswordHash != hashedInput)
+                throw new UnauthorizedAccessException("Invalid credentials.");
 
-            // 2) TC’yi AES decrypt edip, parola hash’i eşleştir
-            var user = all.FirstOrDefault(u =>
-                Crypto.Decrypt(u.Tcid) == dto.Tcid &&
-                u.Password == hashedInputPwd);
+            var entity = (await _repo.GetAllAsync()).FirstOrDefault()
+                         ?? throw new InvalidOperationException("SuperAdmin metadata not found.");
 
-            if (user == null)
-                throw new UnauthorizedAccessException("Geçersiz TC veya parola.");
-
-            // 3) JWT token oluştur
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_cfg["Jwt:Key"]);
-            var token = tokenHandler.CreateToken(new SecurityTokenDescriptor
+            var handler = new JwtSecurityTokenHandler();
+            var keyBytes = Encoding.UTF8.GetBytes(_cfg["Jwt:Key"]);
+            var token = handler.CreateToken(new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, Crypto.Decrypt(user.Tcid)),
-                new Claim(ClaimTypes.Role, user.UserType) // “SUPER_ADMIN”
+                Subject = new ClaimsIdentity(new[] {
+                new Claim(ClaimTypes.NameIdentifier, entity.Id.ToString()),
+                new Claim(ClaimTypes.Name, _settings.Username),
+                new Claim(ClaimTypes.Role, entity.UserType)
             }),
                 Expires = DateTime.UtcNow.AddMinutes(int.Parse(_cfg["Jwt:ExpiresInMinutes"])),
                 Issuer = _cfg["Jwt:Issuer"],
                 Audience = _cfg["Jwt:Audience"],
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key),
-                    SecurityAlgorithms.HmacSha256)
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256)
             });
-
-            return tokenHandler.WriteToken(token);
+            return handler.WriteToken(token);
         }
 
         public async Task<SuperAdminDto> CreateAsync(CreateSuperAdminDto dto)
         {
-            // 1) Aynı TC veya e-posta var mı kontrol et
-            var allUsers = await _repo.GetAllAsync();
-            var encTcid = Crypto.Encrypt(dto.Tcid);
-            var encEmail = Crypto.Encrypt(dto.Email);
-
-            if (allUsers.Any(u => u.Tcid == encTcid))
-                throw new InvalidOperationException("Bu TC Kimlik Numarası zaten sistemde kayıtlı.");
-            if (allUsers.Any(u => u.Email == encEmail))
-                throw new InvalidOperationException("Bu e-posta adresi zaten sistemde kayıtlı.");
-
-            // 2) DTO’dan entity’ye AutoMapper ile dönüştür (profilde encrypt, hash işlemleri tanımlı)
-            var entity = _mapper.Map<SuperAdminUser>(dto);
-
-            // 3) Kaydet
+            // Only one SuperAdminUser entity expected
+            var entity = new SuperAdminUser
+            {
+                UserType = _settings.UserType
+            };
             await _repo.InsertAsync(entity);
-
-            // 4) Kaydedilen entity’yi DTO’ya mapleyip döndür
-            var result = _mapper.Map<SuperAdminDto>(entity);
-            return result;
+            return _mapper.Map<SuperAdminDto>(entity);
         }
 
-        public async Task<SuperAdminDto> GetByIdAsync(Guid id)
+        public async Task SetUserActiveStatusAsync(ChangeUserActiveStatusDto dto)
         {
-            var e = await _repo.GetByIdAsync(id);
-            if (e == null) return null;
+            var sys = (await _repo.GetAllAsync()).FirstOrDefault()
+                      ?? throw new InvalidOperationException("System record not found.");
 
-            // Entity’den DTO’ya maple (profilde decrypt işlemi var)
-            return _mapper.Map<SuperAdminDto>(e);
+            var admins = await _adminRepo.GetAllAsync();
+            foreach (var admin in admins)
+            {
+                if (!sys.ActivePassiveUsers.ContainsKey(admin.Id))
+                    sys.ActivePassiveUsers[admin.Id] = true;
+            }
+
+            sys.ActivePassiveUsers[dto.TargetUserId] = dto.IsActive;
+
+            await _repo.UpdateAsync(sys.Id, sys);
         }
 
-        public async Task<IEnumerable<SuperAdminDto>> GetAllAsync()
+        public async Task AssignUsersToAdminAsync(AssignUsersToAdminDto dto)
         {
-            var list = await _repo.GetAllAsync();
-            // Her bir entity’yi DTO’ya mapleyip döndür
-            return list.Select(e => _mapper.Map<SuperAdminDto>(e));
+            var sys = (await _repo.GetAllAsync()).FirstOrDefault()
+                      ?? throw new InvalidOperationException("System record not found.");
+
+            var admins = await _adminRepo.GetAllAsync();
+            foreach (var admin in admins)
+            {
+                if (!sys.AssignPermissionToAdmin.ContainsKey(admin.Id))
+                    sys.AssignPermissionToAdmin[admin.Id] = [];
+            }
+
+            sys.AssignPermissionToAdmin[dto.AdminId] = dto.PermittedUserIds;
+
+            await _repo.UpdateAsync(sys.Id, sys);
         }
 
-        public async Task ChangePasswordAsync(Guid userId, UpdateAdminPasswordDto dto)
+        //BUNU ŞİMDİLİK KULLANMAYACAĞIZ : yeni versiyonda değişik bir şeyler düşüneceğim.
+        public async Task<SystemActivityDto> GetSystemActivityAsync()
         {
-            if (dto.NewPassword != dto.ConfirmPassword)
-                throw new InvalidOperationException("Yeni parola ve onay eşleşmiyor.");
+            var sys = (await _repo.GetAllAsync()).FirstOrDefault();
+            if (sys == null)
+                return new SystemActivityDto
+                {
+                    UserStatuses = new List<UserStatusDto>(),
+                    AdminPermissions = new List<AdminPermissionsDto>()
+                };
 
-            var user = await _repo.GetByIdAsync(userId);
-            if (user == null)
-                throw new KeyNotFoundException("Kullanıcı bulunamadı.");
-
-            // Mevcut parolayı doğrula
-            var hashedCurrent = Crypto.HashSha512(dto.CurrentPassword);
-            if (user.Password != hashedCurrent)
-                throw new UnauthorizedAccessException("Mevcut parola yanlış.");
-
-            // Yeni parolayı SHA512 ile hash’le ve güncelle
-            user.Password = Crypto.HashSha512(dto.NewPassword);
-            await _repo.UpdateAsync(userId, user);
-        }
-
-        public async Task UpdateAsync(Guid userId, UpdateSuperAdminDto dto)
-        {
-            var user = await _repo.GetByIdAsync(userId);
-            if (user == null)
-                throw new KeyNotFoundException("Kullanıcı bulunamadı.");
-
-            // Her alan güncellenmek istenirse null kontrolü yapıp AES Encrypt ile ata
-            user.Name = Crypto.Encrypt(dto.Name);
-            user.Surname = Crypto.Encrypt(dto.Surname);
-
-            if (!string.IsNullOrEmpty(dto.Email))
-                user.Email = Crypto.Encrypt(dto.Email);
-
-            if (!string.IsNullOrEmpty(dto.Tcid))
-                user.Tcid = Crypto.Encrypt(dto.Tcid);
-
-            await _repo.UpdateAsync(userId, user);
+            var statuses = sys.ActivePassiveUsers
+                .Select(kv => new UserStatusDto { UserId = kv.Key, IsActive = kv.Value })
+                .ToList();
+            var perms = sys.AssignPermissionToAdmin
+                .Select(kv => new AdminPermissionsDto { AdminId = kv.Key, PermittedUserIds = kv.Value })
+                .ToList();
+            return new SystemActivityDto { UserStatuses = statuses, AdminPermissions = perms };
         }
     }
+
+    
 }
