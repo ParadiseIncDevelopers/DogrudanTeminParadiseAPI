@@ -16,6 +16,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         public OfferLetterController(IOfferLetterService svc) => _svc = svc;
 
         [HttpPost]
+        [PermissionCheck]
         public async Task<IActionResult> Create([FromBody] CreateOfferLetterDto dto)
         {
             try
@@ -27,11 +28,26 @@ namespace DogrudanTeminParadiseAPI.Controllers
             catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
         }
 
+        [HttpGet]
+        [PermissionCheck]
+        public async Task<IActionResult> GetAll()
+        {
+            var permitted = HttpContext.Items["PermittedList"] as IEnumerable<Guid>;
+            var list = await _svc.GetAllAsync(permitted);
+            return Ok(list);
+        }
+
         [HttpGet("entry/{entryId}")]
+        [PermissionCheck]
         public async Task<IActionResult> GetAllByEntry(Guid entryId)
-            => Ok(await _svc.GetAllByEntryAsync(entryId));
+        {
+            var permitted = HttpContext.Items["PermittedList"] as IEnumerable<Guid>;
+            var list = await _svc.GetAllByEntryAsync(entryId, permitted);
+            return Ok(list);
+        }
 
         [HttpGet("{id}")]
+        [PermissionCheck]
         public async Task<IActionResult> GetById(Guid id)
         {
             var item = await _svc.GetByIdAsync(id);
@@ -39,6 +55,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPut("{id}")]
+        [PermissionCheck]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateOfferLetterDto dto)
         {
             try
@@ -51,6 +68,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [PermissionCheck]
         public async Task<IActionResult> Delete(Guid id)
         {
             try { await _svc.DeleteAsync(id); return NoContent(); }

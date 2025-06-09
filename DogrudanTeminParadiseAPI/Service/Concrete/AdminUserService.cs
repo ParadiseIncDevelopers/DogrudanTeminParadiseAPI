@@ -14,17 +14,20 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
     public class AdminUserService : IAdminUserService
     {
         private readonly MongoDBRepository<AdminUser> _repo;
+        private readonly MongoDBRepository<SuperAdminUser> _sysRepo;
         private readonly MongoDBRepository<Title> _titleRepo;
         private readonly IMapper _mapper;
         private readonly IConfiguration _cfg;
 
         public AdminUserService(
             MongoDBRepository<AdminUser> repo,
+            MongoDBRepository<SuperAdminUser> sysRepo,
             MongoDBRepository<Title> titleRepo,
             IMapper mapper,
             IConfiguration cfg)
         {
             _repo = repo;
+            _sysRepo = sysRepo;
             _titleRepo = titleRepo;
             _mapper = mapper;
             _cfg = cfg;
@@ -32,6 +35,9 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task<string> AuthenticateAsync(LoginDto dto)
         {
+            var sys = (await _sysRepo.GetAllAsync()).FirstOrDefault()
+               ?? throw new InvalidOperationException("System record not found.");
+
             var all = await _repo.GetAllAsync();
             var hashedInputPwd = Crypto.HashSha512(dto.Password);
 
@@ -41,6 +47,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
             if (user == null)
                 throw new UnauthorizedAccessException("Geçersiz TC veya parola");
+            else if (sys.ActivePassiveUsers.TryGetValue(user.Id.ToString(), out var isActive) && !isActive)
+                throw new UnauthorizedAccessException("Bu kullanıcı pasif durumda. Giriş yasak.");
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_cfg["Jwt:Key"]);

@@ -3,6 +3,7 @@ using DogrudanTeminParadiseAPI.Factory.Abstract;
 using DogrudanTeminParadiseAPI.Factory.Concrete;
 using DogrudanTeminParadiseAPI.Factory.Main;
 using DogrudanTeminParadiseAPI.Filter;
+using DogrudanTeminParadiseAPI.Helpers.Attributes;
 using DogrudanTeminParadiseAPI.Helpers.Options;
 using DogrudanTeminParadiseAPI.Mapping;
 using DogrudanTeminParadiseAPI.Models;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using MongoDB.Driver;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -66,6 +68,16 @@ builder.Services.AddScoped(sp => new MongoDBRepository<InspectionAcceptanceCerti
 builder.Services.AddScoped(sp => new MongoDBRepository<AdditionalInspectionAcceptanceCertificate>(cfg["MongoAPI"], cfg["MongoDBName"], "AdditionalInspectionAcceptanceCertificates"));
 builder.Services.AddScoped(sp => new MongoDBRepository<ApproximateCostJury>(cfg["MongoAPI"], cfg["MongoDBName"], "ApproximateCostJuries"));
 builder.Services.AddScoped(sp => new MongoDBRepository<ProcurementEntryEditor>(cfg["MongoAPI"], cfg["MongoDBName"], "ProcurementEntryEditors"));
+
+builder.Services.AddSingleton<IMongoClient>(sp =>
+    new MongoClient(cfg["MongoAPI"])
+);
+
+builder.Services.AddScoped(sp =>
+{
+    var client = sp.GetRequiredService<IMongoClient>();
+    return client.GetDatabase(cfg["MongoDBName"]);
+});
 
 // Servisler
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
@@ -126,6 +138,7 @@ builder.Services.AddScoped<LogActionFilter>();
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<TeminApiExceptionFilter>();
+    options.Filters.Add(typeof(PermissionCheckAttribute));
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

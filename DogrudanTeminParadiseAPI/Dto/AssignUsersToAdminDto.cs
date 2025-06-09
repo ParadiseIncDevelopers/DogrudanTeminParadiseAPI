@@ -3,6 +3,6 @@
     public class AssignUsersToAdminDto
     {
         public Guid AdminId { get; set; }
-        public List<Guid> PermittedUserIds { get; set; }
+        public List<string> PermittedUserIds { get; set; }
     }
 }

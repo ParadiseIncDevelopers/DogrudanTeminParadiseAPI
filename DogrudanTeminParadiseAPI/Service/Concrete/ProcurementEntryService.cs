@@ -45,7 +45,18 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         }
 
         public async Task<IEnumerable<ProcurementEntryDto>> GetAllAsync()
-        => (await _repo.GetAllAsync()).Select(x => _mapper.Map<ProcurementEntryDto>(x));
+            => (await _repo.GetAllAsync()).Select(x => _mapper.Map<ProcurementEntryDto>(x));
+
+        public async Task<IEnumerable<ProcurementEntryDto>> GetAllAsync(IEnumerable<Guid> permittedEntryIds)
+        {
+            if (permittedEntryIds == null)
+                return [];
+
+            var list = await _repo.GetAllAsync();
+            return list
+                .Where(e => permittedEntryIds.Contains(e.Id))
+                .Select(x => _mapper.Map<ProcurementEntryDto>(x));
+        }
 
         public async Task<ProcurementEntryDto> GetByIdAsync(Guid id)
             => (await _repo.GetByIdAsync(id)) is var e && e != null ? _mapper.Map<ProcurementEntryDto>(e) : null;

@@ -38,11 +38,34 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return _mapper.Map<AdditionalInspectionAcceptanceCertificateDto>(entity);
         }
 
+        public async Task<IEnumerable<AdditionalInspectionAcceptanceCertificateDto>> GetAllAsync(IEnumerable<Guid> permittedEntryIds)
+        {
+            if (permittedEntryIds == null)
+                return Enumerable.Empty<AdditionalInspectionAcceptanceCertificateDto>();
+
+            var list = await _repo.GetAllAsync();
+            return list
+                .Where(e => permittedEntryIds.Contains(e.ProcurementEntryId))
+                .Select(e => _mapper.Map<AdditionalInspectionAcceptanceCertificateDto>(e));
+        }
+
         public async Task<IEnumerable<AdditionalInspectionAcceptanceCertificateDto>> GetAllByEntryAsync(Guid entryId)
         {
-            var list = (await _repo.GetAllAsync())
-                .Where(c => c.ProcurementEntryId == entryId);
-            return list.Select(c => _mapper.Map<AdditionalInspectionAcceptanceCertificateDto>(c));
+            var list = await _repo.GetAllAsync();
+            return list
+                .Where(e => e.ProcurementEntryId == entryId)
+                .Select(e => _mapper.Map<AdditionalInspectionAcceptanceCertificateDto>(e));
+        }
+
+        public async Task<IEnumerable<AdditionalInspectionAcceptanceCertificateDto>> GetAllByEntryAsync(Guid entryId, IEnumerable<Guid> permittedEntryIds)
+        {
+            if (permittedEntryIds == null || !permittedEntryIds.Contains(entryId))
+                return Enumerable.Empty<AdditionalInspectionAcceptanceCertificateDto>();
+
+            var list = await _repo.GetAllAsync();
+            return list
+                .Where(e => e.ProcurementEntryId == entryId)
+                .Select(e => _mapper.Map<AdditionalInspectionAcceptanceCertificateDto>(e));
         }
 
         public async Task<AdditionalInspectionAcceptanceCertificateDto> GetByIdAsync(Guid id)

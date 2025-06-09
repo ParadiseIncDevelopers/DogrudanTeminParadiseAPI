@@ -43,9 +43,29 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll() => Ok(await _entrySvc.GetAllAsync());
+        [PermissionCheck]
+        public async Task<IActionResult> GetAll()
+        {
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            var id = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            if (role == "Admin")
+            {
+                var permitted = HttpContext.Items["PermittedList"] as List<Guid>;
+                return Ok(await _entrySvc.GetAllAsync(permitted));
+            }
+            else if (role == "User")
+            {
+                return Ok(await _entrySvc.GetAllAsync([id]));
+            }
+            else
+            {
+                return Ok(await _entrySvc.GetAllAsync());  // SuperAdmin
+            }
+        }
 
         [HttpGet("{id}")]
+        [PermissionCheck]
         public async Task<IActionResult> GetById(Guid id)
         {
             var item = await _entrySvc.GetByIdAsync(id);
@@ -53,6 +73,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPut("{id}")]
+        [PermissionCheck]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProcurementEntryDto dto)
         {
             try
@@ -134,17 +155,12 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet("by-requester")]
+        [PermissionCheck]
         public async Task<IActionResult> GetByRequester()
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(userIdClaim, out var userId))
-                return Unauthorized();
-
-            var role = User.FindFirstValue(ClaimTypes.Role);
-            var isAdmin = string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
-
-            var result = await _entrySvc.GetByRequesterAsync(userId, isAdmin);
-            return Ok(result);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var isAdmin = User.IsInRole("Admin");
+            return Ok(await _entrySvc.GetByRequesterAsync(userId, isAdmin));
         }
     }
 }

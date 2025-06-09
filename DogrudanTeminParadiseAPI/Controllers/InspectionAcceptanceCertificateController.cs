@@ -16,25 +16,52 @@ namespace DogrudanTeminParadiseAPI.Controllers
         public InspectionAcceptanceCertificateController(IInspectionAcceptanceCertificateService svc) => _svc = svc;
 
         [HttpPost]
+        [PermissionCheck]
         public async Task<IActionResult> Create([FromBody] CreateInspectionAcceptanceCertificateDto dto)
         {
             var created = await _svc.CreateAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
+        /// <summary>
+        /// Get all certificates, filtered by permission list
+        /// </summary>
+        [HttpGet]
+        [PermissionCheck]
+        public async Task<IActionResult> GetAll()
+        {
+            var permitted = HttpContext.Items["PermittedList"] as IEnumerable<Guid>;
+            var list = await _svc.GetAllAsync(permitted);
+            return Ok(list);
+        }
+
         [HttpGet("entry/{entryId}")]
-        public async Task<IActionResult> GetAllByEntry(Guid entryId)
-            => Ok(await _svc.GetAllByEntryAsync(entryId));
+        [PermissionCheck]
+        public async Task<IActionResult> GetAllByEntry(Guid entryId) 
+        {
+            var permitted = HttpContext.Items["PermittedList"] as IEnumerable<Guid>;
+            var list = await _svc.GetAllByEntryAsync(entryId, permitted);
+            return Ok(list);
+        }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(Guid id)
-            => (await _svc.GetByIdAsync(id)) is var dto && dto != null ? Ok(dto) : NotFound();
+        [PermissionCheck]
+        public async Task<IActionResult> GetById(Guid id) 
+        {
+            var dto = await _svc.GetByIdAsync(id);
+            return dto == null ? NotFound() : Ok(dto);
+        }
 
         [HttpPut("{id}")]
+        [PermissionCheck]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateInspectionAcceptanceCertificateDto dto)
-            => Ok(await _svc.UpdateAsync(id, dto));
+        {
+            var updated = await _svc.UpdateAsync(id, dto);
+            return updated == null ? NotFound() : Ok(updated);
+        }
 
         [HttpDelete("{id}")]
+        [PermissionCheck]
         public async Task<IActionResult> Delete(Guid id)
         {
             await _svc.DeleteAsync(id);

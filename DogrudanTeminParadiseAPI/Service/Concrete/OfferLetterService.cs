@@ -55,17 +55,38 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             }
         }
 
-        public async Task<IEnumerable<OfferLetterDto>> GetAllByEntryAsync(Guid procurementEntryId)
-        {
-            var list = (await _repo.GetAllAsync())
-                .Where(o => o.ProcurementEntryId == procurementEntryId);
-            return list.Select(o => _mapper.Map<OfferLetterDto>(o));
-        }
-
         public async Task<IEnumerable<OfferLetterDto>> GetAllAsync()
         {
             var list = await _repo.GetAllAsync();
             return _mapper.Map<IEnumerable<OfferLetterDto>>(list);
+        }
+
+        public async Task<IEnumerable<OfferLetterDto>> GetAllAsync(IEnumerable<Guid> permittedEntryIds)
+        {
+            if (permittedEntryIds == null)
+                return Enumerable.Empty<OfferLetterDto>();
+            var list = await _repo.GetAllAsync();
+            return list
+                .Where(o => permittedEntryIds.Contains(o.ProcurementEntryId))
+                .Select(o => _mapper.Map<OfferLetterDto>(o));
+        }
+
+        public async Task<IEnumerable<OfferLetterDto>> GetAllByEntryAsync(Guid procurementEntryId)
+        {
+            var list = await _repo.GetAllAsync();
+            return list
+                .Where(o => o.ProcurementEntryId == procurementEntryId)
+                .Select(o => _mapper.Map<OfferLetterDto>(o));
+        }
+
+        public async Task<IEnumerable<OfferLetterDto>> GetAllByEntryAsync(Guid procurementEntryId, IEnumerable<Guid> permittedEntryIds)
+        {
+            if (permittedEntryIds == null || !permittedEntryIds.Contains(procurementEntryId))
+                return Enumerable.Empty<OfferLetterDto>();
+            var list = await _repo.GetAllAsync();
+            return list
+                .Where(o => o.ProcurementEntryId == procurementEntryId)
+                .Select(o => _mapper.Map<OfferLetterDto>(o));
         }
 
         public async Task<OfferLetterDto> GetByIdAsync(Guid id) 

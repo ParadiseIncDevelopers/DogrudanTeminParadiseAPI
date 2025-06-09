@@ -16,14 +16,16 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
     {
         private readonly MongoDBRepository<SuperAdminUser> _repo;
         private readonly MongoDBRepository<AdminUser> _adminRepo;  // to load all admins for status initialization
+        private readonly MongoDBRepository<User> _userRepo;
         private readonly IMapper _mapper;
         private readonly SuperAdminSettings _settings;
         private readonly IConfiguration _cfg;
 
-        public SuperAdminService(MongoDBRepository<SuperAdminUser> repo, MongoDBRepository<AdminUser> adminRepo, IMapper mapper, IOptions<SuperAdminSettings> opts, IConfiguration cfg)
+        public SuperAdminService(MongoDBRepository<SuperAdminUser> repo, MongoDBRepository<AdminUser> adminRepo, MongoDBRepository<User> userRepo, IMapper mapper, IOptions<SuperAdminSettings> opts, IConfiguration cfg)
         {
             _repo = repo;
             _adminRepo = adminRepo;
+            _userRepo = userRepo;
             _mapper = mapper;
             _settings = opts.Value;
             _cfg = cfg;
@@ -68,18 +70,33 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task SetUserActiveStatusAsync(ChangeUserActiveStatusDto dto)
         {
+            // Ensure system record exists
             var sys = (await _repo.GetAllAsync()).FirstOrDefault()
                       ?? throw new InvalidOperationException("System record not found.");
 
+            // Populate default active entries for all admins
             var admins = await _adminRepo.GetAllAsync();
             foreach (var admin in admins)
             {
-                if (!sys.ActivePassiveUsers.ContainsKey(admin.Id))
-                    sys.ActivePassiveUsers[admin.Id] = true;
+                var adminKey = admin.Id.ToString();
+                if (!sys.ActivePassiveUsers.ContainsKey(adminKey))
+                    sys.ActivePassiveUsers[adminKey] = true;
             }
 
-            sys.ActivePassiveUsers[dto.TargetUserId] = dto.IsActive;
+            // Populate default active entries for all normal users
+            var users = await _userRepo.GetAllAsync();
+            foreach (var user in users)
+            {
+                var userKey = user.Id.ToString();
+                if (!sys.ActivePassiveUsers.ContainsKey(userKey))
+                    sys.ActivePassiveUsers[userKey] = true;
+            }
 
+            // Update specific target user status
+            var targetKey = dto.TargetUserId.ToString();
+            sys.ActivePassiveUsers[targetKey] = dto.IsActive;
+
+            // Persist changes
             await _repo.UpdateAsync(sys.Id, sys);
         }
 
@@ -91,11 +108,11 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             var admins = await _adminRepo.GetAllAsync();
             foreach (var admin in admins)
             {
-                if (!sys.AssignPermissionToAdmin.ContainsKey(admin.Id))
-                    sys.AssignPermissionToAdmin[admin.Id] = [];
+                if (!sys.AssignPermissionToAdmin.ContainsKey(admin.Id.ToString()))
+                    sys.AssignPermissionToAdmin[admin.Id.ToString()] = [];
             }
 
-            sys.AssignPermissionToAdmin[dto.AdminId] = dto.PermittedUserIds;
+            sys.AssignPermissionToAdmin[dto.AdminId.ToString()] = dto.PermittedUserIds;
 
             await _repo.UpdateAsync(sys.Id, sys);
         }
@@ -112,10 +129,10 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 };
 
             var statuses = sys.ActivePassiveUsers
-                .Select(kv => new UserStatusDto { UserId = kv.Key, IsActive = kv.Value })
+                .Select(kv => new UserStatusDto { UserId = Guid.Parse(kv.Key), IsActive = kv.Value })
                 .ToList();
             var perms = sys.AssignPermissionToAdmin
-                .Select(kv => new AdminPermissionsDto { AdminId = kv.Key, PermittedUserIds = kv.Value })
+                .Select(kv => new AdminPermissionsDto { AdminId = Guid.Parse(kv.Key), PermittedUserIds = kv.Value })
                 .ToList();
             return new SystemActivityDto { UserStatuses = statuses, AdminPermissions = perms };
         }

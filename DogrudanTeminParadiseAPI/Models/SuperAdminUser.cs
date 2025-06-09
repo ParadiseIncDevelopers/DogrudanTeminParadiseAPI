@@ -10,7 +10,9 @@ namespace DogrudanTeminParadiseAPI.Models
         public Guid Id { get; set; }
         public string UserType { get; set; }
 
-        public Dictionary<Guid, bool> ActivePassiveUsers { get; set; } = [];
-        public Dictionary<Guid, List<Guid>> AssignPermissionToAdmin { get; set; } = [];
+        [BsonRepresentation(BsonType.String)]
+        public Dictionary<string, bool> ActivePassiveUsers { get; set; } = [];
+        [BsonRepresentation(BsonType.String)]
+        public Dictionary<string, List<string>> AssignPermissionToAdmin { get; set; } = [];
     }
 }

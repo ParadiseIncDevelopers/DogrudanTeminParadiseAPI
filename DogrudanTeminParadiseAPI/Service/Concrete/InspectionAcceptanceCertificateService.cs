@@ -54,6 +54,17 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return list.Select(e => _mapper.Map<InspectionAcceptanceCertificateDto>(e));
         }
 
+        public async Task<IEnumerable<InspectionAcceptanceCertificateDto>> GetAllByEntryAsync(Guid entryId, IEnumerable<Guid> permittedEntryIds)
+        {
+            if (permittedEntryIds == null || !permittedEntryIds.Contains(entryId))
+                return Enumerable.Empty<InspectionAcceptanceCertificateDto>();
+
+            var list = await _repo.GetAllAsync();
+            return list
+                .Where(e => e.ProcurementEntryId == entryId)
+                .Select(e => _mapper.Map<InspectionAcceptanceCertificateDto>(e));
+        }
+
         public async Task<InspectionAcceptanceCertificateDto> GetByIdAsync(Guid id)
         {
             var e = await _repo.GetByIdAsync(id);
@@ -64,6 +75,17 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         {
             var list = await _repo.GetAllAsync();
             return _mapper.Map<IEnumerable<InspectionAcceptanceCertificateDto>>(list);
+        }
+
+        public async Task<IEnumerable<InspectionAcceptanceCertificateDto>> GetAllAsync(IEnumerable<Guid> permittedEntryIds)
+        {
+            if (permittedEntryIds == null)
+                return [];
+
+            var list = await _repo.GetAllAsync();
+            return list
+                .Where(e => permittedEntryIds.Contains(e.ProcurementEntryId))
+                .Select(e => _mapper.Map<InspectionAcceptanceCertificateDto>(e));
         }
 
         public async Task<InspectionAcceptanceCertificateDto> UpdateAsync(Guid id, UpdateInspectionAcceptanceCertificateDto dto)

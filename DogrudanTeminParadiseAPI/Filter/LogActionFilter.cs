@@ -140,7 +140,7 @@ namespace DogrudanTeminParadiseAPI.Filter
             try
             {
                 context.Request.EnableBuffering();
-                using var reader = new System.IO.StreamReader(
+                using var reader = new StreamReader(
                     context.Request.Body,
                     encoding: Encoding.UTF8,
                     detectEncodingFromByteOrderMarks: false,
