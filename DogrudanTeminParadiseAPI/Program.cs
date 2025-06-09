@@ -1,3 +1,4 @@
+using DogrudanTeminParadiseAPI.Dto;
 using DogrudanTeminParadiseAPI.Factory.Abstract;
 using DogrudanTeminParadiseAPI.Factory.Concrete;
 using DogrudanTeminParadiseAPI.Factory.Main;
@@ -9,12 +10,17 @@ using DogrudanTeminParadiseAPI.Repositories;
 using DogrudanTeminParadiseAPI.Service.Abstract;
 using DogrudanTeminParadiseAPI.Service.Concrete;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 var cfg = builder.Configuration;
+
+cfg.AddJsonFile("superadminsettings.json", optional: false, reloadOnChange: true);
+builder.Services.Configure<SuperAdminSettings>(builder.Configuration.GetSection("SuperAdminCredentials"));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<SuperAdminSettings>>().Value);
 
 builder.Services.Configure<LoggerApiOptions>(
     builder.Configuration.GetSection("LoggerApi"));
