@@ -117,6 +117,50 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             await _repo.UpdateAsync(sys.Id, sys);
         }
 
+        public async Task<Dictionary<Guid, bool>> GetActivePassiveUsersAsync()
+        {
+            // Sistemdeki tek super-admin kaydını al
+            var sys = (await _repo.GetAllAsync()).FirstOrDefault()
+                      ?? throw new InvalidOperationException("System record not found.");
+
+            // Entity’deki Dictionary<string,bool>’i Guid anahtarlı hale çevir
+            var result = new Dictionary<Guid, bool>();
+            foreach (var kv in sys.ActivePassiveUsers)
+            {
+                if (Guid.TryParse(kv.Key, out var guid))
+                    result[guid] = kv.Value;
+            }
+            return result;
+        }
+
+        public async Task<Dictionary<Guid, List<Guid>>> GetAllAdminPermissionsAsync()
+        {
+            var sys = (await _repo.GetAllAsync()).FirstOrDefault()
+                      ?? throw new InvalidOperationException("System record not found.");
+
+            var dict = new Dictionary<Guid, List<Guid>>();
+            foreach (var kv in sys.AssignPermissionToAdmin)
+            {
+                if (Guid.TryParse(kv.Key, out var adminId))
+                {
+                    var list = kv.Value
+                        .Where(s => Guid.TryParse(s, out _))
+                        .Select(s => Guid.Parse(s))
+                        .ToList();
+                    dict[adminId] = list;
+                }
+            }
+            return dict;
+        }
+
+        public async Task<List<Guid>> GetAdminPermissionsAsync(Guid adminId)
+        {
+            var all = await GetAllAdminPermissionsAsync();
+            if (!all.TryGetValue(adminId, out var list))
+                throw new KeyNotFoundException("Admin ID not found in permissions.");
+            return list;
+        }
+
         //BUNU ŞİMDİLİK KULLANMAYACAĞIZ : yeni versiyonda değişik bir şeyler düşüneceğim.
         public async Task<SystemActivityDto> GetSystemActivityAsync()
         {
@@ -137,6 +181,4 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return new SystemActivityDto { UserStatuses = statuses, AdminPermissions = perms };
         }
     }
-
-    
 }

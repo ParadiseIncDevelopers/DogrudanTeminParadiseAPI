@@ -10,6 +10,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [CallLogs]
     public class SuperAdminController : ControllerBase
     {
         private readonly ISuperAdminService _svc;
@@ -37,6 +38,34 @@ namespace DogrudanTeminParadiseAPI.Controllers
         {
             await _svc.AssignUsersToAdminAsync(dto);
             return NoContent();
+        }
+
+        [HttpGet("active-passives")]
+        [Authorize(Roles = "SUPER_ADMIN")]
+        public async Task<IActionResult> GetActivePassiveUsers()
+        {
+            var map = await _svc.GetActivePassiveUsersAsync();
+            return Ok(map);
+        }
+
+        [HttpGet("permissions")]
+        [Authorize(Roles = "SUPER_ADMIN")]
+        public async Task<IActionResult> GetAllAdminPermissions()
+        => Ok(await _svc.GetAllAdminPermissionsAsync());
+
+        [HttpGet("permissions/{adminId}")]
+        [Authorize(Roles = "SUPER_ADMIN")]
+        public async Task<IActionResult> GetAdminPermissions(Guid adminId)
+        {
+            try
+            {
+                var list = await _svc.GetAdminPermissionsAsync(adminId);
+                return Ok(list);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpGet("activities")]
