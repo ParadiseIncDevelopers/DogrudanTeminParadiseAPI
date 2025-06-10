@@ -95,21 +95,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
             return Ok(result);
         }
 
-        [HttpPost("login")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginDto dto)
-        {
-            try
-            {
-                var token = await _svc.AuthenticateAsync(dto);
-                return Ok(new { token });
-            }
-            catch(Exception ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-        }
-
         [HttpPut("change-password")]
         [Authorize]
         public async Task<IActionResult> ChangePassword([FromBody] UpdateAdminPasswordDto dto)
