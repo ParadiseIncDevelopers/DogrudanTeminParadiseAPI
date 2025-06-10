@@ -80,8 +80,7 @@ builder.Services.AddScoped(sp =>
 });
 
 // Servisler
-builder.Services.AddScoped<IAdminUserService, AdminUserService>();
-builder.Services.AddScoped<IUserService, UserService>();
+
 builder.Services.AddScoped<IEntrepriseService, EntrepriseService>();
 builder.Services.AddScoped<IProductItemService, ProductItemService>();
 builder.Services.AddScoped<IProductService, ProductService>();
@@ -103,6 +102,9 @@ builder.Services.AddScoped<IAdditionalInspectionAcceptanceService, AdditionalIns
 builder.Services.AddScoped<IApproximateCostJuryService, ApproximateCostJuryService>();
 builder.Services.AddScoped<IProcurementEntryEditorService, ProcurementEntryEditorService>();
 builder.Services.AddScoped<ISuperAdminService, SuperAdminService>();
+builder.Services.AddScoped<IAdminUserService, AdminUserService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 // Factoryler
 builder.Services.AddSingleton<ITeminApiExceptionFactory, TeminApiExceptionFactory>();
 

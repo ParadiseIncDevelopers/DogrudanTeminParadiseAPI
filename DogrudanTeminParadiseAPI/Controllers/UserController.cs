@@ -74,22 +74,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
             return NoContent();
         }
 
-        // LOGIN -- TC ve şifre ile giriş
-        [HttpPost("login")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginDto dto)
-        {
-            try
-            {
-                var token = await _svc.AuthenticateAsync(dto);
-                return Ok(new { token });
-            }
-            catch (Exception ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-        }
-
         [HttpPut("change-password")]
         [Authorize]
         public async Task<IActionResult> ChangePassword([FromBody] UpdateUserPasswordDto dto)

@@ -5,7 +5,6 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
 {
     public interface IUserService
     {
-        Task<string> AuthenticateAsync(LoginDto dto);
         Task<UserDto> CreateAsync(CreateUserDto dto);
         Task<IEnumerable<UserDto>> GetAllAsync();
         Task<UserDto> GetByIdAsync(Guid id);
