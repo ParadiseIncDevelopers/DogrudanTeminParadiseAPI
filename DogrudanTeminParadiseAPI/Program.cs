@@ -138,7 +138,6 @@ builder.Services.AddScoped<LogActionFilter>();
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<TeminApiExceptionFilter>();
-    options.Filters.Add(typeof(PermissionCheckAttribute));
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

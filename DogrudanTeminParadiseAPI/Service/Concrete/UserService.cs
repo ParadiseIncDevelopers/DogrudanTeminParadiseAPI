@@ -16,6 +16,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         private readonly MongoDBRepository<User> _repo;
         private readonly MongoDBRepository<SuperAdminUser> _sysRepo;
         private readonly MongoDBRepository<Title> _titleRepo;
+        private readonly IAdminUserService _adminService;
         private readonly IMapper _mapper;
         private readonly IConfiguration _cfg;
         private readonly byte[] _aesKey;
@@ -24,6 +25,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             MongoDBRepository<User> repo,
             MongoDBRepository<SuperAdminUser> sysRepo,
             MongoDBRepository<Title> titleRepo,
+            IAdminUserService adminService,
             IMapper mapper,
             IConfiguration cfg)
         {
@@ -31,6 +33,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             _sysRepo = sysRepo;
             _mapper = mapper;
             _titleRepo = titleRepo;
+            _adminService = adminService;
             _cfg = cfg;
 
             // AES anahtarı appsettings.json'dan okunur (32 karakter)
@@ -42,40 +45,52 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task<string> AuthenticateAsync(LoginDto dto)
         {
-            var sys = (await _sysRepo.GetAllAsync()).FirstOrDefault()
-               ?? throw new InvalidOperationException("System record not found.");
+            // 1) Check normal user DB
+            var allUsers = await _repo.GetAllAsync();
+            var hashed = Crypto.HashSha512(dto.Password);
+            var user = allUsers.FirstOrDefault(u => Crypto.Decrypt(u.Tcid) == dto.Tcid);
 
-            var all = await _repo.GetAllAsync();
-            var hashedPwd = Crypto.HashSha512(dto.Password);
-
-            var user = all.FirstOrDefault(u =>
-                Crypto.Decrypt(u.Tcid) == dto.Tcid &&
-                u.Password == hashedPwd);
-
-            if (user == null)
-                throw new UnauthorizedAccessException("Geçersiz TC veya parola");
-            else if (sys.ActivePassiveUsers.TryGetValue(user.Id.ToString(), out var isActive) && !isActive)
-                throw new UnauthorizedAccessException("Bu kullanıcı pasif durumda. Giriş yasak.");
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_cfg["Jwt:Key"]);
-            var token = tokenHandler.CreateToken(new SecurityTokenDescriptor
+            if (user != null)
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, Crypto.Decrypt(user.Tcid)),
-                    new Claim(ClaimTypes.Role, "User")
-                }),
-                Expires = DateTime.UtcNow.AddMinutes(int.Parse(_cfg["Jwt:ExpiresInMinutes"])),
-                Issuer = _cfg["Jwt:Issuer"],
-                Audience = _cfg["Jwt:Audience"],
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key),
-                    SecurityAlgorithms.HmacSha256)
-            });
+                // 1a) Permission check via system ActivePassiveUsers
+                var sys = (await _sysRepo.GetAllAsync()).FirstOrDefault()
+                          ?? throw new InvalidOperationException("System record not found.");
+                var key = user.Id.ToString();
+                if (sys.ActivePassiveUsers.TryGetValue(key, out var isActive) && !isActive)
+                    throw new UnauthorizedAccessException("Kullanıcı pasif; giriş yasak.");
 
-            return tokenHandler.WriteToken(token);
+                // 1b) Password check
+                if (user.Password != hashed)
+                    throw new UnauthorizedAccessException("Parola hatalı.");
+
+                // 1c) Generate JWT for user
+                var handler = new JwtSecurityTokenHandler();
+                var keyBytes = Encoding.UTF8.GetBytes(_cfg["Jwt:Key"]);
+                var token = handler.CreateToken(new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new[] {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Name,         Crypto.Decrypt(user.Tcid)),
+                    new Claim(ClaimTypes.Role,         user.UserType)
+                }),
+                    Expires = DateTime.UtcNow.AddMinutes(int.Parse(_cfg["Jwt:ExpiresInMinutes"])),
+                    Issuer = _cfg["Jwt:Issuer"],
+                    Audience = _cfg["Jwt:Audience"],
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256)
+                });
+                return handler.WriteToken(token);
+            }
+
+            // 2) Not a normal user: try adminService for admin
+            try
+            {
+                return await _adminService.AuthenticateAsync(dto);
+            }
+            catch (KeyNotFoundException)
+            {
+                // neither user nor admin found
+                throw new KeyNotFoundException("Kullanıcı bulunamadı.");
+            }
         }
 
         public async Task<UserDto> CreateAsync(CreateUserDto dto)

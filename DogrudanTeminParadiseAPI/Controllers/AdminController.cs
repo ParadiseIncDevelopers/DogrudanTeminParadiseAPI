@@ -106,7 +106,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
             }
             catch(Exception ex)
             {
-                return Unauthorized("TC veya parola hatalı");
+                return Unauthorized(ex.Message);
             }
         }
 
