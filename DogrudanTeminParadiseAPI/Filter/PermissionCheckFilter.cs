@@ -33,7 +33,7 @@ namespace DogrudanTeminParadiseAPI.Filter
             var id = Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier));
 
             // 2) Role’a göre iki farklı akış
-            if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(role, "ADMIN", StringComparison.OrdinalIgnoreCase))
             {
                 // 2a) SuperAdminUser ayarlarını çek
                 var sys = await _sysCollection
@@ -69,7 +69,7 @@ namespace DogrudanTeminParadiseAPI.Filter
                     return;
                 }
             }
-            else if (string.Equals(role, "User", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(role, "USER", StringComparison.OrdinalIgnoreCase))
             {
                 // 3) Normal kullanıcı sadece kendi kayıtlarını görebilir
                 var routeId = GetRouteGuid(context, "requesterId")   // by-requester gibi

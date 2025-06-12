@@ -16,7 +16,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
         public InspectionAcceptanceCertificateController(IInspectionAcceptanceCertificateService svc) => _svc = svc;
 
         [HttpPost]
-        [PermissionCheck]
         public async Task<IActionResult> Create([FromBody] CreateInspectionAcceptanceCertificateDto dto)
         {
             var created = await _svc.CreateAsync(dto);
@@ -27,25 +26,20 @@ namespace DogrudanTeminParadiseAPI.Controllers
         /// Get all certificates, filtered by permission list
         /// </summary>
         [HttpGet]
-        [PermissionCheck]
         public async Task<IActionResult> GetAll()
         {
-            var permitted = HttpContext.Items["PermittedList"] as IEnumerable<Guid>;
-            var list = await _svc.GetAllAsync(permitted);
+            var list = await _svc.GetAllAsync();
             return Ok(list);
         }
 
         [HttpGet("entry/{entryId}")]
-        [PermissionCheck]
         public async Task<IActionResult> GetAllByEntry(Guid entryId) 
         {
-            var permitted = HttpContext.Items["PermittedList"] as IEnumerable<Guid>;
-            var list = await _svc.GetAllByEntryAsync(entryId, permitted);
+            var list = await _svc.GetAllByEntryAsync(entryId);
             return Ok(list);
         }
 
         [HttpGet("{id}")]
-        [PermissionCheck]
         public async Task<IActionResult> GetById(Guid id) 
         {
             var dto = await _svc.GetByIdAsync(id);
@@ -53,7 +47,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        [PermissionCheck]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateInspectionAcceptanceCertificateDto dto)
         {
             var updated = await _svc.UpdateAsync(id, dto);
@@ -61,7 +54,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        [PermissionCheck]
         public async Task<IActionResult> Delete(Guid id)
         {
             await _svc.DeleteAsync(id);

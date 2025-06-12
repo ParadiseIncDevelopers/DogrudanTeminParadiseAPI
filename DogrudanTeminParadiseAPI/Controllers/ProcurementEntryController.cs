@@ -43,18 +43,17 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet]
-        [PermissionCheck]
         public async Task<IActionResult> GetAll()
         {
             var role = User.FindFirstValue(ClaimTypes.Role);
             var id = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            if (role == "Admin")
+            if (role == "ADMIN")
             {
                 var permitted = HttpContext.Items["PermittedList"] as List<Guid>;
                 return Ok(await _entrySvc.GetAllAsync(permitted));
             }
-            else if (role == "User")
+            else if (role == "USER")
             {
                 return Ok(await _entrySvc.GetAllAsync([id]));
             }
@@ -65,7 +64,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        [PermissionCheck]
         public async Task<IActionResult> GetById(Guid id)
         {
             var item = await _entrySvc.GetByIdAsync(id);
@@ -73,7 +71,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        [PermissionCheck]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProcurementEntryDto dto)
         {
             try
@@ -159,7 +156,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         public async Task<IActionResult> GetByRequester()
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var isAdmin = User.IsInRole("Admin");
+            var isAdmin = User.IsInRole("ADMIN");
             return Ok(await _entrySvc.GetByRequesterAsync(userId, isAdmin));
         }
     }
