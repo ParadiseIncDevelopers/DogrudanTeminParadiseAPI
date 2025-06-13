@@ -18,9 +18,19 @@ namespace DogrudanTeminParadiseAPI.Controllers
         [Authorize]
         public async Task<IActionResult> Create([FromBody] CreateProductDto dto)
         {
-            try { var c = await _svc.CreateAsync(dto); return CreatedAtAction(nameof(GetById), new { id = c.Id }, c); }
-            catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
-            catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
+            try 
+            {
+                var c = await _svc.CreateAsync(dto); 
+                return CreatedAtAction(nameof(GetById), new { id = c.Id }, c); 
+            }
+            catch (KeyNotFoundException ex) 
+            { 
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex) 
+            { 
+                return BadRequest(new { error = ex.Message }); 
+            }
         }
 
         [HttpGet]

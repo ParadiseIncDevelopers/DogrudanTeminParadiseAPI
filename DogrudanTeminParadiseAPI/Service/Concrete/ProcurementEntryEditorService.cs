@@ -21,8 +21,6 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task<ProcurementEntryEditorDto> CreateAsync(CreateProcurementEntryEditorDto dto)
         {
-            if ((await _repo.GetAllAsync()).Any())
-                throw new InvalidOperationException("Sadece bir editör olabilir.");
             var entity = _mapper.Map<ProcurementEntryEditor>(dto);
             entity.Id = Guid.NewGuid();
             await _repo.InsertAsync(entity);
