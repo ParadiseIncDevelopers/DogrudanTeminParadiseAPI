@@ -3,7 +3,6 @@ using DogrudanTeminParadiseAPI.Factory.Abstract;
 using DogrudanTeminParadiseAPI.Factory.Concrete;
 using DogrudanTeminParadiseAPI.Factory.Main;
 using DogrudanTeminParadiseAPI.Filter;
-using DogrudanTeminParadiseAPI.Helpers.Attributes;
 using DogrudanTeminParadiseAPI.Helpers.Options;
 using DogrudanTeminParadiseAPI.Mapping;
 using DogrudanTeminParadiseAPI.Models;
@@ -140,6 +139,9 @@ builder.Services.AddScoped<LogActionFilter>();
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<TeminApiExceptionFilter>();
+}).AddJsonOptions(opts =>
+{
+    opts.JsonSerializerOptions.Converters.Add(new TurkeyDateTimeConverter());
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
