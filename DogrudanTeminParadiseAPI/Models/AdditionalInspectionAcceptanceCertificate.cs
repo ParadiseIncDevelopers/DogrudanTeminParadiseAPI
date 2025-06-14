@@ -1,6 +1,7 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using DogrudanTeminParadiseAPI.Helpers;
 using MongoDB.Bson;
-using DogrudanTeminParadiseAPI.Helpers;
+using MongoDB.Bson.Serialization.Attributes;
+using System.ComponentModel.DataAnnotations;
 
 namespace DogrudanTeminParadiseAPI.Models
 {

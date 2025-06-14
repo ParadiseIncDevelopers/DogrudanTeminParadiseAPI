@@ -86,7 +86,19 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<InspectionAcceptanceCertificate, InspectionAcceptanceCertificateDto>();
 
             CreateMap<CreateAdditionalInspectionAcceptanceCertificateDto, AdditionalInspectionAcceptanceCertificate>();
+            // Map OfferItemDto → SelectedOfferItem
+            CreateMap<OfferItemDto, SelectedOfferItem>()
+                .ForMember(d => d.Id, o => o.MapFrom(s => s.Id == Guid.Empty ? Guid.NewGuid() : s.Id))
+                .ForMember(d => d.Name, o => o.MapFrom(s => s.Name))
+                .ForMember(d => d.Features, o => o.MapFrom(s => s.Features))
+                .ForMember(d => d.Quantity, o => o.MapFrom(s => s.Quantity))
+                .ForMember(d => d.UnitId, o => o.MapFrom(s => s.UnitId))
+                .ForMember(d => d.UnitPrice, o => o.MapFrom(s => s.UnitPrice));
+
+            // Map Update DTO → Entity, including SelectedProducts and unit IDs
             CreateMap<UpdateAdditionalInspectionAcceptanceCertificateDto, AdditionalInspectionAcceptanceCertificate>();
+
+            // Map Entity → DTO for return
             CreateMap<AdditionalInspectionAcceptanceCertificate, AdditionalInspectionAcceptanceCertificateDto>();
 
             CreateMap<CreateProcurementEntryEditorDto, ProcurementEntryEditor>();
