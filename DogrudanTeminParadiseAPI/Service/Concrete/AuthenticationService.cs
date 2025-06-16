@@ -76,6 +76,14 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             throw new KeyNotFoundException("Kullanıcı bulunamadı.");
         }
 
+        public async Task<int> GetTotalUserAndAdminCountAsync()
+        {
+            // SuperAdmin haricinde:
+            var adminCount = (await _adminRepo.GetAllAsync()).Count();
+            var userCount = (await _userRepo.GetAllAsync()).Count();
+            return adminCount + userCount;
+        }
+
         private string CreateJwtToken(Guid id, string nameClaim, string role)
         {
             var handler = new JwtSecurityTokenHandler();

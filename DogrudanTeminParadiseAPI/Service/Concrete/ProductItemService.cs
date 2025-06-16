@@ -57,7 +57,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             existing.Code = dto.Code;
             existing.Description = dto.Description;
             existing.CategoryId = dto.CategoryId;
-            existing.ProductItemType = dto.Type; 
+            existing.Type = dto.Type; 
             await _repo.UpdateAsync(id, existing);
             return _mapper.Map<ProductItemDto>(existing);
         }

@@ -32,5 +32,13 @@ namespace DogrudanTeminParadiseAPI.Controllers
                 return NotFound("Kullanıcı bulunamadı.");
             }
         }
+
+        [HttpGet("counts")]
+        [AllowAnonymous]  // yetki yok
+        public async Task<IActionResult> GetTotalCounts()
+        {
+            var total = await _auth.GetTotalUserAndAdminCountAsync();
+            return Ok(new { total });
+        }
     }
 }
