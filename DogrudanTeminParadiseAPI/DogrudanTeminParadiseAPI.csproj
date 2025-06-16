@@ -8,6 +8,7 @@
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +17,10 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
     <PackageReference Include="MongoDB.Driver" Version="3.3.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <Content Include="Titles.json" CopyToOutputDirectory="Always"
+           Condition="Exists('Titles.json')" />
+    <Content Include="Units.json"  CopyToOutputDirectory="Always"
+             Condition="Exists('Units.json')" />
   </ItemGroup>
 
 </Project>

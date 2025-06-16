@@ -20,16 +20,16 @@ var builder = WebApplication.CreateBuilder(args);
 var cfg = builder.Configuration;
 
 cfg.AddJsonFile("superadminsettings.json", optional: false, reloadOnChange: true);
-builder.Services.Configure<SuperAdminSettings>(builder.Configuration.GetSection("SuperAdminCredentials"));
+builder.Services.Configure<SuperAdminSettings>(cfg.GetSection("SuperAdminCredentials"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<SuperAdminSettings>>().Value);
 
 builder.Services.Configure<LoggerApiOptions>(
-    builder.Configuration.GetSection("LoggerApi"));
+    cfg.GetSection("LoggerApi"));
 
 // Register HttpClient for logger
 builder.Services.AddHttpClient("LoggerApi", client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["LoggerApi:BaseUrl"]);
+    client.BaseAddress = new Uri(cfg["LoggerApi:BaseUrl"]);
 });
 
 //CORS
@@ -38,7 +38,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowMyClient", policy =>
     {
         policy
-          .WithOrigins("https://localhost:44379") 
+          .WithOrigins(cfg["ConnectionStrings:CORS"].ToString()) 
           .AllowAnyHeader()
           .AllowAnyMethod();
     });
@@ -169,16 +169,17 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var wizard = new DbInstallationWizard(scope.ServiceProvider);
+    await wizard.RunAsync();
+}
+
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("AllowMyClient");
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
+app.UseSwagger();
+app.UseSwaggerUI();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();

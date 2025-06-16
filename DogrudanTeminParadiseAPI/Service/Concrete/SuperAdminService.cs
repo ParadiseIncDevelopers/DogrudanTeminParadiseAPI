@@ -37,8 +37,24 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             if (_settings.Username != dto.Username || _settings.PasswordHash != hashedInput)
                 throw new UnauthorizedAccessException("Invalid credentials.");
 
-            var entity = (await _repo.GetAllAsync()).FirstOrDefault()
+            SuperAdminUser? entity = new();
+            try
+            {
+                entity = (await _repo.GetAllAsync()).FirstOrDefault()
                          ?? throw new InvalidOperationException("SuperAdmin metadata not found.");
+            }
+            catch 
+            {
+                SuperAdminUser superAdmin = new()
+                {
+                    Id = Guid.NewGuid(),
+                    UserType = "SUPER_ADMIN",
+                    ActivePassiveUsers = [],
+                    AssignPermissionToAdmin = []
+                };
+                await _repo.InsertAsync(superAdmin);
+                entity = (await _repo.GetAllAsync()).FirstOrDefault();
+            }
 
             var handler = new JwtSecurityTokenHandler();
             var keyBytes = Encoding.UTF8.GetBytes(_cfg["Jwt:Key"]);
