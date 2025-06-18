@@ -13,12 +13,15 @@ namespace DogrudanTeminParadiseAPI.Controllers
     [CallLogs]
     public class AdminController : ControllerBase
     {
-        private readonly IAdminUserService _svc;
+        private readonly ISuperAdminService _superAdminSvc;
+        private readonly IAdminUserService _adminSvc;
         private readonly IUserService _userSvc;
-        public AdminController(IAdminUserService svc, IUserService userSvc) 
+        public AdminController(IAdminUserService adminSvc, IUserService userSvc, ISuperAdminService superAdminSvc) 
         {
+            _superAdminSvc = superAdminSvc;
+            _adminSvc = adminSvc;
             _userSvc = userSvc;
-            _svc = svc;
+            
         }
 
         /// <summary>
@@ -29,7 +32,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         {
             try
             {
-                var created = await _svc.CreateAsync(dto);
+                var created = await _adminSvc.CreateAsync(dto);
                 return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
             }
             catch (InvalidOperationException ex)
@@ -42,7 +45,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         [Authorize]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var user = await _svc.GetByIdAsync(id);
+            var user = await _adminSvc.GetByIdAsync(id);
             return user == null ? NotFound() : Ok(user);
         }
 
@@ -53,7 +56,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         [Authorize]
         public async Task<IActionResult> GetAll()
         {
-            var admins = await _svc.GetAllAsync();
+            var admins = await _adminSvc.GetAllAsync();
             return Ok(admins);
         }
 
@@ -67,10 +70,14 @@ namespace DogrudanTeminParadiseAPI.Controllers
                 return Unauthorized();
 
             // 2) Tüm adminleri çek, yalnızca kendisinin kaydını seç
-            var allAdmins = await _svc.GetAllAsync();
+            var allAdmins = await _adminSvc.GetAllAsync();
             var currentAdmin = allAdmins
                 .Where(a => a.Id == currentUserId)
                 .ToList();
+
+            //İzinlerimizin olduğu kullanıcılara bakalım
+            var list = await _superAdminSvc.GetAllAdminPermissionsAsync();
+            var allPermissionUser = list[currentUserId];
 
             // 3) Tüm normal kullanıcıları çek ve AdminUserDto’ya dönüştür
             var normalUsers = await _userSvc.GetAllAsync();
@@ -85,7 +92,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
                 TitleId = u.TitleId,
                 Permissions = u.Permissions,
                 PublicInstitutionName = null
-            });
+            }).Where(x => allPermissionUser.Contains(x.Id));
 
             // 4) Birleştir ve döndür
             var result = currentAdmin
@@ -105,7 +112,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
 
             try
             {
-                await _svc.ChangePasswordAsync(userId, dto);
+                await _adminSvc.ChangePasswordAsync(userId, dto);
                 return NoContent();
             }
             catch (Exception ex) when (ex is UnauthorizedAccessException || ex is InvalidOperationException || ex is KeyNotFoundException)
@@ -120,7 +127,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         {
             try
             {
-                await _svc.AssignTitleAsync(id, titleId);
+                await _adminSvc.AssignTitleAsync(id, titleId);
                 return NoContent();
             }
             catch (Exception ex) when (ex is KeyNotFoundException)

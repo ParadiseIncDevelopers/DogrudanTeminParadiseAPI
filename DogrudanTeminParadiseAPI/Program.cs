@@ -19,6 +19,12 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 var cfg = builder.Configuration;
 
+
+builder.Services.AddSingleton(new HttpClient(new HttpClientHandler
+{
+    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+}));
+
 cfg.AddJsonFile("superadminsettings.json", optional: false, reloadOnChange: true);
 builder.Services.Configure<SuperAdminSettings>(cfg.GetSection("SuperAdminCredentials"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<SuperAdminSettings>>().Value);

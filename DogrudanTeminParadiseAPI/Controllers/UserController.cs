@@ -13,20 +13,18 @@ namespace DogrudanTeminParadiseAPI.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _svc;
-        private readonly IConfiguration _config;
 
-        public UserController(IUserService svc, IConfiguration config)
+        public UserController(IUserService svc)
         {
             _svc = svc;
-            _config = config;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
+        [HttpPost("{adminId}")]
+        public async Task<IActionResult> Create(string adminId, [FromBody] CreateUserDto dto)
         {
             try
             {
-                var created = await _svc.CreateAsync(dto);
+                var created = await _svc.CreateAsync(dto, adminId);
                 return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
             }
             catch (InvalidOperationException ex)

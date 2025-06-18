@@ -14,6 +14,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
     public class UserService : IUserService
     {
         private readonly MongoDBRepository<User> _repo;
+        private readonly MongoDBRepository<AdminUser> _adminRepo;
         private readonly MongoDBRepository<SuperAdminUser> _sysRepo;
         private readonly MongoDBRepository<Title> _titleRepo;
         private readonly IMapper _mapper;
@@ -22,12 +23,14 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public UserService(
             MongoDBRepository<User> repo,
+            MongoDBRepository<AdminUser> adminRepo,
             MongoDBRepository<SuperAdminUser> sysRepo,
             MongoDBRepository<Title> titleRepo,
             IMapper mapper,
             IConfiguration cfg)
         {
             _repo = repo;
+            _adminRepo = adminRepo;
             _sysRepo = sysRepo;
             _mapper = mapper;
             _titleRepo = titleRepo;
@@ -40,9 +43,13 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             _aesKey = Encoding.UTF8.GetBytes(keyString);
         }
 
-        public async Task<UserDto> CreateAsync(CreateUserDto dto)
+        public async Task<UserDto> CreateAsync(CreateUserDto dto, string adminId)
         {
             var allUsers = await _repo.GetAllAsync();
+            var getAdmin = await _adminRepo.GetByIdAsync(Guid.Parse(adminId)) ?? throw new InvalidOperationException("Bu Admin kullanıcısı yok. Lütfen tekrar deneyin.");
+
+            var superAdmins = (await _sysRepo.GetAllAsync()).ToList();
+            var permissionsDict = superAdmins[0].AssignPermissionToAdmin;
 
             // Encrypt ve hash
             var encTcid = Crypto.Encrypt(dto.Tcid);
@@ -66,7 +73,18 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             entity.Surname = encSurname;
             entity.Password = hashedPwd;
 
+            if (!permissionsDict.ContainsKey(adminId))
+            {
+                permissionsDict.Add(adminId, [entity.Id.ToString()]);
+            }
+            else 
+            {
+                permissionsDict[adminId].Add(entity.Id.ToString());
+            }
+            superAdmins[0].AssignPermissionToAdmin = permissionsDict;
+
             await _repo.InsertAsync(entity);
+            await _sysRepo.UpdateAsync(superAdmins[0].Id, superAdmins[0]);
 
             // Decrypted DTO
             return new UserDto
