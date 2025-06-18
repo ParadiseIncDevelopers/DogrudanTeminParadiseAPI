@@ -35,7 +35,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 throw new InvalidOperationException("Bu satın alma karar numarası zaten mevcut.");
 
             var user = await _userRepo.GetByIdAsync(dto.TenderResponsibleUserId);
-            if (user == null)
+            var admin = await _adminRepo.GetByIdAsync(dto.TenderResponsibleUserId);
+            if (user == null && admin == null)
                 throw new KeyNotFoundException("İhale sorumlusu user bulunamadı.");
 
             var entity = _mapper.Map<ProcurementEntry>(dto);

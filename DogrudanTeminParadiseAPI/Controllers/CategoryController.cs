@@ -18,7 +18,11 @@ namespace DogrudanTeminParadiseAPI.Controllers
         [Authorize]
         public async Task<IActionResult> Create([FromBody] CreateCategoryDto dto)
         {
-            try { var c = await _svc.CreateAsync(dto); return CreatedAtAction(nameof(GetById), new { id = c.Id }, c); }
+            try 
+            { 
+                var c = await _svc.CreateAsync(dto); 
+                return CreatedAtAction(nameof(GetById), new { id = c.Id }, c);
+            }
             catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
         }
 
