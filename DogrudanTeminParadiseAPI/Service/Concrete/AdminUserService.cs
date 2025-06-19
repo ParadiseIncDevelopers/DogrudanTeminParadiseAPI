@@ -14,20 +14,20 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
     public class AdminUserService : IAdminUserService
     {
         private readonly MongoDBRepository<AdminUser> _repo;
-        private readonly MongoDBRepository<SuperAdminUser> _sysRepo;
+        private readonly MongoDBRepository<User> _userRepo;
         private readonly MongoDBRepository<Title> _titleRepo;
         private readonly IMapper _mapper;
         private readonly IConfiguration _cfg;
 
         public AdminUserService(
             MongoDBRepository<AdminUser> repo,
-            MongoDBRepository<SuperAdminUser> sysRepo,
+            MongoDBRepository<User> userRepo,
             MongoDBRepository<Title> titleRepo,
             IMapper mapper,
             IConfiguration cfg)
         {
             _repo = repo;
-            _sysRepo = sysRepo;
+            _userRepo = userRepo;
             _titleRepo = titleRepo;
             _mapper = mapper;
             _cfg = cfg;
@@ -35,7 +35,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task<AdminUserDto> CreateAsync(CreateUserDto dto)
         {
-            var allUsers = await _repo.GetAllAsync();
+            var allAdmins = await _repo.GetAllAsync();
+            var allUsers = await _userRepo.GetAllAsync();
 
             // AES ile şifreleyeceğimiz alanlar
             var encTcid = Crypto.Encrypt(dto.Tcid);
@@ -49,9 +50,9 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
             var hashedPwd = Crypto.HashSha512(dto.Password);
 
-            if (allUsers.Any(u => u.Tcid == encTcid))
+            if (allAdmins.Any(u => u.Tcid == encTcid) || allUsers.Any(u => u.Tcid == encTcid))
                 throw new InvalidOperationException("Bu TC Kimlik Numarası zaten sistemde kayıtlı.");
-            if (allUsers.Any(u => u.Email == encEmail))
+            if (allAdmins.Any(u => u.Email == encEmail) || allUsers.Any(u => u.Email == encEmail))
                 throw new InvalidOperationException("Bu e-posta adresi zaten sistemde kayıtlı.");
 
             var entity = new AdminUser

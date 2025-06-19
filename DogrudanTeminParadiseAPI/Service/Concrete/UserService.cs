@@ -46,6 +46,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         public async Task<UserDto> CreateAsync(CreateUserDto dto, string adminId)
         {
             var allUsers = await _repo.GetAllAsync();
+            var allAdmins = await _adminRepo.GetAllAsync();
             var getAdmin = await _adminRepo.GetByIdAsync(Guid.Parse(adminId)) ?? throw new InvalidOperationException("Bu Admin kullanıcısı yok. Lütfen tekrar deneyin.");
 
             var superAdmins = (await _sysRepo.GetAllAsync()).ToList();
@@ -59,9 +60,9 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             var hashedPwd = Crypto.HashSha512(dto.Password);
 
             // Uniqueness check
-            if (allUsers.Any(u => u.Tcid == encTcid))
+            if (allUsers.Any(u => u.Tcid == encTcid) || allAdmins.Any(u => u.Tcid == encTcid))
                 throw new InvalidOperationException("Bu TC Kimlik Numarası zaten kayıtlı.");
-            if (allUsers.Any(u => u.Email == encEmail))
+            if (allUsers.Any(u => u.Email == encEmail) || allAdmins.Any(u => u.Email == encEmail))
                 throw new InvalidOperationException("Bu e-posta zaten kayıtlı.");
 
             // Entity oluştur
