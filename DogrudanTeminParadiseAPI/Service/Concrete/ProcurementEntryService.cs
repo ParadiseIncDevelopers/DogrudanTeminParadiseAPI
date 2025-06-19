@@ -84,7 +84,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             }
 
             var user = await _userRepo.GetByIdAsync(dto.TenderResponsibleUserId);
-            if (user == null)
+            var admin = await _adminRepo.GetByIdAsync(dto.TenderResponsibleUserId);
+            if (user == null && admin == null)
                 throw new KeyNotFoundException("İhale sorumlusu user bulunamadı.");
 
             existing.ProcurementDecisionDate = dto.ProcurementDecisionDate;
