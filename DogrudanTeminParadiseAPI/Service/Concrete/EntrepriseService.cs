@@ -36,12 +36,12 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 throw new InvalidOperationException("Bu Adres başka bir firma tarafından zaten kullanılıyor.");
 
             bool emailExists = allEntreprises.Any(e =>
-                e.Email.Equals(dto.Email, StringComparison.OrdinalIgnoreCase));
+                e.Email.Equals(dto.Email, StringComparison.OrdinalIgnoreCase) && dto.Email != "");
             if (emailExists)
                 throw new InvalidOperationException("Bu e-posta başka bir firma tarafından zaten kullanılıyor.");
 
             bool phoneExists = allEntreprises.Any(e =>
-                e.PhoneNumber.Equals(dto.PhoneNumber, StringComparison.OrdinalIgnoreCase));
+                e.PhoneNumber.Equals(dto.PhoneNumber, StringComparison.OrdinalIgnoreCase) && dto.PhoneNumber != "");
             if (phoneExists)
                 throw new InvalidOperationException("Bu telefon numarası başka bir firma tarafından zaten kullanılıyor.");
 
@@ -92,13 +92,13 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
             bool emailExists = allEntreprises
                 .Where(e => e.Id != id)
-                .Any(e => e.Email.Equals(dto.Email, StringComparison.OrdinalIgnoreCase));
+                .Any(e => e.Email.Equals(dto.Email, StringComparison.OrdinalIgnoreCase) && dto.Email != "");
             if (emailExists)
                 throw new InvalidOperationException("Bu e-posta başka bir firma tarafından zaten kullanılıyor.");
 
             bool phoneExists = allEntreprises
                 .Where(e => e.Id != id)
-                .Any(e => e.PhoneNumber.Equals(dto.PhoneNumber, StringComparison.OrdinalIgnoreCase));
+                .Any(e => e.PhoneNumber.Equals(dto.PhoneNumber, StringComparison.OrdinalIgnoreCase) && dto.PhoneNumber != "");
             if (phoneExists)
                 throw new InvalidOperationException("Bu telefon numarası başka bir firma tarafından zaten kullanılıyor.");
 

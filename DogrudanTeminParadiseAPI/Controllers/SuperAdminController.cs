@@ -68,12 +68,20 @@ namespace DogrudanTeminParadiseAPI.Controllers
             }
         }
 
-        [HttpGet("activities")]
+        [HttpPut("reset-password")]
         [Authorize(Roles = "SUPER_ADMIN")]
-        public async Task<IActionResult> GetActivities()
+        public async Task<IActionResult> ResetPassword([FromBody] UpdateForgotPasswordDto dto)
         {
-            var activities = await _svc.GetSystemActivityAsync();
-            return Ok(activities);
+            await _svc.ResetPasswordAsync(dto);
+            return NoContent();
         }
+
+        //[HttpGet("activities")]
+        //[Authorize(Roles = "SUPER_ADMIN")]
+        //public async Task<IActionResult> GetActivities()
+        //{
+        //    var activities = await _svc.GetSystemActivityAsync();
+        //    return Ok(activities);
+        //}
     }
 }

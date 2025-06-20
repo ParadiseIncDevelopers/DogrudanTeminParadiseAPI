@@ -177,24 +177,51 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return list;
         }
 
-        //BUNU ŞİMDİLİK KULLANMAYACAĞIZ : yeni versiyonda değişik bir şeyler düşüneceğim.
-        public async Task<SystemActivityDto> GetSystemActivityAsync()
+        public async Task ResetPasswordAsync(UpdateForgotPasswordDto dto)
         {
-            var sys = (await _repo.GetAllAsync()).FirstOrDefault();
-            if (sys == null)
-                return new SystemActivityDto
-                {
-                    UserStatuses = new List<UserStatusDto>(),
-                    AdminPermissions = new List<AdminPermissionsDto>()
-                };
+            // 1) AdminUser koleksiyonunda ara
+            var allAdmins = await _adminRepo.GetAllAsync();
+            var admin = allAdmins.FirstOrDefault(a => a.Id == dto.UserOrAdminId);
+            if (admin != null)
+            {
+                admin.Password = Crypto.HashSha512(dto.NewPassword);
+                await _adminRepo.UpdateAsync(admin.Id, admin);
+                return;
+            }
 
-            var statuses = sys.ActivePassiveUsers
-                .Select(kv => new UserStatusDto { UserId = Guid.Parse(kv.Key), IsActive = kv.Value })
-                .ToList();
-            var perms = sys.AssignPermissionToAdmin
-                .Select(kv => new AdminPermissionsDto { AdminId = Guid.Parse(kv.Key), PermittedUserIds = kv.Value })
-                .ToList();
-            return new SystemActivityDto { UserStatuses = statuses, AdminPermissions = perms };
+            // 2) Normal User koleksiyonunda ara
+            var allUsers = await _userRepo.GetAllAsync();
+            var user = allUsers.FirstOrDefault(u => u.Id == dto.UserOrAdminId);
+            if (user != null)
+            {
+                user.Password = Crypto.HashSha512(dto.NewPassword);
+                await _userRepo.UpdateAsync(user.Id, user);
+                return;
+            }
+
+            // 3) Hiçbiri bulunamazsa
+            throw new KeyNotFoundException("Kullanıcı veya admin bulunamadı.");
         }
+
+        //BUNU ŞİMDİLİK KULLANMAYACAĞIZ : yeni versiyonda değişik bir şeyler düşüneceğim.
+
+        //public async Task<SystemActivityDto> GetSystemActivityAsync()
+        //{
+        //    var sys = (await _repo.GetAllAsync()).FirstOrDefault();
+        //    if (sys == null)
+        //        return new SystemActivityDto
+        //        {
+        //            UserStatuses = new List<UserStatusDto>(),
+        //            AdminPermissions = new List<AdminPermissionsDto>()
+        //        };
+
+        //    var statuses = sys.ActivePassiveUsers
+        //        .Select(kv => new UserStatusDto { UserId = Guid.Parse(kv.Key), IsActive = kv.Value })
+        //        .ToList();
+        //    var perms = sys.AssignPermissionToAdmin
+        //        .Select(kv => new AdminPermissionsDto { AdminId = Guid.Parse(kv.Key), PermittedUserIds = kv.Value })
+        //        .ToList();
+        //    return new SystemActivityDto { UserStatuses = statuses, AdminPermissions = perms };
+        //}
     }
 }
