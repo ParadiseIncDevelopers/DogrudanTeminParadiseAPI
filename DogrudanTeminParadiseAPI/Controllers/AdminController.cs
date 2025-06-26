@@ -7,7 +7,6 @@ using System.Security.Claims;
 
 namespace DogrudanTeminParadiseAPI.Controllers
 {
-    // Controllers/AdminController.cs
     [ApiController]
     [Route("api/[controller]")]
     [CallLogs]
@@ -133,6 +132,24 @@ namespace DogrudanTeminParadiseAPI.Controllers
             catch (Exception ex) when (ex is KeyNotFoundException)
             {
                 return NotFound(new { error = ex.Message });
+            }
+        }
+
+        [HttpPut("{id}")]
+        [Authorize]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateAdminDto dto)
+        {
+            try
+            {
+                var updated = await _adminSvc.UpdateAsync(id, dto);
+                if (updated == null)
+                    return NotFound(new { error = "Kullanıcı bulunamadı." });
+
+                return Ok(updated);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
             }
         }
     }

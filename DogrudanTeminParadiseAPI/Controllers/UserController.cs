@@ -54,14 +54,12 @@ namespace DogrudanTeminParadiseAPI.Controllers
             return user == null ? NotFound() : Ok(user);
         }
 
-        [HttpPut("Update/{id}")]
+        [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserDto dto)
         {
             var updated = await _svc.UpdateAsync(id, dto);
-            return updated == null
-                ? NotFound()
-                : Ok(updated);
+            return updated == null ? NotFound() : Ok(updated);
         }
 
         [HttpDelete("{id}")]

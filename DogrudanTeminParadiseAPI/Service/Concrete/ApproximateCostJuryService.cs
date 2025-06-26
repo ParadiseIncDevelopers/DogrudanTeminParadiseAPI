@@ -52,7 +52,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         public async Task<ApproximateCostJuryDto> UpdateAsync(Guid id, UpdateApproximateCostJuryDto dto)
         {
             var existing = (await _repo.GetAllAsync())
-                .FirstOrDefault(j => j.Id == id);
+                .FirstOrDefault(j => j.ProcurementEntryId == id);
             if (existing == null) return null;
             existing.UserIds = dto.UserIds;
             await _repo.UpdateAsync(existing.Id, existing);

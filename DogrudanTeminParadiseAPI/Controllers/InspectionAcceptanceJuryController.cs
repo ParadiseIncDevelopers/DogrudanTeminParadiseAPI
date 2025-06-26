@@ -23,16 +23,13 @@ namespace DogrudanTeminParadiseAPI.Controllers
         }
 
         [HttpGet("entry/{entryId}")]
-        public async Task<IActionResult> GetAllByEntry(Guid entryId)
-            => Ok(await _svc.GetAllByEntryAsync(entryId));
+        public async Task<IActionResult> GetAllByEntry(Guid entryId) => Ok(await _svc.GetAllByEntryAsync(entryId));
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(Guid id)
-            => (await _svc.GetByIdAsync(id)) is var dto && dto != null ? Ok(dto) : NotFound();
+        public async Task<IActionResult> GetById(Guid id) => (await _svc.GetByIdAsync(id)) is var dto && dto != null ? Ok(dto) : NotFound();
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateInspectionAcceptanceJuryDto dto)
-            => Ok(await _svc.UpdateAsync(id, dto));
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateInspectionAcceptanceJuryDto dto) => Ok(await _svc.UpdateAsync(id, dto));
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)

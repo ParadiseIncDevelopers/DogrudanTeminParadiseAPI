@@ -157,5 +157,36 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             user.TitleId = titleId;
             await _repo.UpdateAsync(userId, user);
         }
+
+        public async Task<AdminUserDto> UpdateAsync(Guid id, UpdateAdminDto dto)
+        {
+            // 1) Mevcut kaydı çek
+            var existing = await _repo.GetByIdAsync(id);
+            if (existing == null)
+                return null;
+
+            // 2) Gelen verileri şifrele / encrypt et
+            existing.Name = Crypto.Encrypt(dto.Name);
+            existing.Surname = Crypto.Encrypt(dto.Surname);
+            existing.Email = Crypto.Encrypt(dto.Email);
+            existing.TitleId = dto.TitleId;
+
+            // 3) Güncelle
+            await _repo.UpdateAsync(id, existing);
+
+            // 4) Dto’ya dönüştürüp dön
+            return new AdminUserDto
+            {
+                Id = existing.Id,
+                Name = Crypto.Decrypt(existing.Name),
+                Surname = Crypto.Decrypt(existing.Surname),
+                Email = Crypto.Decrypt(existing.Email),
+                Tcid = Crypto.Decrypt(existing.Tcid),
+                UserType = existing.UserType,
+                TitleId = existing.TitleId,
+                Permissions = existing.Permissions,
+                PublicInstitutionName = string.IsNullOrEmpty(existing.PublicInstitutionName) ? null : Crypto.Decrypt(existing.PublicInstitutionName)
+            };
+        }
     }
 }
