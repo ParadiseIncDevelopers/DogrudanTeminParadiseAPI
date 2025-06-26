@@ -56,8 +56,32 @@ namespace DogrudanTeminParadiseAPI.Controllers
                 var updated = await _svc.UpdateAsync(id, dto);
                 return updated == null ? NotFound() : Ok(updated);
             }
-            catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
-            catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
+            catch (KeyNotFoundException ex) 
+            { 
+                return NotFound(new { error = ex.Message }); 
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPut("entry/{entryId}/items")]
+        public async Task<IActionResult> UpdateItemsByEntry(Guid entryId, [FromBody] UpdateOfferItemsByEntryDto dto)
+        {
+            try
+            {
+                var updated = await _svc.UpdateItemsByEntryAsync(entryId, dto);
+                return Ok(updated);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]

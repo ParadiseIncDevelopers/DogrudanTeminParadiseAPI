@@ -82,7 +82,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         public async Task<IEnumerable<OfferLetterDto>> GetAllByEntryAsync(Guid procurementEntryId, IEnumerable<Guid> permittedEntryIds)
         {
             if (permittedEntryIds == null || !permittedEntryIds.Contains(procurementEntryId))
-                return Enumerable.Empty<OfferLetterDto>();
+                return [];
             var list = await _repo.GetAllAsync();
             return list
                 .Where(o => o.ProcurementEntryId == procurementEntryId)
@@ -102,6 +102,27 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             _mapper.Map(dto, e);
             await _repo.UpdateAsync(id, e);
             return _mapper.Map<OfferLetterDto>(e);
+        }
+
+        public async Task<IEnumerable<OfferLetterDto>> UpdateItemsByEntryAsync(Guid procurementEntryId, UpdateOfferItemsByEntryDto dto)
+        {
+            var all = await _repo.GetAllAsync();
+            var letters = all.Where(o => o.ProcurementEntryId == dto.ProcurementEntryId).ToList();
+            if (letters.Count == 0)
+                throw new KeyNotFoundException("Bu entryId için teklif mektubu bulunamadı.");
+
+            foreach (var letter in letters)
+            {
+                for (int i = 0; i < dto.Items.Count; i++)
+                {
+                    var item = letter.OfferItems[i];
+                    item.Quantity = (int)dto.Items[i].Qty;
+                }
+
+                await _repo.UpdateAsync(letter.Id, letter);
+            }
+
+            return letters.Select(_mapper.Map<OfferLetterDto>);
         }
 
         public async Task DeleteAsync(Guid id)
