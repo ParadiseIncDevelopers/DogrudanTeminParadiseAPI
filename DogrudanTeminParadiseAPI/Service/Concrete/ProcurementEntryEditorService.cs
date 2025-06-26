@@ -3,6 +3,7 @@ using DogrudanTeminParadiseAPI.Dto;
 using DogrudanTeminParadiseAPI.Models;
 using DogrudanTeminParadiseAPI.Repositories;
 using DogrudanTeminParadiseAPI.Service.Abstract;
+using SharpCompress.Common;
 
 namespace DogrudanTeminParadiseAPI.Service.Concrete
 {
@@ -41,7 +42,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task<ProcurementEntryEditorDto> UpdateAsync(UpdateProcurementEntryEditorDto dto)
         {
-            var e = (await _repo.GetAllAsync()).FirstOrDefault();
+            var e = (await _repo.GetAllAsync()).FirstOrDefault(o => o.ProcurementEntryId == dto.ProcurementEntryId);
             if (e == null) return null;
             _mapper.Map(dto, e);
             await _repo.UpdateAsync(e.Id, e);

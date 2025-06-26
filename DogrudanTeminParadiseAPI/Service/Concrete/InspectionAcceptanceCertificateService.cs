@@ -100,7 +100,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                     Features = i.Features,
                     Quantity = i.Quantity,
                     UnitId = i.UnitId,
-                    UnitPrice = i.UnitPrice
+                    UnitPrice = i.UnitPrice,
+                    Name = i.Name
                 }).ToList();
             await _repo.UpdateAsync(id, existing);
             return _mapper.Map<InspectionAcceptanceCertificateDto>(existing);
