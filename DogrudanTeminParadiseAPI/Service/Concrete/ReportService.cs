@@ -101,7 +101,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             var offers = (await _offerRepo.GetAllAsync())
                 .Where(o => o.ProcurementEntryId == procurementEntryId)
                 .ToList();
-            if (!offers.Any())
+            if (offers.Count == 0)
                 throw new InvalidOperationException("No offer letters for entry.");
 
             // 1) En düşük ortalama birim fiyatı veren offer'ı seç
@@ -114,9 +114,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 .First();
 
             // 2) Kazanan offer'ın toplam teklif tutarını hesapla
-            double totalOfferedPrice = winningOffer.OfferItems.Any()
-                ? winningOffer.OfferItems.Sum(fi => fi.TotalAmount)
-                : 0;
+            double totalOfferedPrice = winningOffer.OfferItems.Any() ? winningOffer.OfferItems.Sum(fi => fi.TotalAmount) : 0;
 
             // 3) Entreprise bilgisi
             var ent = await _entRepo.GetByIdAsync(winningOffer.EntrepriseId)
@@ -175,11 +173,15 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 .Where(e => e.TenderResponsibleUserId == tenderResponsibleUserId && e.BudgetAllocationId.HasValue)
                 .ToList();
 
-            if (!userEntries.Any())
-                return new List<TopUnitDto>();
+            if (userEntries.Count == 0)
+                return [];
+
+            var init = _inspectionRepo.GetAll().Select(x => x.ProcurementEntryId).ToList();
+            var addl = _addInspectionRepo.GetAll().Select(x => x.ProcurementEntryId).ToList();
+            var certificatesGuid = init.Concat(addl).ToList() ?? [];
 
             // 2) BudgetAllocationId bazında grupla ve say
-            var counts = userEntries
+            var counts = userEntries.Where(x => certificatesGuid.Contains(x.Id))
                 .GroupBy(e => e.BudgetAllocationId.Value)
                 .Select(g => new { BudgetId = g.Key, Count = g.Count() })
                 .OrderByDescending(x => x.Count)
@@ -190,6 +192,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             var otherCount = counts.Skip(top).Sum(x => x.Count);
 
             var result = new List<TopUnitDto>();
+
             foreach (var item in topList)
             {
                 // BudgetItemService’den adını al
@@ -613,7 +616,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 records.Add((cert.InvoiceDate.Date, total));
             }
 
-            if (!records.Any())
+            if (records.Count == 0)
                 return new SpendingReportDto
                 {
                     Weekly = [],
@@ -700,146 +703,173 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task<SpendingByFirmDto> GetTopFirmsSpendingAsync(string periodType)
         {
-            // 1) Döneme göre gün sayısını belirle
-            int days;
+            var today = DateTime.UtcNow.Date;
+
+            // 1) Döneme göre periyotları oluştur
+            //    her periyot: (başlangıç, bitiş, etiket)
+            var periods = new List<(DateTime Start, DateTime End, string Label)>();
+
             switch (periodType?.ToLowerInvariant())
             {
                 case "weekly":
-                    days = 7;
+                    // Son 7 gün, günlük etiketler
+                    for (int i = 6; i >= 0; i--)
+                    {
+                        var day = today.AddDays(-i);
+                        periods.Add((
+                            Start: day,
+                            End: day,
+                            Label: day.ToString("dd MMM", CultureInfo.CurrentCulture)
+                        ));
+                    }
                     break;
-                case "quarterly":
-                    days = 90;
-                    break;
-                case "yearly":
-                    days = 365;
-                    break;
+
                 case "monthly":
-                default:
-                    days = 30;
+                    // Son 4 ay, aylık etiketler
+                    var firstOfThisMonth = new DateTime(today.Year, today.Month, 1);
+                    for (int i = 3; i >= 0; i--)
+                    {
+                        var start = firstOfThisMonth.AddMonths(-i);
+                        var end = start.AddMonths(1).AddDays(-1);
+                        periods.Add((
+                            Start: start,
+                            End: end,
+                            Label: start.ToString("MMM yy", CultureInfo.CurrentCulture)
+                        ));
+                    }
                     break;
+
+                case "quarterly":
+                    // Son 4 çeyrek, 3'er aylık etiketler (Qx YYYY)
+                    // Bulunduğumuz yılın çeyrek başlangıcını al
+                    int currentQuarter = (today.Month - 1) / 3 + 1;
+                    var quarterStart = new DateTime(today.Year, (currentQuarter - 1) * 3 + 1, 1);
+                    for (int i = 3; i >= 0; i--)
+                    {
+                        var start = quarterStart.AddMonths(-3 * i);
+                        var end = start.AddMonths(3).AddDays(-1);
+                        var q = (start.Month - 1) / 3 + 1;
+                        periods.Add((
+                            Start: start,
+                            End: end,
+                            Label: $"Q{q} {start.Year}"
+                        ));
+                    }
+                    break;
+
+                case "yearly":
+                    // Son 5 yıl, yıllık etiketler
+                    for (int i = 4; i >= 0; i--)
+                    {
+                        var year = today.Year - i;
+                        var start = new DateTime(year, 1, 1);
+                        var end = new DateTime(year, 12, 31);
+                        periods.Add((
+                            Start: start,
+                            End: end,
+                            Label: year.ToString()
+                        ));
+                    }
+                    break;
+
+                default:
+                    throw new InvalidOperationException($"Bilinmeyen periodType: {periodType}");
             }
 
-            var today = DateTime.UtcNow.Date;
-            var startDate = today.AddDays(-days + 1);
+            var periodLabels = periods.Select(p => p.Label).ToList();
 
-            // 2) Tüm sertifikaları al
+            // 2) Kaynak verileri çek
             var inspections = (await _inspectionRepo.GetAllAsync()).ToList();
             var additionals = (await _addInspectionRepo.GetAllAsync()).ToList();
             var allOffers = (await _offerRepo.GetAllAsync()).ToList();
 
-            // 3) Sertifikalardan toplam harcamayı hesapla ve sadece son 'days' gün içindekileri al
-            var combinedCerts = inspections
-                .Select(c => new
-                {
-                    c.InvoiceDate,
-                    c.SelectedOfferLetterId,
+            // 3) Tüm sertifikalardaki toplam harcamayı birleştir
+            var combined = inspections
+                .Select(c => new {
+                    Date = c.InvoiceDate.Date,
+                    OfferId = c.SelectedOfferLetterId,
                     Total = c.SelectedProducts.Sum(p => p.UnitPrice * p.Quantity)
                 })
-                .Concat(additionals.Select(c => new
-                {
-                    c.InvoiceDate,
-                    c.SelectedOfferLetterId,
+                .Concat(additionals.Select(c => new {
+                    Date = c.InvoiceDate.Date,
+                    OfferId = c.SelectedOfferLetterId,
                     Total = c.SelectedProducts.Sum(p => p.UnitPrice * p.Quantity)
                 }))
-                .Where(c => c.InvoiceDate.Date >= startDate && c.InvoiceDate.Date <= today)
                 .ToList();
 
-            // 4) Günlük anahtar listesini (dates) oluştur, arada boş günler için de anahtar olmalı
-            var dates = Enumerable.Range(0, days)
-                .Select(offset => startDate.AddDays(offset))
-                .ToList();
-            var dateKeys = dates.Select(d => d.ToString("yyyy-MM-dd")).ToList();
-
-            // 5) Firmaya göre ve gün anahtarına göre sözlük oluştur, başlangıçta 0 ile doldur
-            var spendByFirmDay = new Dictionary<Guid, Dictionary<string, double>>();
-            // İlk, tüm firmaları ve günleri sıfırla
-            var allFirmIds = combinedCerts
-                .Select(cert => {
-                    var offer = allOffers.FirstOrDefault(o => o.Id == cert.SelectedOfferLetterId);
-                    return offer?.EntrepriseId;
-                })
+            // 4) Firma × periyot matrisini sıfırla
+            var spendByFirm = new Dictionary<Guid, Dictionary<string, double>>();
+            var allFirmIds = combined
+                .Select(x => allOffers.FirstOrDefault(o => o.Id == x.OfferId)?.EntrepriseId)
                 .Where(id => id.HasValue)
                 .Select(id => id.Value)
                 .Distinct();
 
             foreach (var firmId in allFirmIds)
             {
-                spendByFirmDay[firmId] = dateKeys.ToDictionary(key => key, key => 0.0);
+                spendByFirm[firmId] = periodLabels.ToDictionary(lbl => lbl, _ => 0.0);
             }
 
-            // 6) Her sertifikayı ilgili firmaya ve gün anahtarına ekle
-            foreach (var cert in combinedCerts)
+            // 5) Her kayıt için doğru periyodu bulup topla
+            foreach (var rec in combined)
             {
-                var dateKey = cert.InvoiceDate.Date.ToString("yyyy-MM-dd");
-                var offer = allOffers.FirstOrDefault(o => o.Id == cert.SelectedOfferLetterId);
+                var offer = allOffers.FirstOrDefault(o => o.Id == rec.OfferId);
                 if (offer == null) continue;
                 var firmId = offer.EntrepriseId;
 
-                if (!spendByFirmDay.ContainsKey(firmId))
-                {
-                    // Yeni firma olmuşsa sözlük oluştur ve doldur
-                    spendByFirmDay[firmId] = dateKeys.ToDictionary(key => key, key => 0.0);
-                }
-                spendByFirmDay[firmId][dateKey] += cert.Total;
+                // hangi periyota ait?
+                var period = periods.FirstOrDefault(p => rec.Date >= p.Start && rec.Date <= p.End);
+                if (period.Label == null)
+                    continue;
+
+                spendByFirm[firmId][period.Label] += rec.Total;
             }
 
-            // 7) Her firmanın toplam harcamasını hesapla ve en çok 5 firma + "Diğer" belirle
-            var firmTotals = spendByFirmDay
-                .Select(kvp => new { FirmId = kvp.Key, Total = kvp.Value.Values.Sum() })
+            // 6) Firmaları toplam harcamaya göre sırala, top5 + diğer
+            var firmTotals = spendByFirm
+                .Select(kv => new { FirmId = kv.Key, Total = kv.Value.Values.Sum() })
                 .OrderByDescending(x => x.Total)
                 .ToList();
 
             var top5 = firmTotals.Take(5).Select(x => x.FirmId).ToList();
-            var otherIds = firmTotals.Skip(5).Select(x => x.FirmId).ToList();
+            var others = firmTotals.Skip(5).Select(x => x.FirmId).ToList();
 
-            // 8) Serileri oluştur
+            // 7) Series verisini oluştur
             var series = new List<ChartSeriesDto>();
 
-            // Top 5 firmalar
+            // Top5 firmalar
             foreach (var firmId in top5)
             {
-                var firm = await _entRepo.GetByIdAsync(firmId);
-                var name = firm?.Unvan ?? "Bilinmeyen";
-
-                var data = dateKeys
-                    .Select(key => spendByFirmDay[firmId][key])
-                    .ToList();
+                var ent = await _entRepo.GetByIdAsync(firmId);
+                var name = ent?.Unvan ?? "Bilinmeyen";
 
                 series.Add(new ChartSeriesDto
                 {
                     Name = name,
-                    Data = data
+                    Data = periodLabels.Select(lbl => spendByFirm[firmId][lbl]).ToList()
                 });
             }
 
-            // "Diğer" grubu
-            if (otherIds.Any())
+            // “Diğer” grubu
+            if (others.Any())
             {
-                var otherData = dateKeys
-                    .Select(key =>
-                        otherIds.Sum(fid => spendByFirmDay.ContainsKey(fid)
-                            ? spendByFirmDay[fid][key]
-                            : 0.0))
-                    .ToList();
-
                 series.Add(new ChartSeriesDto
                 {
                     Name = "Diğer",
-                    Data = otherData
+                    Data = periodLabels
+                        .Select(lbl => others.Sum(fid => spendByFirm[fid][lbl]))
+                        .ToList()
                 });
             }
 
-            // 9) Dönem etiketlerini (örneğin "01 May", "02 May"...) oluştur
-            var periodLabels = dates
-                .Select(d => d.ToString("dd MMM", CultureInfo.CurrentCulture))
-                .ToList();
-
+            // 8) Sonuç DTO’su
             return new SpendingByFirmDto
             {
-                Periods = periodLabels,
+                Periods = periodLabels,   // artık periodLabels olarak kullanıyoruz
                 Series = series
             };
         }
+
 
         // Tarihi uygun döneme eşleyip anahtarı döndürür
         private static string FindPeriodKey(

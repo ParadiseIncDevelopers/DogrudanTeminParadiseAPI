@@ -50,8 +50,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
 
             if (role == "ADMIN")
             {
-                var permitted = HttpContext.Items["PermittedList"] as List<Guid>;
-                return Ok(await _entrySvc.GetAllAsync(permitted));
+                return Ok(await _entrySvc.GetAllAsync());
             }
             else if (role == "USER")
             {
