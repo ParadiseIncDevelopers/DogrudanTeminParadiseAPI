@@ -16,13 +16,14 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         private readonly MongoDBRepository<Entreprise> _entRepo;
         private readonly MongoDBRepository<Unit> _unitRepo;
         private readonly MongoDBRepository<User> _userRepo;
+        private readonly MongoDBRepository<AdminUser> _adminRepo;
         private readonly MongoDBRepository<InspectionAcceptanceCertificate> _inspectionRepo;
         private readonly MongoDBRepository<AdditionalInspectionAcceptanceCertificate> _addInspectionRepo;
         private readonly IInspectionAcceptanceCertificateService _inspectionSvc;
         private readonly IAdditionalInspectionAcceptanceService _addInspectionSvc;
         private readonly IBudgetItemService _budgetItemSvc;
 
-        public ReportService(MongoDBRepository<ProcurementEntry> entryRepo, MongoDBRepository<ProcurementListItem> itemRepo, MongoDBRepository<OfferLetter> offerRepo, MongoDBRepository<Entreprise> entRepo, MongoDBRepository<Unit> unitRepo, MongoDBRepository<InspectionAcceptanceCertificate> inspectionRepo, MongoDBRepository<User> userRepo, MongoDBRepository<AdditionalInspectionAcceptanceCertificate> addInspectionRepo, IInspectionAcceptanceCertificateService inspectionSvc, IAdditionalInspectionAcceptanceService addInspectionSvc, IBudgetItemService budgetItemSvc)
+        public ReportService(MongoDBRepository<ProcurementEntry> entryRepo, MongoDBRepository<ProcurementListItem> itemRepo, MongoDBRepository<OfferLetter> offerRepo, MongoDBRepository<Entreprise> entRepo, MongoDBRepository<Unit> unitRepo, MongoDBRepository<InspectionAcceptanceCertificate> inspectionRepo, MongoDBRepository<User> userRepo, MongoDBRepository<AdminUser> adminRepo, MongoDBRepository<AdditionalInspectionAcceptanceCertificate> addInspectionRepo, IInspectionAcceptanceCertificateService inspectionSvc, IAdditionalInspectionAcceptanceService addInspectionSvc, IBudgetItemService budgetItemSvc)
         {
             _entryRepo = entryRepo;
             _itemRepo = itemRepo;
@@ -30,6 +31,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             _entRepo = entRepo;
             _unitRepo = unitRepo;
             _userRepo = userRepo;
+            _adminRepo = adminRepo;
             _inspectionRepo = inspectionRepo;
             _addInspectionRepo = addInspectionRepo;
             _inspectionSvc = inspectionSvc;
@@ -909,10 +911,25 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             var result = new List<UserCountDto>();
             foreach (var item in topList)
             {
+                // Önce admin, sonra user olarak arama yapıyoruz
+                var admin = await _adminRepo.GetByIdAsync(item.UserId);
                 var user = await _userRepo.GetByIdAsync(item.UserId);
-                var name = user != null
-                    ? $"{Crypto.Decrypt(user.Name)} {Crypto.Decrypt(user.Surname)}"
-                    : "Bilinmeyen";
+
+                string name;
+                if (admin != null)
+                {
+
+                    name = $"{Crypto.Decrypt(admin.Name)} {Crypto.Decrypt(admin.Surname)}";
+                }
+                else if (user != null)
+                {
+                    name = $"{Crypto.Decrypt(user.Name)} {Crypto.Decrypt(user.Surname)}";
+                }
+                else
+                {
+                    name = "Bilinmeyen";
+                }
+
                 result.Add(new UserCountDto
                 {
                     UserName = name,
@@ -928,6 +945,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                     Count = otherCount
                 });
             }
+
+            result.Reverse();
 
             return result;
         }
@@ -955,10 +974,24 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             var result = new List<UserCountDto>();
             foreach (var item in bottomList)
             {
+                // Önce admin, sonra user olarak arama yapıyoruz
+                var admin = await _adminRepo.GetByIdAsync(item.UserId);
                 var user = await _userRepo.GetByIdAsync(item.UserId);
-                var name = user != null
-                    ? $"{Crypto.Decrypt(user.Name)} {Crypto.Decrypt(user.Surname)}"
-                    : "Bilinmeyen";
+
+                string name;
+                if (admin != null)
+                {
+                    name = $"{Crypto.Decrypt(admin.Name)} {Crypto.Decrypt(admin.Surname)}";
+                }
+                else if (user != null)
+                {
+                    name = $"{Crypto.Decrypt(user.Name)} {Crypto.Decrypt(user.Surname)}";
+                }
+                else
+                {
+                    name = "Bilinmeyen";
+                }
+
                 result.Add(new UserCountDto
                 {
                     UserName = name,
@@ -974,6 +1007,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                     Count = otherCount
                 });
             }
+
+            result.Reverse();
 
             return result;
         }

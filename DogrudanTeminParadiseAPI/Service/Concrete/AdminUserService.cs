@@ -166,6 +166,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 return null;
 
             // 2) Gelen verileri şifrele / encrypt et
+            existing.Tcid = Crypto.Encrypt(dto.Tcid);
             existing.Name = Crypto.Encrypt(dto.Name);
             existing.Surname = Crypto.Encrypt(dto.Surname);
             existing.Email = Crypto.Encrypt(dto.Email);

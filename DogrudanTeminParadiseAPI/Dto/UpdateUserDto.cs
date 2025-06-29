@@ -3,6 +3,7 @@ namespace DogrudanTeminParadiseAPI.Dto
 {
     public class UpdateUserDto
     {
+        public string Tcid { get; set; }
         public string Name { get; set; }
         public string Surname { get; set; }
         public string Email { get; set; }

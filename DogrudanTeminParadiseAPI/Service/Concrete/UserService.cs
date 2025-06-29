@@ -144,6 +144,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             if (existing == null) return null;
 
             // Encrypt ve hash
+            existing.Tcid = Crypto.Encrypt(dto.Tcid);
             existing.Name = Crypto.Encrypt(dto.Name);
             existing.Surname = Crypto.Encrypt(dto.Surname);
             existing.Email = Crypto.Encrypt(dto.Email);
