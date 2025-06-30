@@ -104,24 +104,45 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return _mapper.Map<OfferLetterDto>(e);
         }
 
-        public async Task<IEnumerable<OfferLetterDto>> UpdateItemsByEntryAsync(Guid procurementEntryId, UpdateOfferItemsByEntryDto dto)
+        public async Task<IEnumerable<OfferLetterDto>> UpdateItemsByEntryAsync(
+    Guid procurementEntryId,
+    UpdateOfferItemsByEntryDto dto)
         {
+            // 1) Doğrulama
+            if (procurementEntryId != dto.ProcurementEntryId)
+                throw new ArgumentException("Entry IDs do not match.", nameof(dto));
+
+            // 2) İlgili mektupları çek
             var all = await _repo.GetAllAsync();
-            var letters = all.Where(o => o.ProcurementEntryId == dto.ProcurementEntryId).ToList();
-            if (letters.Count == 0)
+            var letters = all
+                .Where(o => o.ProcurementEntryId == procurementEntryId)
+                .ToList();
+
+            if (!letters.Any())
                 throw new KeyNotFoundException("Bu entryId için teklif mektubu bulunamadı.");
 
+            // 3) DTO içindeki itemleri bir sözlüğe al: OfferItemId → yeni Qty
+            var qtyMap = dto.Items
+                .ToDictionary(i => i.OfferItemId, i => i.Qty);
+
+            // 4) Her mektubun her satırını kendi Id’siyle güncelle
             foreach (var letter in letters)
             {
-                for (int i = 0; i < dto.Items.Count; i++)
+                var updated = false;
+                foreach (var item in letter.OfferItems)
                 {
-                    var item = letter.OfferItems[i];
-                    item.Quantity = (int)dto.Items[i].Qty;
+                    if (qtyMap.TryGetValue(item.Id, out var newQty))
+                    {
+                        item.Quantity = (int)newQty;
+                        updated = true;
+                    }
                 }
 
-                await _repo.UpdateAsync(letter.Id, letter);
+                if (updated)
+                    await _repo.UpdateAsync(letter.Id, letter);
             }
 
+            // 5) Sonuçları DTO’ya map edip döndür
             return letters.Select(_mapper.Map<OfferLetterDto>);
         }
 
