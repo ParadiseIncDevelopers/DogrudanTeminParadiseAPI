@@ -42,10 +42,13 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task<InspectionAcceptanceJuryDto> UpdateAsync(Guid id, UpdateInspectionAcceptanceJuryDto dto)
         {
-            var existing = await _repo.GetByIdAsync(id);
-            if (existing == null) return null;
+            var allInspectionsJuries = await _repo.GetAllAsync();
+            if (allInspectionsJuries == null) 
+                return null;
+            var existing = allInspectionsJuries.FirstOrDefault(x => x.InspectionAcceptanceJuryId == id) ?? throw new KeyNotFoundException("Jüriler bulunamadı");
+
             existing.UserIds = dto.UserIds;
-            await _repo.UpdateAsync(id, existing);
+            await _repo.UpdateAsync(existing.Id, existing);
             return _mapper.Map<InspectionAcceptanceJuryDto>(existing);
         }
 

@@ -918,7 +918,6 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 string name;
                 if (admin != null)
                 {
-
                     name = $"{Crypto.Decrypt(admin.Name)} {Crypto.Decrypt(admin.Surname)}";
                 }
                 else if (user != null)
