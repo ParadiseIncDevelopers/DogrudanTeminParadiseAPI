@@ -20,7 +20,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         public async Task<BudgetItemDto> CreateAsync(CreateBudgetItemDto dto)
         {
             var all = await _repo.GetAllAsync();
-            if (all.Any(x => x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase) || x.ItemCode.Equals(dto.ItemCode, StringComparison.OrdinalIgnoreCase)))
+            if (all.Any(x => x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Aynı isim veya kodda bütçe kalemi zaten mevcut.");
             var entity = _mapper.Map<BudgetItem>(dto);
             entity.Id = Guid.NewGuid();
@@ -45,7 +45,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             var existing = await _repo.GetByIdAsync(id);
             if (existing == null) return null;
             var all = await _repo.GetAllAsync();
-            if (all.Any(x => x.Id != id && (x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase) || x.ItemCode.Equals(dto.ItemCode, StringComparison.OrdinalIgnoreCase))))
+            if (all.Any(x => x.Id != id && x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase)))
                 throw new InvalidOperationException("Aynı isim veya kodda bütçe kalemi zaten mevcut.");
             existing.Name = dto.Name;
             existing.Description = dto.Description;
