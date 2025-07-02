@@ -20,7 +20,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         public async Task<BudgetItemDto> CreateAsync(CreateBudgetItemDto dto)
         {
             var all = await _repo.GetAllAsync();
-            if (all.Any(x => x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase))
+            if (all.Any(x => x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase)))
                 throw new InvalidOperationException("Aynı isim veya kodda bütçe kalemi zaten mevcut.");
             var entity = _mapper.Map<BudgetItem>(dto);
             entity.Id = Guid.NewGuid();
