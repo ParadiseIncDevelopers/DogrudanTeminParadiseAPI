@@ -1,4 +1,5 @@
 ﻿using DogrudanTeminParadiseAPI.Dto;
+using DogrudanTeminParadiseAPI.Dto.Logger;
 
 namespace DogrudanTeminParadiseAPI.Service.Abstract
 {
@@ -11,5 +12,7 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<Dictionary<Guid, List<Guid>>> GetAllAdminPermissionsAsync();
         Task<List<Guid>> GetAdminPermissionsAsync(Guid adminId);
         Task ResetPasswordAsync(UpdateForgotPasswordDto dto);
+        Task<IEnumerable<PageEntryDto>> GetPageActivitiesAsync(PageQueryParameters parameters);
+
     }
 }

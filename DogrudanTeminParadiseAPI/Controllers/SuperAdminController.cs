@@ -1,10 +1,9 @@
 ﻿using DogrudanTeminParadiseAPI.Dto;
+using DogrudanTeminParadiseAPI.Dto.Logger;
 using DogrudanTeminParadiseAPI.Helpers.Attributes;
-using DogrudanTeminParadiseAPI.Models;
 using DogrudanTeminParadiseAPI.Service.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace DogrudanTeminParadiseAPI.Controllers
 {
@@ -76,12 +75,22 @@ namespace DogrudanTeminParadiseAPI.Controllers
             return NoContent();
         }
 
-        //[HttpGet("activities")]
-        //[Authorize(Roles = "SUPER_ADMIN")]
-        //public async Task<IActionResult> GetActivities()
-        //{
-        //    var activities = await _svc.GetSystemActivityAsync();
-        //    return Ok(activities);
-        //}
+        [HttpGet("page-activities")]
+        public async Task<IActionResult> GetPageActivities([FromQuery] PageQueryParameters q)
+        {
+            try
+            {
+                var activities = await _svc.GetPageActivitiesAsync(q);
+                return Ok(activities);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(502, new { error = $"Logger API hatası: {ex.Message}" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 }

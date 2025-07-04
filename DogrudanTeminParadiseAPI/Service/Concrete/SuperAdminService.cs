@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using DogrudanTeminParadiseAPI.Dto;
+using DogrudanTeminParadiseAPI.Dto.Logger;
 using DogrudanTeminParadiseAPI.Helpers;
 using DogrudanTeminParadiseAPI.Models;
 using DogrudanTeminParadiseAPI.Repositories;
@@ -203,25 +204,38 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             throw new KeyNotFoundException("Kullanıcı veya admin bulunamadı.");
         }
 
-        //BUNU ŞİMDİLİK KULLANMAYACAĞIZ : yeni versiyonda değişik bir şeyler düşüneceğim.
+        public async Task<IEnumerable<PageEntryDto>> GetPageActivitiesAsync(PageQueryParameters parameters)
+        {
+            // 1) BaseUrl’i al
+            var baseUrl = _cfg["LoggerApi:BaseUrl"];
+            if (string.IsNullOrEmpty(baseUrl))
+                throw new InvalidOperationException("LoggerApi BaseUrl ayarı eksik.");
 
-        //public async Task<SystemActivityDto> GetSystemActivityAsync()
-        //{
-        //    var sys = (await _repo.GetAllAsync()).FirstOrDefault();
-        //    if (sys == null)
-        //        return new SystemActivityDto
-        //        {
-        //            UserStatuses = new List<UserStatusDto>(),
-        //            AdminPermissions = new List<AdminPermissionsDto>()
-        //        };
+            // 2) HttpClient oluştur ve sorgu string’ini hazırla
+            using var client = new HttpClient { BaseAddress = new Uri(baseUrl) };
 
-        //    var statuses = sys.ActivePassiveUsers
-        //        .Select(kv => new UserStatusDto { UserId = Guid.Parse(kv.Key), IsActive = kv.Value })
-        //        .ToList();
-        //    var perms = sys.AssignPermissionToAdmin
-        //        .Select(kv => new AdminPermissionsDto { AdminId = Guid.Parse(kv.Key), PermittedUserIds = kv.Value })
-        //        .ToList();
-        //    return new SystemActivityDto { UserStatuses = statuses, AdminPermissions = perms };
-        //}
+            var qs = new List<string>();
+            if (parameters.From.HasValue) 
+                qs.Add($"From={parameters.From.Value:o}");
+            if (parameters.To.HasValue) 
+                qs.Add($"To={parameters.To.Value:o}");
+            if (parameters.UserId.HasValue) 
+                qs.Add($"UserId={parameters.UserId.Value}");
+            qs.Add($"Page={parameters.Page}");
+            qs.Add($"PageSize={parameters.PageSize}");
+            if (!string.IsNullOrEmpty(parameters.PageUrl))
+                qs.Add($"PageUrl={Uri.EscapeDataString(parameters.PageUrl)}");
+
+            var url = $"api/Page?{string.Join("&", qs)}";
+
+            // 3) Çağrı yap
+            var resp = await client.GetAsync(url);
+            if (!resp.IsSuccessStatusCode)
+                throw new HttpRequestException($"LoggerAPI çağrısı başarısız: {(int)resp.StatusCode}");
+
+            // 4) Dönen JSON’u DTO listesine parse et
+            var entries = await resp.Content.ReadFromJsonAsync<IEnumerable<PageEntryDto>>();
+            return entries ?? [];
+        }
     }
 }
