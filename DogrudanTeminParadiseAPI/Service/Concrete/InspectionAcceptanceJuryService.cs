@@ -9,13 +9,16 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
     public class InspectionAcceptanceJuryService : IInspectionAcceptanceJuryService
     {
         private readonly MongoDBRepository<InspectionAcceptanceJury> _repo;
+        private readonly MongoDBRepository<BackupInspectionAcceptanceJury> _backupRepo;
         private readonly IMapper _mapper;
 
         public InspectionAcceptanceJuryService(
             MongoDBRepository<InspectionAcceptanceJury> repo,
+            MongoDBRepository<BackupInspectionAcceptanceJury> backupRepo,
             IMapper mapper)
         {
             _repo = repo;
+            _backupRepo = backupRepo;
             _mapper = mapper;
         }
 
@@ -52,10 +55,14 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return _mapper.Map<InspectionAcceptanceJuryDto>(existing);
         }
 
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id, Guid userId)
         {
             var existing = await _repo.GetByIdAsync(id);
             if (existing == null) throw new KeyNotFoundException("Jüri kaydı bulunamadı.");
+            var backup = _mapper.Map<BackupInspectionAcceptanceJury>(existing);
+            backup.RemovedByUserId = userId;
+            backup.RemovingDate = DateTime.UtcNow;
+            await _backupRepo.InsertAsync(backup);
             await _repo.DeleteAsync(id);
         }
     }
