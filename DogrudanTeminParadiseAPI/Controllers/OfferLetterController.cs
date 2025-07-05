@@ -3,6 +3,7 @@ using DogrudanTeminParadiseAPI.Helpers.Attributes;
 using DogrudanTeminParadiseAPI.Service.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DogrudanTeminParadiseAPI.Controllers
 {
@@ -87,8 +88,20 @@ namespace DogrudanTeminParadiseAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            try { await _svc.DeleteAsync(id); return NoContent(); }
-            catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
+            var userId = Guid.Parse(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier));
+            try
+            {
+                await _svc.DeleteAsync(id, userId);
+                return NoContent();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, ex.Message);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
         }
     }
 }

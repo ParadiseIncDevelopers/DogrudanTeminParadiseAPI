@@ -11,13 +11,16 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
     public class InspectionAcceptanceCertificateService : IInspectionAcceptanceCertificateService
     {
         private readonly MongoDBRepository<InspectionAcceptanceCertificate> _repo;
+        private readonly MongoDBRepository<BackupInspectionAcceptanceCertificate> _backupRepo;
         private readonly IMapper _mapper;
 
         public InspectionAcceptanceCertificateService(
             MongoDBRepository<InspectionAcceptanceCertificate> repo,
+            MongoDBRepository<BackupInspectionAcceptanceCertificate> backupRepo,
             IMapper mapper)
         {
             _repo = repo;
+            _backupRepo = backupRepo;
             _mapper = mapper;
         }
 
@@ -107,10 +110,14 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return _mapper.Map<InspectionAcceptanceCertificateDto>(existing);
         }
 
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id, Guid userId)
         {
             var e = await _repo.GetByIdAsync(id);
             if (e == null) throw new KeyNotFoundException("Kayıt bulunamadı.");
+            var backup = _mapper.Map<BackupInspectionAcceptanceCertificate>(e);
+            backup.RemovedByUserId = userId;
+            backup.RemovingDate = DateTime.UtcNow;
+            await _backupRepo.InsertAsync(backup);
             await _repo.DeleteAsync(id);
         }
     }

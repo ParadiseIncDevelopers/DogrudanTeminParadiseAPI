@@ -89,6 +89,23 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<UpdateAdditionalInspectionAcceptanceCertificateDto, AdditionalInspectionAcceptanceCertificate>();
             CreateMap<AdditionalInspectionAcceptanceCertificate, AdditionalInspectionAcceptanceCertificateDto>();
 
+            // Backup mappings
+            CreateMap<CreateBackupInspectionAcceptanceCertificateDto, BackupInspectionAcceptanceCertificate>();
+            CreateMap<BackupInspectionAcceptanceCertificate, BackupInspectionAcceptanceCertificateDto>();
+            CreateMap<InspectionAcceptanceCertificate, BackupInspectionAcceptanceCertificate>();
+
+            CreateMap<CreateBackupInspectionAcceptanceJuryDto, BackupInspectionAcceptanceJury>();
+            CreateMap<BackupInspectionAcceptanceJury, BackupInspectionAcceptanceJuryDto>();
+            CreateMap<InspectionAcceptanceJury, BackupInspectionAcceptanceJury>();
+
+            CreateMap<CreateBackupAdditionalInspectionAcceptanceCertificateDto, BackupAdditionalInspectionAcceptanceCertificate>();
+            CreateMap<BackupAdditionalInspectionAcceptanceCertificate, BackupAdditionalInspectionAcceptanceCertificateDto>();
+            CreateMap<AdditionalInspectionAcceptanceCertificate, BackupAdditionalInspectionAcceptanceCertificate>();
+
+            CreateMap<CreateBackupOfferLetterDto, BackupOfferLetter>();
+            CreateMap<BackupOfferLetter, BackupOfferLetterDto>();
+            CreateMap<OfferLetter, BackupOfferLetter>();
+
             CreateMap<OfferItemDto, SelectedOfferItem>()
                 .ForMember(d => d.Id, o => o.MapFrom(s => s.Id == Guid.Empty ? Guid.NewGuid() : s.Id))
                 .ForMember(d => d.Name, o => o.MapFrom(s => s.Name))

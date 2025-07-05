@@ -13,6 +13,6 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<IEnumerable<InspectionAcceptanceCertificateDto>> GetAllByEntryAsync(Guid entryId, IEnumerable<Guid> permittedEntryIds);
         Task<InspectionAcceptanceCertificateDto> GetByIdAsync(Guid id);
         Task<InspectionAcceptanceCertificateDto> UpdateAsync(Guid id, UpdateInspectionAcceptanceCertificateDto dto);
-        Task DeleteAsync(Guid id);
+        Task DeleteAsync(Guid id, Guid userId);
     }
 }

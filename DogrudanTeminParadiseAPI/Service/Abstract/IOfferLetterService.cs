@@ -12,6 +12,6 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<IEnumerable<OfferLetterDto>> UpdateItemsByEntryAsync(Guid procurementEntryId, UpdateOfferItemsByEntryDto dto);
         Task<OfferLetterDto> GetByIdAsync(Guid id);
         Task<OfferLetterDto> UpdateAsync(Guid id, UpdateOfferLetterDto dto);
-        Task DeleteAsync(Guid id);
+        Task DeleteAsync(Guid id, Guid userId);
     }
 }
