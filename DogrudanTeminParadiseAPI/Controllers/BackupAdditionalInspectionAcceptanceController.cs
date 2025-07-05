@@ -1,9 +1,8 @@
-﻿using DogrudanTeminParadiseAPI.Dto;
+using DogrudanTeminParadiseAPI.Dto;
 using DogrudanTeminParadiseAPI.Helpers.Attributes;
 using DogrudanTeminParadiseAPI.Service.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace DogrudanTeminParadiseAPI.Controllers
 {
@@ -11,17 +10,17 @@ namespace DogrudanTeminParadiseAPI.Controllers
     [Route("api/[controller]")]
     [Authorize]
     [CallLogs]
-    public class AdditionalInspectionAcceptanceCertificateController : ControllerBase
+    public class BackupAdditionalInspectionAcceptanceController : ControllerBase
     {
-        private readonly IAdditionalInspectionAcceptanceService _svc;
+        private readonly IBackupAdditionalInspectionAcceptanceService _svc;
 
-        public AdditionalInspectionAcceptanceCertificateController(IAdditionalInspectionAcceptanceService svc)
+        public BackupAdditionalInspectionAcceptanceController(IBackupAdditionalInspectionAcceptanceService svc)
         {
             _svc = svc;
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateAdditionalInspectionAcceptanceCertificateDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateBackupAdditionalInspectionAcceptanceCertificateDto dto)
         {
             var created = await _svc.CreateAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
@@ -48,18 +47,10 @@ namespace DogrudanTeminParadiseAPI.Controllers
             return dto == null ? NotFound() : Ok(dto);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateAdditionalInspectionAcceptanceCertificateDto dto)
-        {
-            var updated = await _svc.UpdateAsync(id, dto);
-            return updated == null ? NotFound() : Ok(updated);
-        }
-
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            await _svc.DeleteAsync(id, userId);
+            await _svc.DeleteAsync(id);
             return NoContent();
         }
     }
