@@ -10,6 +10,17 @@ namespace DogrudanTeminParadiseAPI.Helpers
         public string Number { get; set; }
     }
 
+    public class UserFeatures
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
+        public string Id { get; set; }
+
+        public string ListName { get; set; }
+
+        public List<Feature> Features { get; set; } = new();
+    }
+
     public class Feature
     {
         public string Description { get; set; }

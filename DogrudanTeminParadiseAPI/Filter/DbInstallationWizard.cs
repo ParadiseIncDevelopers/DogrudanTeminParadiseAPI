@@ -32,7 +32,7 @@ namespace DogrudanTeminParadiseAPI.Filter
             "MarketResearchJuries", "InspectionAcceptanceJuries",
             "InspectionAcceptanceCertificates",
             "AdditionalInspectionAcceptanceCertificates",
-            "ApproximateCostJuries", "ProcurementEntryEditors"
+            "ApproximateCostJuries", "ProcurementEntryEditors", "InspectionAcceptanceNotes"
         };
 
             // 2) Eksik koleksiyonları yarat

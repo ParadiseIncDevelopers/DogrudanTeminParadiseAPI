@@ -86,7 +86,9 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<InspectionAcceptanceCertificate, InspectionAcceptanceCertificateDto>();
 
             CreateMap<CreateAdditionalInspectionAcceptanceCertificateDto, AdditionalInspectionAcceptanceCertificate>();
-            // Map OfferItemDto → SelectedOfferItem
+            CreateMap<UpdateAdditionalInspectionAcceptanceCertificateDto, AdditionalInspectionAcceptanceCertificate>();
+            CreateMap<AdditionalInspectionAcceptanceCertificate, AdditionalInspectionAcceptanceCertificateDto>();
+
             CreateMap<OfferItemDto, SelectedOfferItem>()
                 .ForMember(d => d.Id, o => o.MapFrom(s => s.Id == Guid.Empty ? Guid.NewGuid() : s.Id))
                 .ForMember(d => d.Name, o => o.MapFrom(s => s.Name))
@@ -95,23 +97,44 @@ namespace DogrudanTeminParadiseAPI.Mapping
                 .ForMember(d => d.UnitId, o => o.MapFrom(s => s.UnitId))
                 .ForMember(d => d.UnitPrice, o => o.MapFrom(s => s.UnitPrice));
 
-            // Map Update DTO → Entity, including SelectedProducts and unit IDs
-            CreateMap<UpdateAdditionalInspectionAcceptanceCertificateDto, AdditionalInspectionAcceptanceCertificate>();
-
-            // Map Entity → DTO for return
-            CreateMap<AdditionalInspectionAcceptanceCertificate, AdditionalInspectionAcceptanceCertificateDto>();
-
             CreateMap<CreateProcurementEntryEditorDto, ProcurementEntryEditor>();
             CreateMap<UpdateProcurementEntryEditorDto, ProcurementEntryEditor>();
             CreateMap<ProcurementEntryEditor, ProcurementEntryEditorDto>();
 
             CreateMap<SuperAdminUser, SuperAdminDto>()
-            .ForMember(dest => dest.UserType, opt => opt.MapFrom(src => src.UserType));
-
+                .ForMember(dest => dest.UserType, opt => opt.MapFrom(src => src.UserType));
             CreateMap<CreateSuperAdminDto, SuperAdminUser>()
                 .ForMember(dst => dst.UserType, opt => opt.Ignore())
                 .ForMember(dst => dst.ActivePassiveUsers, opt => opt.Ignore())
                 .ForMember(dst => dst.AssignPermissionToAdmin, opt => opt.Ignore());
+
+            CreateMap<CreateInspectionAcceptanceNoteDto, InspectionAcceptanceNote>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.ProcurementEntryId, opt => opt.MapFrom(src => src.ProcurementEntryId.ToString()));
+            CreateMap<UpdateInspectionAcceptanceNoteDto, InspectionAcceptanceNote>()
+                .ForMember(dest => dest.ProcurementEntryId, opt => opt.Ignore())
+                .ForMember(dest => dest.Id, opt => opt.Ignore());
+            CreateMap<InspectionAcceptanceNote, InspectionAcceptanceNoteDto>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.Parse(src.Id)))
+                .ForMember(dest => dest.ProcurementEntryId, opt => opt.MapFrom(src => Guid.Parse(src.ProcurementEntryId)));
+
+            CreateMap<CreateUserOwnFeaturesListDto, UserOwnFeaturesList>()
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId.ToString()));
+            CreateMap<CreateUserFeaturesDto, UserFeatures>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore());
+            CreateMap<FeatureDto, Feature>();
+            CreateMap<UpdateUserOwnFeaturesListDto, UserOwnFeaturesList>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.UserId, opt => opt.Ignore());
+            CreateMap<UpdateUserFeaturesDto, UserFeatures>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.ToString()));
+            CreateMap<UserOwnFeaturesList, UserOwnFeaturesListDto>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.Parse(src.Id)))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => Guid.Parse(src.UserId)));
+            CreateMap<UserFeatures, UserFeaturesDto>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.Parse(src.Id)));
+            CreateMap<Feature, FeatureDto>();
         }
     }
 }

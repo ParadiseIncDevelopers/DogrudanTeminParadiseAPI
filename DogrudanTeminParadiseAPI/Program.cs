@@ -73,6 +73,8 @@ builder.Services.AddScoped(sp => new MongoDBRepository<InspectionAcceptanceCerti
 builder.Services.AddScoped(sp => new MongoDBRepository<AdditionalInspectionAcceptanceCertificate>(cfg["MongoAPI"], cfg["MongoDBName"], "AdditionalInspectionAcceptanceCertificates"));
 builder.Services.AddScoped(sp => new MongoDBRepository<ApproximateCostJury>(cfg["MongoAPI"], cfg["MongoDBName"], "ApproximateCostJuries"));
 builder.Services.AddScoped(sp => new MongoDBRepository<ProcurementEntryEditor>(cfg["MongoAPI"], cfg["MongoDBName"], "ProcurementEntryEditors"));
+builder.Services.AddScoped(sp => new MongoDBRepository<InspectionAcceptanceNote>(cfg["MongoAPI"], cfg["MongoDBName"], "InspectionAcceptanceNotes"));
+builder.Services.AddScoped(sp => new MongoDBRepository<UserOwnFeaturesList>(cfg["MongoAPI"], cfg["MongoDBName"], "UserOwnFeaturesLists"));
 
 builder.Services.AddSingleton<IMongoClient>(sp =>
     new MongoClient(cfg["MongoAPI"])
@@ -110,6 +112,8 @@ builder.Services.AddScoped<ISuperAdminService, SuperAdminService>();
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IInspectionAcceptanceNoteService, InspectionAcceptanceNoteService>();
+builder.Services.AddScoped<IUserOwnFeaturesListService, UserOwnFeaturesListService>();
 // Factoryler
 builder.Services.AddSingleton<ITeminApiExceptionFactory, TeminApiExceptionFactory>();
 
