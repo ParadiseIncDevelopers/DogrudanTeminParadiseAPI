@@ -145,11 +145,16 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             backup.RemovingDate = DateTime.UtcNow;
             await _backupRepo.InsertAsync(backup);
 
-            // Delete related offer letters
-            var offers = await _offerSvc.GetAllByEntryAsync(id);
-            foreach (var offer in offers)
+            var juries = await _jurySvc.GetAllByEntryAsync(id);
+            foreach (var jury in juries)
             {
-                await _offerSvc.DeleteAsync(offer.Id, userId);
+                await _jurySvc.DeleteAsync(jury.Id, userId);
+            }
+
+            var additionals = await _additionalInspectionRepo.GetAllByEntryAsync(id);
+            foreach (var add in additionals)
+            {
+                await _additionalInspectionRepo.DeleteAsync(add.Id, userId);
             }
 
             // Delete related inspections
@@ -159,16 +164,11 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 await _inspectionSvc.DeleteAsync(ins.Id, userId);
             }
 
-            var additionals = await _additionalInspectionRepo.GetAllByEntryAsync(id);
-            foreach (var add in additionals)
+            // Delete related offer letters
+            var offers = await _offerSvc.GetAllByEntryAsync(id);
+            foreach (var offer in offers)
             {
-                await _additionalInspectionRepo.DeleteAsync(add.Id, userId);
-            }
-
-            var juries = await _jurySvc.GetAllByEntryAsync(id);
-            foreach (var jury in juries)
-            {
-                await _jurySvc.DeleteAsync(jury.Id, userId);
+                await _offerSvc.DeleteAsync(offer.Id, userId);
             }
 
             var editors = (await _editorRepo.GetAllAsync()).Where(e => e.ProcurementEntryId == id);
