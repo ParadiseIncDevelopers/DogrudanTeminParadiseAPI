@@ -28,6 +28,24 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return _mapper.Map<BudgetItemDto>(entity);
         }
 
+        public async Task<IEnumerable<BudgetItemDto>> AddMassAsync(List<CreateBudgetItemDto> dtos)
+        {
+            var all = (await _repo.GetAllAsync()).ToList();
+            var entities = new List<BudgetItem>();
+            foreach (var dto in dtos)
+            {
+                if (all.Any(x => x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase)) ||
+                    entities.Any(x => x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidOperationException("Aynı isim veya kodda bütçe kalemi zaten mevcut.");
+                var entity = _mapper.Map<BudgetItem>(dto);
+                entity.Id = Guid.NewGuid();
+                entities.Add(entity);
+                all.Add(entity);
+            }
+            await _repo.InsertManyAsync(entities);
+            return entities.Select(x => _mapper.Map<BudgetItemDto>(x));
+        }
+
         public async Task<IEnumerable<BudgetItemDto>> GetAllAsync()
         {
             var list = await _repo.GetAllAsync();

@@ -1,5 +1,6 @@
 ﻿using MongoDB.Driver;
 using MongoDB.Driver.Linq;
+using System.Collections.Generic;
 
 namespace DogrudanTeminParadiseAPI.Repositories
 {
@@ -22,6 +23,16 @@ namespace DogrudanTeminParadiseAPI.Repositories
         public async Task InsertAsync(T document)
         {
             await _collection.InsertOneAsync(document);
+        }
+
+        public void InsertMany(IEnumerable<T> documents)
+        {
+            _collection.InsertMany(documents);
+        }
+
+        public async Task InsertManyAsync(IEnumerable<T> documents)
+        {
+            await _collection.InsertManyAsync(documents);
         }
 
         public T GetById(Guid? id)

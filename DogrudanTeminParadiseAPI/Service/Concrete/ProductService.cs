@@ -40,6 +40,28 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return _mapper.Map<ProductDto>(entity);
         }
 
+        public async Task<IEnumerable<ProductDto>> AddMassAsync(List<CreateProductDto> dtos)
+        {
+            var all = (await _prodRepo.GetAllAsync()).ToList();
+            var entities = new List<Product>();
+            foreach (var dto in dtos)
+            {
+                if (await _catRepo.GetByIdAsync(dto.CategoryId) == null)
+                    throw new KeyNotFoundException("Kategori bulunamadı.");
+                if (await _itemRepo.GetByIdAsync(dto.ProductItemId) == null)
+                    throw new KeyNotFoundException("Ürün kalemi bulunamadı.");
+                if (all.Any(x => x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase) || x.Code.Equals(dto.Code, StringComparison.OrdinalIgnoreCase)) ||
+                    entities.Any(x => x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase) || x.Code.Equals(dto.Code, StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidOperationException("Aynı isim veya koda sahip ürün mevcut.");
+                var entity = _mapper.Map<Product>(dto);
+                entity.Id = Guid.NewGuid();
+                entities.Add(entity);
+                all.Add(entity);
+            }
+            await _prodRepo.InsertManyAsync(entities);
+            return entities.Select(x => _mapper.Map<ProductDto>(x));
+        }
+
         public async Task<IEnumerable<ProductDto>> GetAllAsync()
         {
             var list = await _prodRepo.GetAllAsync();

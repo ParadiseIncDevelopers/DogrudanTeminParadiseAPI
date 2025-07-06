@@ -28,6 +28,24 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return _mapper.Map<CategoryDto>(entity);
         }
 
+        public async Task<IEnumerable<CategoryDto>> AddMassAsync(List<CreateCategoryDto> dtos)
+        {
+            var all = (await _repo.GetAllAsync()).ToList();
+            var entities = new List<Category>();
+            foreach (var dto in dtos)
+            {
+                if (all.Any(x => x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase) || x.Code.Equals(dto.Code, StringComparison.OrdinalIgnoreCase)) ||
+                    entities.Any(x => x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase) || x.Code.Equals(dto.Code, StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidOperationException("Aynı isim veya koda sahip kategori zaten mevcut.");
+                var entity = _mapper.Map<Category>(dto);
+                entity.Id = Guid.NewGuid();
+                entities.Add(entity);
+                all.Add(entity);
+            }
+            await _repo.InsertManyAsync(entities);
+            return entities.Select(x => _mapper.Map<CategoryDto>(x));
+        }
+
         public async Task<IEnumerable<CategoryDto>> GetAllAsync()
         {
             var list = await _repo.GetAllAsync();
