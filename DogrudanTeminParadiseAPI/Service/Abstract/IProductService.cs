@@ -5,6 +5,7 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
     public interface IProductService
     {
         Task<ProductDto> CreateAsync(CreateProductDto dto);
+        Task<IEnumerable<ProductDto>> AddMassAsync(List<CreateProductDto> dtos);
         Task<IEnumerable<ProductDto>> GetAllAsync();
         Task<ProductDto> GetByIdAsync(Guid id);
         Task<ProductDto> UpdateAsync(Guid id, UpdateProductDto dto);

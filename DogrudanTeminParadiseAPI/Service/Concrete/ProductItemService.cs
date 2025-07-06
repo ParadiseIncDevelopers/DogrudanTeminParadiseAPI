@@ -32,6 +32,26 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return _mapper.Map<ProductItemDto>(entity);
         }
 
+        public async Task<IEnumerable<ProductItemDto>> AddMassAsync(List<CreateProductItemDto> dtos)
+        {
+            var all = (await _repo.GetAllAsync()).ToList();
+            var entities = new List<ProductItem>();
+            foreach (var dto in dtos)
+            {
+                if (await _catRepo.GetByIdAsync(dto.CategoryId) == null)
+                    throw new KeyNotFoundException("Kategori bulunamadı.");
+                if (all.Any(x => x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase) || x.Code.Equals(dto.Code, StringComparison.OrdinalIgnoreCase)) ||
+                    entities.Any(x => x.Name.Equals(dto.Name, StringComparison.OrdinalIgnoreCase) || x.Code.Equals(dto.Code, StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidOperationException("Aynı isim veya koda sahip ürün kalemi mevcut.");
+                var entity = _mapper.Map<ProductItem>(dto);
+                entity.Id = Guid.NewGuid();
+                entities.Add(entity);
+                all.Add(entity);
+            }
+            await _repo.InsertManyAsync(entities);
+            return entities.Select(x => _mapper.Map<ProductItemDto>(x));
+        }
+
         public async Task<IEnumerable<ProductItemDto>> GetAllAsync()
         {
             var list = await _repo.GetAllAsync();

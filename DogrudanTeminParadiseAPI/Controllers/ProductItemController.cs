@@ -22,6 +22,19 @@ namespace DogrudanTeminParadiseAPI.Controllers
             catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
         }
 
+        [HttpPost("addMass")]
+        [Authorize]
+        public async Task<IActionResult> AddMass([FromBody] List<CreateProductItemDto> dtos)
+        {
+            try
+            {
+                var created = await _svc.AddMassAsync(dtos);
+                return Ok(created);
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
+            catch (InvalidOperationException ex) { return BadRequest(new { error = ex.Message }); }
+        }
+
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> GetAll() => Ok(await _svc.GetAllAsync());

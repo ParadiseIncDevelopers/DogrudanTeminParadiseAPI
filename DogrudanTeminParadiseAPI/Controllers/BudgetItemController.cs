@@ -18,14 +18,29 @@ namespace DogrudanTeminParadiseAPI.Controllers
         [Authorize]
         public async Task<IActionResult> Create([FromBody] CreateBudgetItemDto dto)
         {
-            try 
-            { 
-                var created = await _svc.CreateAsync(dto); 
-                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created); 
+            try
+            {
+                var created = await _svc.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
             }
-            catch (InvalidOperationException ex) 
-            { 
-                return BadRequest(new { error = ex.Message }); 
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("addMass")]
+        [Authorize]
+        public async Task<IActionResult> AddMass([FromBody] List<CreateBudgetItemDto> dtos)
+        {
+            try
+            {
+                var created = await _svc.AddMassAsync(dtos);
+                return Ok(created);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
             }
         }
 
