@@ -9,7 +9,7 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<IEnumerable<ProcurementEntryDto>> GetAllAsync(IEnumerable<Guid> permittedEntryIds);
         Task<ProcurementEntryDto> GetByIdAsync(Guid id);
         Task<ProcurementEntryDto> UpdateAsync(Guid id, UpdateProcurementEntryDto dto);
-        Task DeleteAsync(Guid id);
+        Task DeleteAsync(Guid id, Guid userId);
         Task<IEnumerable<ProcurementEntryDto>> GetInspectionPriceRangeAsync(ProcurementEntryInspectionPriceDto query);
         Task<IEnumerable<ProcurementEntryDto>> GetByOfferCountAsync(ProcurementEntryWithOfferCountDto query);
         Task<IEnumerable<ProcurementEntryDto>> GetByAdministrativeUnitsAsync(ProcurementEntryWithUnitFilterDto query);

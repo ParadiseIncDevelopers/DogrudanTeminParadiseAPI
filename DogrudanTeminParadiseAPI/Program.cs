@@ -77,6 +77,8 @@ builder.Services.AddScoped(sp => new MongoDBRepository<BackupInspectionAcceptanc
 builder.Services.AddScoped(sp => new MongoDBRepository<BackupAdditionalInspectionAcceptanceCertificate>(cfg["MongoAPI"], cfg["MongoBackupDBName"], "AdditionalInspectionAcceptanceCertificates"));
 builder.Services.AddScoped(sp => new MongoDBRepository<ApproximateCostJury>(cfg["MongoAPI"], cfg["MongoDBName"], "ApproximateCostJuries"));
 builder.Services.AddScoped(sp => new MongoDBRepository<ProcurementEntryEditor>(cfg["MongoAPI"], cfg["MongoDBName"], "ProcurementEntryEditors"));
+builder.Services.AddScoped(sp => new MongoDBRepository<BackupProcurementEntry>(cfg["MongoAPI"], cfg["MongoBackupDBName"], "BackupProcurementEntries"));
+builder.Services.AddScoped(sp => new MongoDBRepository<BackupProcurementEntryEditor>(cfg["MongoAPI"], cfg["MongoBackupDBName"], "BackupProcurementEntryEditors"));
 builder.Services.AddScoped(sp => new MongoDBRepository<InspectionAcceptanceNote>(cfg["MongoAPI"], cfg["MongoDBName"], "InspectionAcceptanceNotes"));
 builder.Services.AddScoped(sp => new MongoDBRepository<UserOwnFeaturesList>(cfg["MongoAPI"], cfg["MongoDBName"], "UserOwnFeaturesLists"));
 
@@ -116,6 +118,8 @@ builder.Services.AddScoped<IBackupInspectionAcceptanceCertificateService, Backup
 builder.Services.AddScoped<IBackupAdditionalInspectionAcceptanceService, BackupAdditionalInspectionAcceptanceService>();
 builder.Services.AddScoped<IApproximateCostJuryService, ApproximateCostJuryService>();
 builder.Services.AddScoped<IProcurementEntryEditorService, ProcurementEntryEditorService>();
+builder.Services.AddScoped<IBackupProcurementEntryService, BackupProcurementEntryService>();
+builder.Services.AddScoped<IBackupProcurementEntryEditorService, BackupProcurementEntryEditorService>();
 builder.Services.AddScoped<ISuperAdminService, SuperAdminService>();
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 builder.Services.AddScoped<IUserService, UserService>();
