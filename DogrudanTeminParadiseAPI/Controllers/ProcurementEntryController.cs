@@ -139,9 +139,10 @@ namespace DogrudanTeminParadiseAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             try
             {
-                await _entrySvc.DeleteAsync(id);
+                await _entrySvc.DeleteAsync(id, userId);
                 return NoContent();
             }
             catch (KeyNotFoundException ex)

@@ -14,15 +14,34 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         private readonly IAdditionalInspectionAcceptanceService _additionalInspectionRepo;
         private readonly IOfferLetterService _offerSvc;
         private readonly IInspectionAcceptanceCertificateService _inspectionSvc;
+        private readonly IInspectionAcceptanceJuryService _jurySvc;
+        private readonly MongoDBRepository<ProcurementEntryEditor> _editorRepo;
+        private readonly MongoDBRepository<BackupProcurementEntry> _backupRepo;
+        private readonly MongoDBRepository<BackupProcurementEntryEditor> _backupEditorRepo;
         private readonly IMapper _mapper;
 
-        public ProcurementEntryService(MongoDBRepository<ProcurementEntry> repo, MongoDBRepository<User> userRepo, MongoDBRepository<AdminUser> adminRepo, IOfferLetterService offerSvc, IInspectionAcceptanceCertificateService inspectionSvc,  IMapper mapper, IAdditionalInspectionAcceptanceService additionalInspectionRepo)
+        public ProcurementEntryService(
+            MongoDBRepository<ProcurementEntry> repo,
+            MongoDBRepository<User> userRepo,
+            MongoDBRepository<AdminUser> adminRepo,
+            IOfferLetterService offerSvc,
+            IInspectionAcceptanceCertificateService inspectionSvc,
+            IInspectionAcceptanceJuryService jurySvc,
+            MongoDBRepository<ProcurementEntryEditor> editorRepo,
+            MongoDBRepository<BackupProcurementEntry> backupRepo,
+            MongoDBRepository<BackupProcurementEntryEditor> backupEditorRepo,
+            IMapper mapper,
+            IAdditionalInspectionAcceptanceService additionalInspectionRepo)
         {
             _repo = repo;
             _userRepo = userRepo;
             _adminRepo = adminRepo;
             _offerSvc = offerSvc;
             _inspectionSvc = inspectionSvc;
+            _jurySvc = jurySvc;
+            _editorRepo = editorRepo;
+            _backupRepo = backupRepo;
+            _backupEditorRepo = backupEditorRepo;
             _mapper = mapper;
             _additionalInspectionRepo = additionalInspectionRepo;
         }
@@ -115,11 +134,52 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return _mapper.Map<ProcurementEntryDto>(existing);
         }
 
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id, Guid userId)
         {
             var existing = await _repo.GetByIdAsync(id);
             if (existing == null)
                 throw new KeyNotFoundException("Silinmek istenen Temin Girişi bulunamadı.");
+
+            var backup = _mapper.Map<BackupProcurementEntry>(existing);
+            backup.RemovedByUserId = userId;
+            backup.RemovingDate = DateTime.UtcNow;
+            await _backupRepo.InsertAsync(backup);
+
+            // Delete related offer letters
+            var offers = await _offerSvc.GetAllByEntryAsync(id);
+            foreach (var offer in offers)
+            {
+                await _offerSvc.DeleteAsync(offer.Id, userId);
+            }
+
+            // Delete related inspections
+            var inspections = await _inspectionSvc.GetAllByEntryAsync(id);
+            foreach (var ins in inspections)
+            {
+                await _inspectionSvc.DeleteAsync(ins.Id, userId);
+            }
+
+            var additionals = await _additionalInspectionRepo.GetAllByEntryAsync(id);
+            foreach (var add in additionals)
+            {
+                await _additionalInspectionRepo.DeleteAsync(add.Id, userId);
+            }
+
+            var juries = await _jurySvc.GetAllByEntryAsync(id);
+            foreach (var jury in juries)
+            {
+                await _jurySvc.DeleteAsync(jury.Id, userId);
+            }
+
+            var editors = (await _editorRepo.GetAllAsync()).Where(e => e.ProcurementEntryId == id);
+            foreach (var editor in editors)
+            {
+                var be = _mapper.Map<BackupProcurementEntryEditor>(editor);
+                be.RemovedByUserId = userId;
+                be.RemovingDate = DateTime.UtcNow;
+                await _backupEditorRepo.InsertAsync(be);
+                await _editorRepo.DeleteAsync(editor.Id);
+            }
 
             await _repo.DeleteAsync(id);
         }

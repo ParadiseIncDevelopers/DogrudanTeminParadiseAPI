@@ -12,6 +12,9 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         private readonly MongoDBRepository<Entreprise> _entRepo;
         private readonly MongoDBRepository<ProcurementEntry> _peRepo;
         private readonly MongoDBRepository<Unit> _unitRepo;
+        private readonly MongoDBRepository<BackupOfferLetter> _backupRepo;
+        private readonly MongoDBRepository<InspectionAcceptanceCertificate> _insRepo;
+        private readonly MongoDBRepository<AdditionalInspectionAcceptanceCertificate> _addInsRepo;
         private readonly IMapper _mapper;
 
         public OfferLetterService(
@@ -19,12 +22,18 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             MongoDBRepository<Entreprise> entRepo,
             MongoDBRepository<ProcurementEntry> peRepo,
             MongoDBRepository<Unit> unitRepo,
+            MongoDBRepository<BackupOfferLetter> backupRepo,
+            MongoDBRepository<InspectionAcceptanceCertificate> insRepo,
+            MongoDBRepository<AdditionalInspectionAcceptanceCertificate> addInsRepo,
             IMapper mapper)
         {
             _repo = repo;
             _entRepo = entRepo;
             _peRepo = peRepo;
             _unitRepo = unitRepo;
+            _backupRepo = backupRepo;
+            _insRepo = insRepo;
+            _addInsRepo = addInsRepo;
             _mapper = mapper;
         }
 
@@ -146,11 +155,25 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return letters.Select(_mapper.Map<OfferLetterDto>);
         }
 
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id, Guid userId)
         {
             var existing = await _repo.GetByIdAsync(id);
             if (existing == null)
                 throw new KeyNotFoundException("Teklif mektubu bulunamadı.");
+
+            var inspections = await _insRepo.GetAllAsync();
+            if (inspections.Any(i => i.ProcurementEntryId == existing.ProcurementEntryId))
+                throw new UnauthorizedAccessException("Muayene kabul işlemi bulunan kayıt için teklif mektubu silinemez.");
+
+            var addInspections = await _addInsRepo.GetAllAsync();
+            if (addInspections.Any(i => i.ProcurementEntryId == existing.ProcurementEntryId))
+                throw new UnauthorizedAccessException("Ek muayene kabul işlemi bulunan kayıt için teklif mektubu silinemez.");
+
+            var backup = _mapper.Map<BackupOfferLetter>(existing);
+            backup.RemovedByUserId = userId;
+            backup.RemovingDate = DateTime.UtcNow;
+            await _backupRepo.InsertAsync(backup);
+
             await _repo.DeleteAsync(id);
         }
     }
