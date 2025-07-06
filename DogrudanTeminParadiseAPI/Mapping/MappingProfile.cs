@@ -105,7 +105,7 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<CreateBackupOfferLetterDto, BackupOfferLetter>();
             CreateMap<BackupOfferLetter, BackupOfferLetterDto>();
             CreateMap<OfferLetter, BackupOfferLetter>();
-
+            
             CreateMap<CreateBackupProcurementEntryDto, BackupProcurementEntry>();
             CreateMap<BackupProcurementEntry, BackupProcurementEntryDto>();
             CreateMap<ProcurementEntry, BackupProcurementEntry>();
@@ -113,7 +113,7 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<CreateBackupProcurementEntryEditorDto, BackupProcurementEntryEditor>();
             CreateMap<BackupProcurementEntryEditor, BackupProcurementEntryEditorDto>();
             CreateMap<ProcurementEntryEditor, BackupProcurementEntryEditor>();
-
+            
             CreateMap<OfferItemDto, SelectedOfferItem>()
                 .ForMember(d => d.Id, o => o.MapFrom(s => s.Id == Guid.Empty ? Guid.NewGuid() : s.Id))
                 .ForMember(d => d.Name, o => o.MapFrom(s => s.Name))
