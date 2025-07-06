@@ -1,4 +1,6 @@
 using DogrudanTeminParadiseAPI.Helpers;
+using DogrudanTeminParadiseAPI.Filter;
+using System.Text.Json.Serialization;
 
 namespace DogrudanTeminParadiseAPI.Dto
 {
@@ -14,6 +16,7 @@ namespace DogrudanTeminParadiseAPI.Dto
         public Guid SubAdministrationUnitId { get; set; }
         public Guid ThreeSubAdministrationUnitId { get; set; }
         public Guid RemovedByUserId { get; set; }
+        [JsonConverter(typeof(TurkeyDateTimeConverter))]
         public DateTime RemovingDate { get; set; }
     }
 }
