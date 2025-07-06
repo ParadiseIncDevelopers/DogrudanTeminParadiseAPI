@@ -1,6 +1,7 @@
 using DogrudanTeminParadiseAPI.Helpers;
 using DogrudanTeminParadiseAPI.Filter;
 using System.Text.Json.Serialization;
+using DogrudanTeminParadiseAPI.Models;
 
 namespace DogrudanTeminParadiseAPI.Dto
 {
