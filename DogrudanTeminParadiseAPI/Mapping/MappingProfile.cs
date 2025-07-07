@@ -160,6 +160,10 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<UserFeatures, UserFeaturesDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.Parse(src.Id)));
             CreateMap<Feature, FeatureDto>();
+
+            CreateMap<CreateDecisionNumbersDto, DecisionNumbers>();
+            CreateMap<UpdateDecisionNumbersDto, DecisionNumbers>();
+            CreateMap<DecisionNumbers, DecisionNumbersDto>();
         }
     }
 }
