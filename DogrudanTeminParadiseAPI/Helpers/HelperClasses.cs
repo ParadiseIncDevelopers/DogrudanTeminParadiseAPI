@@ -68,14 +68,4 @@ namespace DogrudanTeminParadiseAPI.Helpers
         PRODUCT,
         SERVICE
     }
-
-    public class ProcurementNumbers
-    {
-        public string ProcurementDecisionNumber { get; set; }
-        public string PiyasaArastirmaOnayNumber { get; set; }
-        public string TeklifMektubuNumber { get; set; }
-        public string PiyasaArastirmaBaslangicNumber { get; set; }
-        public string YaklasikMaliyetHesaplamaBaslangicNumber { get; set; }
-        public string MuayeneVeKabulBelgesiNumber { get; set; }
-    }
 }
