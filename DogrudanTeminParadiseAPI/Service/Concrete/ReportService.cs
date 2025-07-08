@@ -947,8 +947,6 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 });
             }
 
-            result.Reverse();
-
             return result;
         }
 
@@ -1008,8 +1006,6 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                     Count = otherCount
                 });
             }
-
-            result.Reverse();
 
             return result;
         }
