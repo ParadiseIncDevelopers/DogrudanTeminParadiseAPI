@@ -130,6 +130,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 PiyasaArastirmaBaslangicDate = entry.PiyasaArastirmaBaslangicDate,
                 ProcurementDecisionNumber = entry.ProcurementDecisionNumber ?? "",
                 PiyasaArastirmaBaslangicNumber = entry.PiyasaArastirmaBaslangicNumber ?? "",
+                PiyasaArastirmaOnayDate = entry.PiyasaArastirmaOnayDate,
+                PiyasaArastirmaOnayNumber = entry.PiyasaArastirmaOnayNumber,
                 ProcurementDecisionDate = entry.ProcurementDecisionDate,
 
                 WinnerEntreprise = new WinnerDto

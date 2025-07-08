@@ -8,6 +8,8 @@
         public string ProcurementDecisionNumber { get; set; }
         public DateTime? PiyasaArastirmaBaslangicDate { get; set; }  // eklendi
         public string PiyasaArastirmaBaslangicNumber { get; set; }  // eklendi
+        public DateTime? PiyasaArastirmaOnayDate { get; set; }
+        public string? PiyasaArastirmaOnayNumber { get; set; }
         public WinnerDto WinnerEntreprise { get; set; }
     }
 
