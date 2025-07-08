@@ -49,9 +49,6 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         public async Task<ProcurementEntryDto> CreateAsync(CreateProcurementEntryDto dto)
         {
             var all = await _repo.GetAllAsync();
-            if (!string.IsNullOrEmpty(dto.ProcurementDecisionNumber) &&
-                all.Any(x => x.ProcurementDecisionNumber.Equals(dto.ProcurementDecisionNumber, StringComparison.OrdinalIgnoreCase)))
-                throw new InvalidOperationException("Bu satın alma karar numarası zaten mevcut.");
 
             var user = await _userRepo.GetByIdAsync(dto.TenderResponsibleUserId);
             var admin = await _adminRepo.GetByIdAsync(dto.TenderResponsibleUserId);

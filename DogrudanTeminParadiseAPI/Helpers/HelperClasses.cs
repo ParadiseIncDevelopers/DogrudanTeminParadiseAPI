@@ -68,5 +68,4 @@ namespace DogrudanTeminParadiseAPI.Helpers
         PRODUCT,
         SERVICE
     }
-
 }
