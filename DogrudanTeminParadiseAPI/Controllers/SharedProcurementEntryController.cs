@@ -28,6 +28,5 @@ namespace DogrudanTeminParadiseAPI.Controllers
             var list = await _svc.GetByUserAsync(userId);
             return Ok(list);
         }
-
     }
 }

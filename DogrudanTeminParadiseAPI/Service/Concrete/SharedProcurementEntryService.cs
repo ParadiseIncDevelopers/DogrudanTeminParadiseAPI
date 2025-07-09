@@ -32,6 +32,5 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 .Where(x => x.ProcurementSharerUserId == userId || x.SharedToUserIds.Contains(userId));
             return list.Select(x => _mapper.Map<SharedProcurementEntryDto>(x));
         }
-
     }
 }
