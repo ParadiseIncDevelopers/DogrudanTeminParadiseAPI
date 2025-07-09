@@ -84,6 +84,7 @@ builder.Services.AddScoped(sp => new MongoDBRepository<UserOwnFeaturesList>(cfg[
 builder.Services.AddScoped(sp => new MongoDBRepository<DecisionNumbers>(cfg["MongoAPI"], cfg["MongoDBName"], "DecisionNumbers"));
 builder.Services.AddScoped(sp => new MongoDBRepository<SharedProcurementEntry>(cfg["MongoAPI"], cfg["MongoDBName"], "SharedProcurementEntries"));
 builder.Services.AddScoped(sp => new MongoDBRepository<UserNotification>(cfg["MongoAPI"], cfg["MongoDBName"], "UserNotifications"));
+builder.Services.AddScoped(sp => new MongoDBRepository<BackupUserNotification>(cfg["MongoAPI"], cfg["MongoBackupDBName"], "BackupUserNotifications"));
 
 builder.Services.AddSingleton<IMongoClient>(sp =>
     new MongoClient(cfg["MongoAPI"])
@@ -132,6 +133,7 @@ builder.Services.AddScoped<IUserOwnFeaturesListService, UserOwnFeaturesListServi
 builder.Services.AddScoped<IDecisionNumbersService, DecisionNumbersService>();
 builder.Services.AddScoped<ISharedProcurementEntryService, SharedProcurementEntryService>();
 builder.Services.AddScoped<IUserNotificationService, UserNotificationService>();
+builder.Services.AddScoped<IBackupUserNotificationService, BackupUserNotificationService>();
 // Factoryler
 builder.Services.AddSingleton<ITeminApiExceptionFactory, TeminApiExceptionFactory>();
 

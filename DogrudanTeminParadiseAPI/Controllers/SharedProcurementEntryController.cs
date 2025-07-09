@@ -28,19 +28,5 @@ namespace DogrudanTeminParadiseAPI.Controllers
             var list = await _svc.GetByUserAsync(userId);
             return Ok(list);
         }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            try
-            {
-                await _svc.DeleteAsync(id);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
-        }
     }
 }

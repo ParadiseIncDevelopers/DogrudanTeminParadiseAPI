@@ -9,11 +9,16 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
     public class UserNotificationService : IUserNotificationService
     {
         private readonly MongoDBRepository<UserNotification> _repo;
+        private readonly MongoDBRepository<BackupUserNotification> _backupRepo;
         private readonly IMapper _mapper;
 
-        public UserNotificationService(MongoDBRepository<UserNotification> repo, IMapper mapper)
+        public UserNotificationService(
+            MongoDBRepository<UserNotification> repo,
+            MongoDBRepository<BackupUserNotification> backupRepo,
+            IMapper mapper)
         {
             _repo = repo;
+            _backupRepo = backupRepo;
             _mapper = mapper;
         }
 
@@ -50,10 +55,15 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return _mapper.Map<UserNotificationDto>(existing);
         }
 
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id, Guid userId)
         {
             var existing = await _repo.GetByIdAsync(id);
             if (existing == null) throw new KeyNotFoundException("Bildirim bulunamadı.");
+            var backup = _mapper.Map<BackupUserNotification>(existing);
+            backup.Id = Guid.NewGuid();
+            backup.RemovedByUserId = userId;
+            backup.RemovingDate = DateTime.UtcNow;
+            await _backupRepo.InsertAsync(backup);
             await _repo.DeleteAsync(id);
         }
     }

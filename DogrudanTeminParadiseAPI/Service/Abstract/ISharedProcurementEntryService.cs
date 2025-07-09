@@ -6,6 +6,5 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
     {
         Task<SharedProcurementEntryDto> CreateAsync(CreateSharedProcurementEntryDto dto);
         Task<IEnumerable<SharedProcurementEntryDto>> GetByUserAsync(Guid userId);
-        Task DeleteAsync(Guid id);
     }
 }

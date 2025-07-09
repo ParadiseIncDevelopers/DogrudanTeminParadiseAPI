@@ -32,13 +32,5 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 .Where(x => x.ProcurementSharerUserId == userId || x.SharedToUserIds.Contains(userId));
             return list.Select(x => _mapper.Map<SharedProcurementEntryDto>(x));
         }
-
-        public async Task DeleteAsync(Guid id)
-        {
-            var existing = await _repo.GetByIdAsync(id);
-            if (existing == null)
-                throw new KeyNotFoundException("Paylaşım bulunamadı.");
-            await _repo.DeleteAsync(id);
-        }
     }
 }

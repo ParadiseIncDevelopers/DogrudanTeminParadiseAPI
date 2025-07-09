@@ -3,6 +3,7 @@ using DogrudanTeminParadiseAPI.Helpers.Attributes;
 using DogrudanTeminParadiseAPI.Service.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DogrudanTeminParadiseAPI.Controllers
 {
@@ -48,7 +49,8 @@ namespace DogrudanTeminParadiseAPI.Controllers
         {
             try
             {
-                await _svc.DeleteAsync(id);
+                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                await _svc.DeleteAsync(id, userId);
                 return NoContent();
             }
             catch (KeyNotFoundException ex)
