@@ -82,6 +82,9 @@ builder.Services.AddScoped(sp => new MongoDBRepository<BackupProcurementEntryEdi
 builder.Services.AddScoped(sp => new MongoDBRepository<InspectionAcceptanceNote>(cfg["MongoAPI"], cfg["MongoDBName"], "InspectionAcceptanceNotes"));
 builder.Services.AddScoped(sp => new MongoDBRepository<UserOwnFeaturesList>(cfg["MongoAPI"], cfg["MongoDBName"], "UserOwnFeaturesLists"));
 builder.Services.AddScoped(sp => new MongoDBRepository<DecisionNumbers>(cfg["MongoAPI"], cfg["MongoDBName"], "DecisionNumbers"));
+builder.Services.AddScoped(sp => new MongoDBRepository<SharedProcurementEntry>(cfg["MongoAPI"], cfg["MongoDBName"], "SharedProcurementEntries"));
+builder.Services.AddScoped(sp => new MongoDBRepository<UserNotification>(cfg["MongoAPI"], cfg["MongoDBName"], "UserNotifications"));
+builder.Services.AddScoped(sp => new MongoDBRepository<BackupUserNotification>(cfg["MongoAPI"], cfg["MongoBackupDBName"], "BackupUserNotifications"));
 
 builder.Services.AddSingleton<IMongoClient>(sp =>
     new MongoClient(cfg["MongoAPI"])
@@ -128,6 +131,9 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IInspectionAcceptanceNoteService, InspectionAcceptanceNoteService>();
 builder.Services.AddScoped<IUserOwnFeaturesListService, UserOwnFeaturesListService>();
 builder.Services.AddScoped<IDecisionNumbersService, DecisionNumbersService>();
+builder.Services.AddScoped<ISharedProcurementEntryService, SharedProcurementEntryService>();
+builder.Services.AddScoped<IUserNotificationService, UserNotificationService>();
+builder.Services.AddScoped<IBackupUserNotificationService, BackupUserNotificationService>();
 // Factoryler
 builder.Services.AddSingleton<ITeminApiExceptionFactory, TeminApiExceptionFactory>();
 
