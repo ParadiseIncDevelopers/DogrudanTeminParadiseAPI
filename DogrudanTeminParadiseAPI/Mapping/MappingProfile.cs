@@ -166,6 +166,7 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<DecisionNumbers, DecisionNumbersDto>();
 
             CreateMap<CreateSharedProcurementEntryDto, SharedProcurementEntry>();
+            CreateMap<UpdateSharedToUserIdsDto, SharedProcurementEntry>();
             CreateMap<SharedProcurementEntry, SharedProcurementEntryDto>();
 
             CreateMap<CreateUserNotificationDto, UserNotification>();
