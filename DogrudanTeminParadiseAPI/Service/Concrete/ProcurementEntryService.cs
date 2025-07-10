@@ -18,6 +18,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         private readonly MongoDBRepository<ProcurementEntryEditor> _editorRepo;
         private readonly MongoDBRepository<BackupProcurementEntry> _backupRepo;
         private readonly MongoDBRepository<BackupProcurementEntryEditor> _backupEditorRepo;
+        private readonly MongoDBRepository<SharedProcurementEntry> _sharedRepo;
         private readonly IMapper _mapper;
 
         public ProcurementEntryService(
@@ -30,6 +31,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             MongoDBRepository<ProcurementEntryEditor> editorRepo,
             MongoDBRepository<BackupProcurementEntry> backupRepo,
             MongoDBRepository<BackupProcurementEntryEditor> backupEditorRepo,
+            MongoDBRepository<SharedProcurementEntry> sharedRepo,
             IMapper mapper,
             IAdditionalInspectionAcceptanceService additionalInspectionRepo)
         {
@@ -42,6 +44,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             _editorRepo = editorRepo;
             _backupRepo = backupRepo;
             _backupEditorRepo = backupEditorRepo;
+            _sharedRepo = sharedRepo;
             _mapper = mapper;
             _additionalInspectionRepo = additionalInspectionRepo;
         }
@@ -453,6 +456,23 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                     .Where(e => e.TenderResponsibleUserId == requesterId)
                     .Select(e => _mapper.Map<ProcurementEntryDto>(e));
             }
+        }
+
+        public async Task<IEnumerable<ProcurementEntryDto>> GetAllUserSharedsAsync(Guid userId)
+        {
+            var sharedEntries = await _sharedRepo.GetAllAsync();
+            var permittedIds = sharedEntries
+                .Where(s => s.SharedToUserIds.Contains(userId))
+                .Select(s => s.ProcurementId)
+                .ToHashSet();
+
+            if (permittedIds.Count == 0)
+                return Enumerable.Empty<ProcurementEntryDto>();
+
+            var allEntries = await _repo.GetAllAsync();
+            return allEntries
+                .Where(e => permittedIds.Contains(e.Id))
+                .Select(e => _mapper.Map<ProcurementEntryDto>(e));
         }
     }
 }

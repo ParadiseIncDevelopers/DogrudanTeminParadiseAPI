@@ -19,5 +19,7 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<IEnumerable<ProcurementEntryDto>> GetByInspectionDateRangeAsync(ProcurementEntryDateRangeDto query);
         Task<IEnumerable<ProcurementEntryDto>> GetByRequesterAsync(Guid requesterId, bool isAdmin);
 
+        Task<IEnumerable<ProcurementEntryDto>> GetAllUserSharedsAsync(Guid userId);
+
     }
 }
