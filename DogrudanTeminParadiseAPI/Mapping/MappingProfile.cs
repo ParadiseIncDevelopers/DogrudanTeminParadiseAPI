@@ -176,6 +176,9 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<CreateBackupUserNotificationDto, BackupUserNotification>();
             CreateMap<BackupUserNotification, BackupUserNotificationDto>();
             CreateMap<UserNotification, BackupUserNotification>();
+
+            CreateMap<CreateNotificationDto, Notification>();
+            CreateMap<Notification, NotificationDto>();
         }
     }
 }
