@@ -22,10 +22,10 @@ namespace DogrudanTeminParadiseAPI.Controllers
             return CreatedAtAction(nameof(GetByUser), new { userId = created.ProcurementSharerUserId }, created);
         }
 
-        [HttpGet("user/{userId}")]
-        public async Task<IActionResult> GetByUser(Guid userId)
+        [HttpGet("user/{userId}/entry/{entryId}")]
+        public async Task<IActionResult> GetByUser(Guid userId, Guid entryId)
         {
-            var list = await _svc.GetByUserAsync(userId);
+            var list = await _svc.GetByUserAsync(userId, entryId);
             return Ok(list);
         }
     }

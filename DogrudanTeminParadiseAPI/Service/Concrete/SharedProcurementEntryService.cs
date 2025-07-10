@@ -26,11 +26,11 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return _mapper.Map<SharedProcurementEntryDto>(entity);
         }
 
-        public async Task<IEnumerable<SharedProcurementEntryDto>> GetByUserAsync(Guid userId)
+        public async Task<SharedProcurementEntryDto> GetByUserAsync(Guid userId, Guid procurementEntryId)
         {
-            var list = (await _repo.GetAllAsync())
-                .Where(x => x.ProcurementSharerUserId == userId || x.SharedToUserIds.Contains(userId));
-            return list.Select(x => _mapper.Map<SharedProcurementEntryDto>(x));
+            var shared = (await _repo.GetAllAsync())
+                .FirstOrDefault(x => x.ProcurementSharerUserId == userId && x.ProcurementId == procurementEntryId);
+            return _mapper.Map<SharedProcurementEntryDto>(shared);
         }
     }
 }
