@@ -32,5 +32,31 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 .FirstOrDefault(x => x.ProcurementSharerUserId == userId && x.ProcurementId == procurementEntryId);
             return _mapper.Map<SharedProcurementEntryDto>(shared);
         }
+
+        public async Task DeleteUserFromSharersAsync(Guid procurementId, Guid userId)
+        {
+            var shared = (await _repo.GetAllAsync())
+                .FirstOrDefault(x => x.ProcurementId == procurementId && x.SharedToUserIds.Contains(userId));
+
+            if (shared == null)
+                throw new KeyNotFoundException("Paylaşım bulunamadı.");
+
+            shared.SharedToUserIds.Remove(userId);
+            await _repo.UpdateAsync(shared.Id, shared);
+        }
+
+        public async Task<SharedProcurementEntryDto> UpdateSharedToIdsAsync(Guid procurementId, List<Guid> sharedToUserIds)
+        {
+            var shared = (await _repo.GetAllAsync())
+                .FirstOrDefault(x => x.ProcurementId == procurementId);
+
+            if (shared == null)
+                throw new KeyNotFoundException("Paylaşım bulunamadı.");
+
+            shared.SharedToUserIds = sharedToUserIds ?? new();
+            await _repo.UpdateAsync(shared.Id, shared);
+
+            return _mapper.Map<SharedProcurementEntryDto>(shared);
+        }
     }
 }
