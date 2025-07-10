@@ -159,5 +159,13 @@ namespace DogrudanTeminParadiseAPI.Controllers
             var isAdmin = User.IsInRole("ADMIN");
             return Ok(await _entrySvc.GetByRequesterAsync(userId, isAdmin));
         }
+
+        [HttpGet("get-all-user-shareds")]
+        public async Task<IActionResult> GetAllUserShareds()
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var entries = await _entrySvc.GetAllUserSharedsAsync(userId);
+            return Ok(entries);
+        }
     }
 }
