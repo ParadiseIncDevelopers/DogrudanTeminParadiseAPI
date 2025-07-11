@@ -56,5 +56,19 @@ namespace DogrudanTeminParadiseAPI.Controllers
                 return NotFound(new { error = ex.Message });
             }
         }
+
+        [HttpPut("{id}/markIsRead")]
+        public async Task<IActionResult> MarkIsRead(Guid id)
+        {
+            try
+            {
+                var dto = await _svc.MarkIsReadAsync(id);
+                return Ok(dto);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+        }
     }
 }

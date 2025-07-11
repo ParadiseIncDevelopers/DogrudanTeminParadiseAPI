@@ -9,5 +9,6 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<NotificationDto?> GetByIdAsync(Guid id);
         Task<IEnumerable<NotificationDto>> GetAllAsync();
         Task<IEnumerable<NotificationDto>> GetAllByUserIdAsync(Guid userId);
+        Task<NotificationDto> MarkIsReadAsync(Guid id);
     }
 }
