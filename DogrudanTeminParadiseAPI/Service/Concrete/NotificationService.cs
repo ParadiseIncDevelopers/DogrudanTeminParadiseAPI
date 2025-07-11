@@ -51,5 +51,16 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             var entity = await _repo.GetByIdAsync(id);
             return entity == null ? null : _mapper.Map<NotificationDto>(entity);
         }
+
+        public async Task<NotificationDto> MarkIsReadAsync(Guid id)
+        {
+            var existing = await _repo.GetByIdAsync(id);
+            if (existing == null)
+                throw new KeyNotFoundException("Bildirim bulunamadı.");
+
+            existing.IsRead = true;
+            await _repo.UpdateAsync(id, existing);
+            return _mapper.Map<NotificationDto>(existing);
+        }
     }
 }
