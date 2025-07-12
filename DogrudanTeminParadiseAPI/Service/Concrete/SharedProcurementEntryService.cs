@@ -30,7 +30,15 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         {
             var shared = (await _repo.GetAllAsync())
                 .FirstOrDefault(x => x.ProcurementSharerUserId == userId && x.ProcurementId == procurementEntryId);
-            return _mapper.Map<SharedProcurementEntryDto>(shared);
+
+            if (shared != null)
+            {
+                return _mapper.Map<SharedProcurementEntryDto>(shared);
+            }
+            else 
+            {
+                return new SharedProcurementEntryDto();
+            } 
         }
 
         public async Task DeleteUserFromSharersAsync(Guid procurementId, Guid userId)

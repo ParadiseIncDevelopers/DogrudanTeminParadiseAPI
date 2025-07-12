@@ -19,7 +19,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
         public async Task<IActionResult> Create([FromBody] CreateSharedProcurementEntryDto dto)
         {
             var created = await _svc.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetByUser), new { userId = created.ProcurementSharerUserId }, created);
+            return CreatedAtAction(nameof(GetByUser), new { userId = created.ProcurementSharerUserId, entryId = created.ProcurementId }, created);
         }
 
         [HttpGet("user/{userId}/entry/{entryId}")]
@@ -29,7 +29,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
             return Ok(list);
         }
 
-        [HttpDelete("procurement/{procurementId}/user/{userId}")]
+        [HttpDelete("entry/{procurementId}/user/{userId}")]
         public async Task<IActionResult> DeleteUserFromSharers(Guid procurementId, Guid userId)
         {
             try
@@ -43,7 +43,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
             }
         }
 
-        [HttpPut("procurement/{procurementId}")]
+        [HttpPut("entry/{procurementId}")]
         public async Task<IActionResult> UpdateSharedToIds(Guid procurementId, [FromBody] UpdateSharedToUserIdsDto dto)
         {
             try
