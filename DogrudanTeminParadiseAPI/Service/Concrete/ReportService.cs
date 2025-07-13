@@ -351,11 +351,12 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return result;
         }
 
-        public async Task<List<LastJobsDto>> GetLast10JobsAsync(Guid tenderResponsibleId)
+        public async Task<List<LastJobsDto>> GetLast10JobsAsync(IEnumerable<Guid> tenderResponsibleIds)
         {
+            var idSet = tenderResponsibleIds?.ToHashSet() ?? new HashSet<Guid>();
             var allEntries = await _entryRepo.GetAllAsync();
             var userEntries = allEntries
-                .Where(e => e.TenderResponsibleUserId == tenderResponsibleId)
+                .Where(e => e.TenderResponsibleUserId.HasValue && idSet.Contains(e.TenderResponsibleUserId.Value))
                 .ToList();
 
             if (!userEntries.Any())
@@ -412,11 +413,12 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 .ToList();
         }
 
-        public async Task<List<TopUnitDto>> GetTopAdministrationUnitsAsync(Guid tenderResponsibleId)
+        public async Task<List<TopUnitDto>> GetTopAdministrationUnitsAsync(IEnumerable<Guid> tenderResponsibleIds)
         {
+            var idSet = tenderResponsibleIds?.ToHashSet() ?? new HashSet<Guid>();
             var allEntries = await _entryRepo.GetAllAsync();
             var userEntryIds = allEntries
-                .Where(e => e.TenderResponsibleUserId == tenderResponsibleId)
+                .Where(e => e.TenderResponsibleUserId.HasValue && idSet.Contains(e.TenderResponsibleUserId.Value))
                 .Select(e => e.Id)
                 .ToHashSet();
 
@@ -468,11 +470,12 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return result;
         }
 
-        public async Task<List<TopUnitDto>> GetTopSubAdministrationUnitsAsync(Guid tenderResponsibleId)
+        public async Task<List<TopUnitDto>> GetTopSubAdministrationUnitsAsync(IEnumerable<Guid> tenderResponsibleIds)
         {
+            var idSet = tenderResponsibleIds?.ToHashSet() ?? new HashSet<Guid>();
             var allEntries = await _entryRepo.GetAllAsync();
             var userEntryIds = allEntries
-                .Where(e => e.TenderResponsibleUserId == tenderResponsibleId)
+                .Where(e => e.TenderResponsibleUserId.HasValue && idSet.Contains(e.TenderResponsibleUserId.Value))
                 .Select(e => e.Id)
                 .ToHashSet();
 
@@ -523,11 +526,12 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return result;
         }
 
-        public async Task<List<TopUnitDto>> GetTopThreeSubAdministrationUnitsAsync(Guid tenderResponsibleId)
+        public async Task<List<TopUnitDto>> GetTopThreeSubAdministrationUnitsAsync(IEnumerable<Guid> tenderResponsibleIds)
         {
+            var idSet = tenderResponsibleIds?.ToHashSet() ?? new HashSet<Guid>();
             var allEntries = await _entryRepo.GetAllAsync();
             var userEntryIds = allEntries
-                .Where(e => e.TenderResponsibleUserId == tenderResponsibleId)
+                .Where(e => e.TenderResponsibleUserId.HasValue && idSet.Contains(e.TenderResponsibleUserId.Value))
                 .Select(e => e.Id)
                 .ToHashSet();
 
@@ -578,11 +582,12 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return result;
         }
 
-        public async Task<SpendingReportDto> GetSpendingReportAsync(Guid tenderResponsibleId)
+        public async Task<SpendingReportDto> GetSpendingReportAsync(IEnumerable<Guid> tenderResponsibleIds)
         {
+            var idSet = tenderResponsibleIds?.ToHashSet() ?? new HashSet<Guid>();
             var allEntries = await _entryRepo.GetAllAsync();
             var userEntries = allEntries
-                .Where(e => e.TenderResponsibleUserId == tenderResponsibleId)
+                .Where(e => e.TenderResponsibleUserId.HasValue && idSet.Contains(e.TenderResponsibleUserId.Value))
                 .ToList();
 
             if (!userEntries.Any())
