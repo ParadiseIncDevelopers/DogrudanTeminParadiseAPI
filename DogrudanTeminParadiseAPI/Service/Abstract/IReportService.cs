@@ -11,11 +11,11 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<InspectionPriceStatsDto> GetInspectionPriceSumAsync(int days);
         Task<List<ProductPriceStatDto>> GetTopInspectionProductsAsync(int days, int top);
         Task<List<FirmStatDto>> GetTopInspectionFirmsMonthlyAsync(int top);
-        Task<List<LastJobsDto>> GetLast10JobsAsync(Guid tenderResponsibleId);
-        Task<List<TopUnitDto>> GetTopAdministrationUnitsAsync(Guid tenderResponsibleId);
-        Task<List<TopUnitDto>> GetTopSubAdministrationUnitsAsync(Guid tenderResponsibleId);
-        Task<List<TopUnitDto>> GetTopThreeSubAdministrationUnitsAsync(Guid tenderResponsibleId);
-        Task<SpendingReportDto> GetSpendingReportAsync(Guid tenderResponsibleId);
+        Task<List<LastJobsDto>> GetLast10JobsAsync(IEnumerable<Guid> tenderResponsibleIds);
+        Task<List<TopUnitDto>> GetTopAdministrationUnitsAsync(IEnumerable<Guid> tenderResponsibleIds);
+        Task<List<TopUnitDto>> GetTopSubAdministrationUnitsAsync(IEnumerable<Guid> tenderResponsibleIds);
+        Task<List<TopUnitDto>> GetTopThreeSubAdministrationUnitsAsync(IEnumerable<Guid> tenderResponsibleIds);
+        Task<SpendingReportDto> GetSpendingReportAsync(IEnumerable<Guid> tenderResponsibleIds);
         Task<SpendingByFirmDto> GetTopFirmsSpendingAsync(string periodType);
         Task<IEnumerable<UserCountDto>> GetTopResponsibleUsersAsync(int top = 3);
         Task<IEnumerable<UserCountDto>> GetBottomResponsibleUsersAsync(int bottom = 3);
