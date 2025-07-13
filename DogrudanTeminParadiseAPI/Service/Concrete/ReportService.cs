@@ -171,7 +171,6 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task<List<TopUnitDto>> GetTopBudgetAllocationsAsync(Guid tenderResponsibleUserId, int top)
         {
-            // 1) İlgili kullanıcının ProcurementEntry’lerini al
             var allEntries = await _entryRepo.GetAllAsync();
             var userEntries = allEntries
                 .Where(e => e.TenderResponsibleUserId == tenderResponsibleUserId && e.BudgetAllocationId.HasValue)
@@ -180,8 +179,12 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             if (userEntries.Count == 0)
                 return [];
 
-            var init = _inspectionRepo.GetAll().Select(x => x.ProcurementEntryId).ToList();
-            var addl = _addInspectionRepo.GetAll().Select(x => x.ProcurementEntryId).ToList();
+            var init = _inspectionRepo.GetAll()
+                .Select(x => x.ProcurementEntryId)
+                .ToList();
+            var addl = _addInspectionRepo.GetAll()
+                .Select(x => x.ProcurementEntryId)
+                .ToList();
             var certificatesGuid = init.Concat(addl).ToList() ?? [];
 
             // 2) BudgetAllocationId bazında grupla ve say
