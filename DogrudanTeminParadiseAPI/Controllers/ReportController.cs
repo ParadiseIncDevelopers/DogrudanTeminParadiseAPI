@@ -94,7 +94,8 @@ namespace DogrudanTeminParadiseAPI.Controllers
             if (top <= 0)
                 return BadRequest(new { error = "Top must be > 0" });
 
-            var stats = await _svc.GetTopBudgetAllocationsAsync(tenderResponsibleUserId, top);
+            var ids = await ResolveTenderResponsibleIds(tenderResponsibleUserId);
+            var stats = await _svc.GetTopBudgetAllocationsAsync(ids, top);
             return Ok(stats);
         }
 

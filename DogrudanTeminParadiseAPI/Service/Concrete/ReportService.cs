@@ -169,11 +169,14 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             };
         }
 
-        public async Task<List<TopUnitDto>> GetTopBudgetAllocationsAsync(Guid tenderResponsibleUserId, int top)
+        public async Task<List<TopUnitDto>> GetTopBudgetAllocationsAsync(IEnumerable<Guid> tenderResponsibleUserIds, int top)
         {
+            var idSet = tenderResponsibleUserIds?.ToHashSet() ?? new HashSet<Guid>();
+
+            // 1) İlgili kullanıcının ProcurementEntry’lerini al
             var allEntries = await _entryRepo.GetAllAsync();
             var userEntries = allEntries
-                .Where(e => e.TenderResponsibleUserId == tenderResponsibleUserId && e.BudgetAllocationId.HasValue)
+                .Where(e => e.TenderResponsibleUserId.HasValue && idSet.Contains(e.TenderResponsibleUserId.Value) && e.BudgetAllocationId.HasValue)
                 .ToList();
 
             if (userEntries.Count == 0)
