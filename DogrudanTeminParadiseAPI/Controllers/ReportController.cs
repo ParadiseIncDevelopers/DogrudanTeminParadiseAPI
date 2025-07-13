@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Globalization;
 using System.Security.Claims;
+using System.Collections.Generic;
 
 namespace DogrudanTeminParadiseAPI.Controllers
 {
@@ -24,9 +25,10 @@ namespace DogrudanTeminParadiseAPI.Controllers
         private readonly IThreeSubAdministrationUnitService _threeSubAdminSvc;
         private readonly IOfferLetterService _offerSvc;
         private readonly IEntrepriseService _entrepriseSvc;
+        private readonly ISuperAdminService _superAdminSvc;
 
         public ReportController(IReportService svc, IProcurementEntryService entrySvc, IInspectionAcceptanceCertificateService inspectionSvc, IAdditionalInspectionAcceptanceService additionalInspectionSvc, IAdministrationUnitService adminUnitSvc,
-            ISubAdministrationUnitService subAdminSvc, IThreeSubAdministrationUnitService threeSubAdminSvc, IOfferLetterService offerSvc, IEntrepriseService entrepriseSvc)
+            ISubAdministrationUnitService subAdminSvc, IThreeSubAdministrationUnitService threeSubAdminSvc, IOfferLetterService offerSvc, IEntrepriseService entrepriseSvc, ISuperAdminService superAdminSvc)
         {
             _svc = svc;
             _entrySvc = entrySvc;
@@ -37,6 +39,7 @@ namespace DogrudanTeminParadiseAPI.Controllers
             _threeSubAdminSvc = threeSubAdminSvc;
             _offerSvc = offerSvc;
             _entrepriseSvc = entrepriseSvc;
+            _superAdminSvc = superAdminSvc;
         }
 
         [HttpGet("approximate-cost/{entryId}")]
@@ -116,14 +119,16 @@ namespace DogrudanTeminParadiseAPI.Controllers
         [HttpGet("last-10-jobs")]
         public async Task<IActionResult> GetLast10Jobs([FromQuery] Guid tenderResponsibleId)
         {
-            var result = await _svc.GetLast10JobsAsync(tenderResponsibleId);
+            var ids = await ResolveTenderResponsibleIds(tenderResponsibleId);
+            var result = await _svc.GetLast10JobsAsync(ids);
             return Ok(result);
         }
 
         [HttpGet("top-admin-units")]
         public async Task<IActionResult> GetTopAdministrationUnits([FromQuery] Guid tenderResponsibleId)
         {
-            var raw = await _svc.GetTopAdministrationUnitsAsync(tenderResponsibleId);
+            var ids = await ResolveTenderResponsibleIds(tenderResponsibleId);
+            var raw = await _svc.GetTopAdministrationUnitsAsync(ids);
             var result = new List<TopUnitDto>();
 
             // Her UnitId'yi gerçekteki Ad isimleriyle eşle
@@ -143,7 +148,8 @@ namespace DogrudanTeminParadiseAPI.Controllers
         [HttpGet("top-sub-admin-units")]
         public async Task<IActionResult> GetTopSubAdministrationUnits([FromQuery] Guid tenderResponsibleId)
         {
-            var raw = await _svc.GetTopSubAdministrationUnitsAsync(tenderResponsibleId);
+            var ids = await ResolveTenderResponsibleIds(tenderResponsibleId);
+            var raw = await _svc.GetTopSubAdministrationUnitsAsync(ids);
             var result = new List<TopUnitDto>();
 
             foreach (var item in raw)
@@ -173,7 +179,8 @@ namespace DogrudanTeminParadiseAPI.Controllers
         [HttpGet("top-three-sub-admin-units")]
         public async Task<IActionResult> GetTopThreeSubAdministrationUnits([FromQuery] Guid tenderResponsibleId)
         {
-            var raw = await _svc.GetTopThreeSubAdministrationUnitsAsync(tenderResponsibleId);
+            var ids = await ResolveTenderResponsibleIds(tenderResponsibleId);
+            var raw = await _svc.GetTopThreeSubAdministrationUnitsAsync(ids);
             var result = new List<TopUnitDto>();
 
             foreach (var item in raw)
@@ -203,7 +210,8 @@ namespace DogrudanTeminParadiseAPI.Controllers
         [HttpGet("spending-report")]
         public async Task<IActionResult> GetSpendingReport(Guid tenderResponsibleId)
         {
-            var report = await _svc.GetSpendingReportAsync(tenderResponsibleId);
+            var ids = await ResolveTenderResponsibleIds(tenderResponsibleId);
+            var report = await _svc.GetSpendingReportAsync(ids);
             return Ok(report);
         }
 
@@ -233,6 +241,29 @@ namespace DogrudanTeminParadiseAPI.Controllers
                 return BadRequest(new { error = "Bottom must be > 0" });
             var data = await _svc.GetBottomResponsibleUsersAsync(bottom);
             return Ok(data);
+        }
+
+        private async Task<IEnumerable<Guid>> ResolveTenderResponsibleIds(Guid tenderResponsibleId)
+        {
+            var allGuid = Guid.Parse("ffffffff-ffff-ffff-ffff-ffffffffffff");
+            if (tenderResponsibleId != allGuid)
+                return new List<Guid> { tenderResponsibleId };
+
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdClaim, out var adminId))
+                throw new UnauthorizedAccessException();
+
+            List<Guid> list;
+            try
+            {
+                list = await _superAdminSvc.GetAdminPermissionsAsync(adminId);
+            }
+            catch
+            {
+                list = new List<Guid>();
+            }
+            list.Insert(0, adminId);
+            return list;
         }
     }
 }
