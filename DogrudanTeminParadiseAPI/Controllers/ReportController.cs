@@ -208,6 +208,20 @@ namespace DogrudanTeminParadiseAPI.Controllers
             return Ok(result);
         }
 
+        [HttpGet("budget-allocations-entry-reports")]
+        public async Task<IActionResult> GetBudgetAllocationsEntryReports(
+            [FromQuery] string userId,
+            [FromQuery] string economyCode,
+            [FromQuery] string financialCode)
+        {
+            if (!Guid.TryParse(userId, out var uid))
+                return BadRequest(new { error = "Invalid userId" });
+
+            var ids = await ResolveTenderResponsibleIds(uid);
+            var data = await _svc.OnGetBudgetAllocationsEntryReports(ids, economyCode, financialCode);
+            return Ok(data);
+        }
+
         [HttpGet("spending-report")]
         public async Task<IActionResult> GetSpendingReport(Guid tenderResponsibleId)
         {

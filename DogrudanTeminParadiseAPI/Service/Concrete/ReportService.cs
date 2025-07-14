@@ -22,8 +22,26 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         private readonly IInspectionAcceptanceCertificateService _inspectionSvc;
         private readonly IAdditionalInspectionAcceptanceService _addInspectionSvc;
         private readonly IBudgetItemService _budgetItemSvc;
+        private readonly MongoDBRepository<AdministrationUnit> _adminUnitRepo;
+        private readonly MongoDBRepository<SubAdministrationUnit> _subAdminRepo;
+        private readonly MongoDBRepository<ThreeSubAdministrationUnit> _threeSubAdminRepo;
 
-        public ReportService(MongoDBRepository<ProcurementEntry> entryRepo, MongoDBRepository<ProcurementListItem> itemRepo, MongoDBRepository<OfferLetter> offerRepo, MongoDBRepository<Entreprise> entRepo, MongoDBRepository<Unit> unitRepo, MongoDBRepository<InspectionAcceptanceCertificate> inspectionRepo, MongoDBRepository<User> userRepo, MongoDBRepository<AdminUser> adminRepo, MongoDBRepository<AdditionalInspectionAcceptanceCertificate> addInspectionRepo, IInspectionAcceptanceCertificateService inspectionSvc, IAdditionalInspectionAcceptanceService addInspectionSvc, IBudgetItemService budgetItemSvc)
+        public ReportService(
+            MongoDBRepository<ProcurementEntry> entryRepo,
+            MongoDBRepository<ProcurementListItem> itemRepo,
+            MongoDBRepository<OfferLetter> offerRepo,
+            MongoDBRepository<Entreprise> entRepo,
+            MongoDBRepository<Unit> unitRepo,
+            MongoDBRepository<InspectionAcceptanceCertificate> inspectionRepo,
+            MongoDBRepository<User> userRepo,
+            MongoDBRepository<AdminUser> adminRepo,
+            MongoDBRepository<AdditionalInspectionAcceptanceCertificate> addInspectionRepo,
+            IInspectionAcceptanceCertificateService inspectionSvc,
+            IAdditionalInspectionAcceptanceService addInspectionSvc,
+            IBudgetItemService budgetItemSvc,
+            MongoDBRepository<AdministrationUnit> adminUnitRepo,
+            MongoDBRepository<SubAdministrationUnit> subAdminRepo,
+            MongoDBRepository<ThreeSubAdministrationUnit> threeSubAdminRepo)
         {
             _entryRepo = entryRepo;
             _itemRepo = itemRepo;
@@ -37,6 +55,9 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             _inspectionSvc = inspectionSvc;
             _addInspectionSvc = addInspectionSvc;
             _budgetItemSvc = budgetItemSvc;
+            _adminUnitRepo = adminUnitRepo;
+            _subAdminRepo = subAdminRepo;
+            _threeSubAdminRepo = threeSubAdminRepo;
 
         }
 
@@ -1015,6 +1036,96 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 {
                     UserName = "Diğer",
                     Count = otherCount
+                });
+            }
+
+            return result;
+        }
+
+        public async Task<IEnumerable<BudgetAllocationEntryReportDto>> OnGetBudgetAllocationsEntryReports(
+            IEnumerable<Guid> userIds,
+            string economyCode,
+            string financialCode)
+        {
+            var idSet = userIds?.ToHashSet() ?? new HashSet<Guid>();
+
+            var allEntries = await _entryRepo.GetAllAsync();
+            var relevantEntries = allEntries
+                .Where(e => e.TenderResponsibleUserId.HasValue && idSet.Contains(e.TenderResponsibleUserId.Value))
+                .Where(e => e.BudgetAllocationId.HasValue)
+                .ToList();
+
+            if (!relevantEntries.Any())
+                return [];
+
+            var budgetItems = (await _budgetItemSvc.GetAllAsync()).ToList();
+            if (!string.IsNullOrEmpty(economyCode))
+                budgetItems = budgetItems.Where(b => b.EconomyCode.Equals(economyCode, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (!string.IsNullOrEmpty(financialCode))
+                budgetItems = budgetItems.Where(b => b.FinancialCode.Equals(financialCode, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            var adminUsers = (await _adminRepo.GetAllAsync()).ToDictionary(a => a.Id);
+            var users = (await _userRepo.GetAllAsync()).ToDictionary(u => u.Id);
+            var adminUnits = (await _adminUnitRepo.GetAllAsync()).ToDictionary(a => a.Id);
+            var subUnits = (await _subAdminRepo.GetAllAsync()).ToDictionary(a => a.Id);
+            var threeUnits = (await _threeSubAdminRepo.GetAllAsync()).ToDictionary(a => a.Id);
+
+            var result = new List<BudgetAllocationEntryReportDto>();
+
+            foreach (var item in budgetItems)
+            {
+                var itemEntries = relevantEntries
+                    .Where(e => e.BudgetAllocationId == item.Id)
+                    .ToList();
+                if (!itemEntries.Any())
+                    continue;
+
+                var entryDtos = new List<BudgetAllocationEntryDto>();
+                foreach (var e in itemEntries)
+                {
+                    string tenderName = null;
+                    if (e.TenderResponsibleUserId.HasValue)
+                    {
+                        if (adminUsers.TryGetValue(e.TenderResponsibleUserId.Value, out var adm))
+                            tenderName = $"{Crypto.Decrypt(adm.Name)} {Crypto.Decrypt(adm.Surname)}";
+                        else if (users.TryGetValue(e.TenderResponsibleUserId.Value, out var usr))
+                            tenderName = $"{Crypto.Decrypt(usr.Name)} {Crypto.Decrypt(usr.Surname)}";
+                        else
+                            tenderName = "Bilinmeyen";
+                    }
+
+                    string adminName = null;
+                    if (e.AdministrationUnitId.HasValue && adminUnits.TryGetValue(e.AdministrationUnitId.Value, out var au))
+                        adminName = au.Name;
+                    string subName = null;
+                    if (e.SubAdministrationUnitId.HasValue && subUnits.TryGetValue(e.SubAdministrationUnitId.Value, out var su))
+                        subName = su.Name;
+                    string threeName = null;
+                    if (e.ThreeSubAdministrationUnitId.HasValue && threeUnits.TryGetValue(e.ThreeSubAdministrationUnitId.Value, out var tu))
+                        threeName = tu.Name;
+
+                    entryDtos.Add(new BudgetAllocationEntryDto
+                    {
+                        ProcurementEntryId = e.Id,
+                        WorkName = e.WorkName,
+                        WorkReason = e.WorkReason,
+                        TenderResponsibleUserId = e.TenderResponsibleUserId,
+                        TenderResponsibleName = tenderName,
+                        AdministrationUnitId = e.AdministrationUnitId,
+                        AdministrationUnitName = adminName,
+                        SubAdministrationUnitId = e.SubAdministrationUnitId,
+                        SubAdministrationUnitName = subName,
+                        ThreeSubAdministrationUnitId = e.ThreeSubAdministrationUnitId,
+                        ThreeSubAdministrationUnitName = threeName
+                    });
+                }
+
+                result.Add(new BudgetAllocationEntryReportDto
+                {
+                    EconomyCode = item.EconomyCode,
+                    FinancialCode = item.FinancialCode,
+                    BudgetItemName = item.Name,
+                    ProcurementEntries = entryDtos
                 });
             }
 

@@ -19,5 +19,9 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<SpendingByFirmDto> GetTopFirmsSpendingAsync(string periodType);
         Task<IEnumerable<UserCountDto>> GetTopResponsibleUsersAsync(int top = 3);
         Task<IEnumerable<UserCountDto>> GetBottomResponsibleUsersAsync(int bottom = 3);
+        Task<IEnumerable<BudgetAllocationEntryReportDto>> OnGetBudgetAllocationsEntryReports(
+            IEnumerable<Guid> userIds,
+            string economyCode,
+            string financialCode);
     }
 }
