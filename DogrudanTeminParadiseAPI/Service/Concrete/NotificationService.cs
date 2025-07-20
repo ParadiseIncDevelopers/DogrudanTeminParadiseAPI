@@ -45,6 +45,16 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             }
         }
 
+        public async Task MarkAllIsReadAsync(Guid userId)
+        {
+            var filter = Builders<Notification>.Filter.Eq(n => n.UserId, userId);
+            var list = await _repo.GetAllAsync(filter);
+            foreach (var item in list)
+            {
+                item.IsRead = true;
+                await _repo.UpdateAsync(item.Id, item);
+            }
+        }
         public async Task<IEnumerable<NotificationDto>> GetAllAsync()
         {
             var list = await _repo.GetAllAsync();

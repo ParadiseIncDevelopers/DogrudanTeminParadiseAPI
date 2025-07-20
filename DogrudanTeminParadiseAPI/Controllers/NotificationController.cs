@@ -43,6 +43,12 @@ namespace DogrudanTeminParadiseAPI.Controllers
             return NoContent();
         }
 
+        [HttpPut("user/{userId}/markAllIsRead")]
+        public async Task<IActionResult> MarkAllIsRead(Guid userId)
+        {
+            await _svc.MarkAllIsReadAsync(userId);
+            return NoContent();
+        }
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
