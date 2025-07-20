@@ -49,7 +49,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
             await _svc.MarkAllIsReadAsync(userId);
             return NoContent();
         }
-
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
