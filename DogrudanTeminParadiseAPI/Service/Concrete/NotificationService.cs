@@ -3,6 +3,7 @@ using DogrudanTeminParadiseAPI.Dto;
 using DogrudanTeminParadiseAPI.Models;
 using DogrudanTeminParadiseAPI.Repositories;
 using DogrudanTeminParadiseAPI.Service.Abstract;
+using MongoDB.Driver;
 
 namespace DogrudanTeminParadiseAPI.Service.Concrete
 {
@@ -32,6 +33,16 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             if (existing == null)
                 throw new KeyNotFoundException("Bildirim bulunamadı.");
             await _repo.DeleteAsync(id);
+        }
+
+        public async Task DeleteAllAsync(Guid userId)
+        {
+            var filter = Builders<Notification>.Filter.Eq(n => n.UserId, userId);
+            var list = await _repo.GetAllAsync(filter);
+            foreach (var item in list)
+            {
+                await _repo.DeleteAsync(item.Id);
+            }
         }
 
         public async Task<IEnumerable<NotificationDto>> GetAllAsync()
