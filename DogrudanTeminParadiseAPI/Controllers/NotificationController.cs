@@ -36,6 +36,20 @@ namespace DogrudanTeminParadiseAPI.Controllers
             return Ok(list);
         }
 
+        [HttpDelete("user/{userId}")]
+        public async Task<IActionResult> DeleteAll(Guid userId)
+        {
+            await _svc.DeleteAllAsync(userId);
+            return NoContent();
+        }
+
+        [HttpPut("user/{userId}/markAllIsRead")]
+        public async Task<IActionResult> MarkAllIsRead(Guid userId)
+        {
+            await _svc.MarkAllIsReadAsync(userId);
+            return NoContent();
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
