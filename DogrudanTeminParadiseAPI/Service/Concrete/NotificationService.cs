@@ -37,8 +37,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task DeleteAllAsync(Guid userId)
         {
-            var filter = Builders<Notification>.Filter.Eq(n => n.UserId, userId);
-            var list = await _repo.GetAllAsync(filter);
+            var list = await _repo.GetAllAsync();
+            list = list.Where(x => x.UserId == userId);
             foreach (var item in list)
             {
                 await _repo.DeleteAsync(item.Id);
