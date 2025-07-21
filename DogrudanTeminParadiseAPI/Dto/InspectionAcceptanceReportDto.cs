@@ -15,7 +15,7 @@
     public class InspectionItemDto
     {
         public string Name { get; set; }
-        public int Quantity { get; set; }
+        public double Quantity { get; set; }
         public string UnitName { get; set; }
     }
 }

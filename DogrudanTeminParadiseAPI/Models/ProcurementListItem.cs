@@ -14,7 +14,7 @@ namespace DogrudanTeminParadiseAPI.Models
         public Guid ProcurementEntryId { get; set; }
 
         public string Name { get; set; }
-        public int Quantity { get; set; }
+        public double Quantity { get; set; }
 
         [BsonRepresentation(BsonType.String)]
         public Guid UnitId { get; set; }
