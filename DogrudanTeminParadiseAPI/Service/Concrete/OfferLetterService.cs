@@ -142,7 +142,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
                 {
                     if (qtyMap.TryGetValue(item.Id, out var newQty))
                     {
-                        item.Quantity = (int)newQty;
+                        item.Quantity = newQty;
                         updated = true;
                     }
                 }

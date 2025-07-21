@@ -12,7 +12,7 @@ namespace DogrudanTeminParadiseAPI.Models
 
         public string Name { get; set; }
         public List<Feature> Features { get; set; } = new();
-        public int Quantity { get; set; }
+        public double Quantity { get; set; }
 
         [BsonRepresentation(BsonType.String)]
         public Guid UnitId { get; set; }
