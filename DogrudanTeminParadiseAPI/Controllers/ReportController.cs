@@ -136,10 +136,10 @@ namespace DogrudanTeminParadiseAPI.Controllers
             foreach (var item in raw)
             {
                 var unit = await _adminUnitSvc.GetByIdAsync(Guid.Parse(item.UnitName));
-                var name = unit?.Name ?? "Bilinmeyen";
+                var code = unit?.Code ?? "Bilinmeyen";
                 result.Add(new TopUnitDto
                 {
-                    UnitName = name,
+                    UnitName = code,
                     Count = item.Count
                 });
             }
@@ -166,10 +166,10 @@ namespace DogrudanTeminParadiseAPI.Controllers
                 }
 
                 var unit = await _subAdminSvc.GetByIdAsync(Guid.Parse(item.UnitName));
-                var name = unit?.Name ?? "Bilinmeyen";
+                var code = unit?.Code ?? "Bilinmeyen";
                 result.Add(new TopUnitDto
                 {
-                    UnitName = name,
+                    UnitName = code,
                     Count = item.Count
                 });
             }
@@ -197,10 +197,10 @@ namespace DogrudanTeminParadiseAPI.Controllers
                 }
 
                 var unit = await _threeSubAdminSvc.GetByIdAsync(Guid.Parse(item.UnitName));
-                var name = unit?.Name ?? "Bilinmeyen";
+                var code = unit?.Code ?? "Bilinmeyen";
                 result.Add(new TopUnitDto
                 {
-                    UnitName = name,
+                    UnitName = code,
                     Count = item.Count
                 });
             }
