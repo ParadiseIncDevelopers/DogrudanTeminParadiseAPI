@@ -113,6 +113,7 @@ builder.Services.AddScoped<IOfferLetterService, OfferLetterService>();
 builder.Services.AddScoped<IBackupOfferLetterService, BackupOfferLetterService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IReportBudgetItemService, ReportBudgetItemService>();
+builder.Services.AddScoped<IReportProductService, ReportProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IBudgetItemService, BudgetItemService>();
 builder.Services.AddScoped<IMarketResearchJuryService, MarketResearchJuryService>();
