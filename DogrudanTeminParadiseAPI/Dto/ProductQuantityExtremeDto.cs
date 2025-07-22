@@ -4,8 +4,8 @@ namespace DogrudanTeminParadiseAPI.Dto
     {
         public string Period { get; set; }
         public string MaxProduct { get; set; }
-        public int MaxQuantity { get; set; }
+        public double MaxQuantity { get; set; }
         public string MinProduct { get; set; }
-        public int MinQuantity { get; set; }
+        public double MinQuantity { get; set; }
     }
 }

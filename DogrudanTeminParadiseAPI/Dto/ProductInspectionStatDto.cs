@@ -4,6 +4,6 @@ namespace DogrudanTeminParadiseAPI.Dto
     {
         public string ProductName { get; set; }
         public int CertificateCount { get; set; }
-        public int Quantity { get; set; }
+        public double Quantity { get; set; }
     }
 }
