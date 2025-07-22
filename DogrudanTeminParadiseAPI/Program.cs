@@ -114,6 +114,7 @@ builder.Services.AddScoped<IBackupOfferLetterService, BackupOfferLetterService>(
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IReportBudgetItemService, ReportBudgetItemService>();
 builder.Services.AddScoped<IReportProductService, ReportProductService>();
+builder.Services.AddScoped<IReportProductItemService, ReportProductItemService>();
 builder.Services.AddScoped<IReportAdministrationService, ReportAdministrationService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IBudgetItemService, BudgetItemService>();
