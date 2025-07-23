@@ -211,7 +211,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         private Dictionary<Guid, Guid> BuildNameToItemIdLookup(IEnumerable<Product> products)
         {
-            return products.ToDictionary(p => p.Name.ToLowerInvariant(), p => p.ProductItemId);
+            return products.ToDictionary(p => Guid.Parse(p.Name), p => p.ProductItemId);
         }
 
         public async Task<IEnumerable<ProductItemCountDto>> GetMostUsedInOffersAsync(int top = 3)
@@ -226,7 +226,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             {
                 foreach (var item in offer.OfferItems)
                 {
-                    if (nameToItem.TryGetValue(item.Name.ToLowerInvariant(), out var pid))
+                    if (nameToItem.TryGetValue(Guid.Parse(item.Name), out var pid))
                     {
                         counts[pid] = counts.GetValueOrDefault(pid) + 1;
                     }
@@ -264,7 +264,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             {
                 foreach (var item in offer.OfferItems)
                 {
-                    if (nameToItem.TryGetValue(item.Name.ToLowerInvariant(), out var pid))
+                    if (nameToItem.TryGetValue(Guid.Parse(item.Name), out var pid))
                     {
                         counts[pid] = counts.GetValueOrDefault(pid) + 1;
                     }
@@ -305,7 +305,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             {
                 foreach (var item in offer.OfferItems)
                 {
-                    if (nameToItem.TryGetValue(item.Name.ToLowerInvariant(), out var pid))
+                    if (nameToItem.TryGetValue(Guid.Parse(item.Name), out var pid))
                     {
                         counts[pid] = counts.GetValueOrDefault(pid) + 1;
                     }
