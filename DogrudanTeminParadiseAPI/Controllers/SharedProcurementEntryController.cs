@@ -56,5 +56,19 @@ namespace DogrudanTeminParadiseAPI.Controllers
                 return NotFound(new { error = ex.Message });
             }
         }
+
+        [HttpDelete("entry/{shareEntryId}")]
+        public async Task<IActionResult> Delete(Guid shareEntryId)
+        {
+            try
+            {
+                await _svc.DeleteAsync(shareEntryId);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+        }
     }
 }

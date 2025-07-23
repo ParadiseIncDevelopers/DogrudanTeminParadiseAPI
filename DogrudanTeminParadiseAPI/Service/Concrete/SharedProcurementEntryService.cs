@@ -66,5 +66,14 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
             return _mapper.Map<SharedProcurementEntryDto>(shared);
         }
+
+        public async Task DeleteAsync(Guid id)
+        {
+            var existing = await _repo.GetByIdAsync(id);
+            if (existing == null)
+                throw new KeyNotFoundException("Paylaşım bulunamadı.");
+
+            await _repo.DeleteAsync(id);
+        }
     }
 }
