@@ -69,11 +69,8 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
 
         public async Task DeleteAsync(Guid id)
         {
-            var existing = await _repo.GetByIdAsync(id);
-            if (existing == null)
-                throw new KeyNotFoundException("Paylaşım bulunamadı.");
-
-            await _repo.DeleteAsync(id);
+            var existing = (await _repo.GetAllAsync()).FirstOrDefault(x => x.ProcurementId == id) ?? throw new KeyNotFoundException("Paylaşım bulunamadı.");
+            await _repo.DeleteAsync(existing.Id);
         }
     }
 }
