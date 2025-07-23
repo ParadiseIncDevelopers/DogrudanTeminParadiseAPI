@@ -8,5 +8,6 @@ namespace DogrudanTeminParadiseAPI.Service.Abstract
         Task<SharedProcurementEntryDto> GetByUserAsync(Guid userId, Guid procurementEntryId);
         Task DeleteUserFromSharersAsync(Guid procurementId, Guid userId);
         Task<SharedProcurementEntryDto> UpdateSharedToIdsAsync(Guid procurementId, List<Guid> sharedToUserIds);
+        Task DeleteAsync(Guid id);
     }
 }
