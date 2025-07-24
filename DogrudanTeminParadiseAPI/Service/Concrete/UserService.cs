@@ -17,6 +17,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         private readonly MongoDBRepository<AdminUser> _adminRepo;
         private readonly MongoDBRepository<SuperAdminUser> _sysRepo;
         private readonly MongoDBRepository<Title> _titleRepo;
+        private readonly MongoDBRepository<UserAvatar> _avatarRepo;
         private readonly IMapper _mapper;
         private readonly IConfiguration _cfg;
         private readonly byte[] _aesKey;
@@ -26,6 +27,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             MongoDBRepository<AdminUser> adminRepo,
             MongoDBRepository<SuperAdminUser> sysRepo,
             MongoDBRepository<Title> titleRepo,
+            MongoDBRepository<UserAvatar> avatarRepo,
             IMapper mapper,
             IConfiguration cfg)
         {
@@ -34,6 +36,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             _sysRepo = sysRepo;
             _mapper = mapper;
             _titleRepo = titleRepo;
+            _avatarRepo = avatarRepo;
             _cfg = cfg;
 
             // AES anahtarı appsettings.json'dan okunur (32 karakter)
@@ -85,6 +88,13 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             superAdmins[0].AssignPermissionToAdmin = permissionsDict;
 
             await _repo.InsertAsync(entity);
+            var avatar = new UserAvatar
+            {
+                Id = Guid.NewGuid(),
+                UserOrAdminId = entity.Id,
+                AvatarCode = 10
+            };
+            await _avatarRepo.InsertAsync(avatar);
             await _sysRepo.UpdateAsync(superAdmins[0].Id, superAdmins[0]);
 
             // Decrypted DTO
