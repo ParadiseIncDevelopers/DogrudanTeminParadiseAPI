@@ -9,19 +9,32 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
     public class OSProcurementEntryDocumentsService : IOSProcurementEntryDocumentsService
     {
         private readonly MongoDBRepository<OSProcurementEntryDocuments> _repo;
+        private readonly GridFSRepository _fsRepo;
         private readonly IMapper _mapper;
 
-        public OSProcurementEntryDocumentsService(MongoDBRepository<OSProcurementEntryDocuments> repo, IMapper mapper)
+        public OSProcurementEntryDocumentsService(
+            MongoDBRepository<OSProcurementEntryDocuments> repo,
+            GridFSRepository fsRepo,
+            IMapper mapper)
         {
             _repo = repo;
+            _fsRepo = fsRepo;
             _mapper = mapper;
         }
 
         public async Task<OSProcurementEntryDocumentsDto> CreateAsync(CreateOSProcurementEntryDocumentsDto dto)
         {
-            var entity = _mapper.Map<OSProcurementEntryDocuments>(dto);
-            entity.Id = Guid.NewGuid();
-            entity.TransactionAt = DateTime.UtcNow;
+            var entity = new OSProcurementEntryDocuments
+            {
+                Id = Guid.NewGuid(),
+                OneSourceProcurementEntryId = dto.OneSourceProcurementEntryId,
+                TransactionAt = DateTime.UtcNow
+            };
+            foreach (var file in dto.EntrepriseFiles)
+            {
+                var fileId = await _fsRepo.UploadAsync(file, entity.Id + ".bin");
+                entity.EntrepriseFileIds.Add(fileId);
+            }
             await _repo.InsertAsync(entity);
             return _mapper.Map<OSProcurementEntryDocumentsDto>(entity);
         }
@@ -48,7 +61,12 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         {
             var entity = await _repo.GetByIdAsync(id);
             if (entity == null) return null;
-            entity.EntrepriseFiles = dto.EntrepriseFiles;
+            entity.EntrepriseFileIds.Clear();
+            foreach (var file in dto.EntrepriseFiles)
+            {
+                var fileId = await _fsRepo.UploadAsync(file, entity.Id + ".bin");
+                entity.EntrepriseFileIds.Add(fileId);
+            }
             await _repo.UpdateAsync(id, entity);
             return _mapper.Map<OSProcurementEntryDocumentsDto>(entity);
         }

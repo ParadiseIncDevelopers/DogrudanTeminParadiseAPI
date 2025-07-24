@@ -12,7 +12,7 @@ namespace DogrudanTeminParadiseAPI.Models
         [BsonRepresentation(BsonType.String)]
         public Guid OneSourceProcurementEntryId { get; set; }
 
-        public List<byte[]> EntrepriseFiles { get; set; } = new();
+        public List<string> EntrepriseFileIds { get; set; } = new();
 
         public DateTime TransactionAt { get; set; }
     }

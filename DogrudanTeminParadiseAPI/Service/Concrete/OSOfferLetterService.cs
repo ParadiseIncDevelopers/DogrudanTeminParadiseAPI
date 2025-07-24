@@ -10,13 +10,13 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
     {
         private readonly MongoDBRepository<OSOfferLetter> _repo;
         private readonly MongoDBRepository<Entreprise> _entRepo;
-        private readonly MongoDBRepository<OneSourceProcurementEntry> _entryRepo;
+        private readonly MongoDBRepository<OSProcurementEntry> _entryRepo;
         private readonly IMapper _mapper;
 
         public OSOfferLetterService(
             MongoDBRepository<OSOfferLetter> repo,
             MongoDBRepository<Entreprise> entRepo,
-            MongoDBRepository<OneSourceProcurementEntry> entryRepo,
+            MongoDBRepository<OSProcurementEntry> entryRepo,
             IMapper mapper)
         {
             _repo = repo;
