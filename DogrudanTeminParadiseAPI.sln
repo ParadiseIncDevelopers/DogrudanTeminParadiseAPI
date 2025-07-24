@@ -5,23 +5,17 @@ VisualStudioVersion = 17.11.35222.181
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DogrudanTeminParadiseAPI", "DogrudanTeminParadiseAPI\DogrudanTeminParadiseAPI.csproj", "{76A10085-1760-4BB8-903D-3A775AF8FE6B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserAvatarMigration", "UserAvatarMigration\UserAvatarMigration.csproj", "{B3317507-F736-4F98-877E-CD5F31A69750}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
-        GlobalSection(ProjectConfigurationPlatforms) = postSolution
-                {76A10085-1760-4BB8-903D-3A775AF8FE6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-                {76A10085-1760-4BB8-903D-3A775AF8FE6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-                {76A10085-1760-4BB8-903D-3A775AF8FE6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-                {76A10085-1760-4BB8-903D-3A775AF8FE6B}.Release|Any CPU.Build.0 = Release|Any CPU
-                {B3317507-F736-4F98-877E-CD5F31A69750}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-                {B3317507-F736-4F98-877E-CD5F31A69750}.Debug|Any CPU.Build.0 = Debug|Any CPU
-                {B3317507-F736-4F98-877E-CD5F31A69750}.Release|Any CPU.ActiveCfg = Release|Any CPU
-                {B3317507-F736-4F98-877E-CD5F31A69750}.Release|Any CPU.Build.0 = Release|Any CPU
-        EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{76A10085-1760-4BB8-903D-3A775AF8FE6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76A10085-1760-4BB8-903D-3A775AF8FE6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76A10085-1760-4BB8-903D-3A775AF8FE6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76A10085-1760-4BB8-903D-3A775AF8FE6B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
