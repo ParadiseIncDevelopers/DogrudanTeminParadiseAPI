@@ -68,4 +68,11 @@ namespace DogrudanTeminParadiseAPI.Helpers
         PRODUCT,
         SERVICE
     }
+
+    public enum KanunMaddesi
+    {
+        _22A,
+        _22B,
+        _22C
+    }
 }

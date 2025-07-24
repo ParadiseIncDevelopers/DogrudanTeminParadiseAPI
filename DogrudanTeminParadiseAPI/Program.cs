@@ -86,6 +86,12 @@ builder.Services.AddScoped(sp => new MongoDBRepository<SharedProcurementEntry>(c
 builder.Services.AddScoped(sp => new MongoDBRepository<UserNotification>(cfg["MongoAPI"], cfg["MongoDBName"], "UserNotifications"));
 builder.Services.AddScoped(sp => new MongoDBRepository<BackupUserNotification>(cfg["MongoAPI"], cfg["MongoBackupDBName"], "BackupUserNotifications"));
 builder.Services.AddScoped(sp => new MongoDBRepository<Notification>(cfg["MongoAPI"], cfg["MongoDBName"], "Notifications"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSProcurementEntryDocuments>(cfg["MongoAPI"], cfg["MongoDBName"], "OSProcurementEntryDocuments"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSOfferLetter>(cfg["MongoAPI"], cfg["MongoDBName"], "OSOfferLetters"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSMarketResearchJury>(cfg["MongoAPI"], cfg["MongoDBName"], "OSMarketResearchJuries"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSInspectionAcceptanceNote>(cfg["MongoAPI"], cfg["MongoDBName"], "OSInspectionAcceptanceNotes"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSInspectionAcceptanceCertificate>(cfg["MongoAPI"], cfg["MongoDBName"], "OSInspectionAcceptanceCertificates"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSAdditionalInspectionAcceptanceCertificate>(cfg["MongoAPI"], cfg["MongoDBName"], "OSAdditionalInspectionAcceptanceCertificates"));
 
 builder.Services.AddSingleton<IMongoClient>(sp =>
     new MongoClient(cfg["MongoAPI"])
@@ -140,6 +146,12 @@ builder.Services.AddScoped<ISharedProcurementEntryService, SharedProcurementEntr
 builder.Services.AddScoped<IUserNotificationService, UserNotificationService>();
 builder.Services.AddScoped<IBackupUserNotificationService, BackupUserNotificationService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IOSProcurementEntryDocumentsService, OSProcurementEntryDocumentsService>();
+builder.Services.AddScoped<IOSOfferLetterService, OSOfferLetterService>();
+builder.Services.AddScoped<IOSMarketResearchJuryService, OSMarketResearchJuryService>();
+builder.Services.AddScoped<IOSInspectionAcceptanceNoteService, OSInspectionAcceptanceNoteService>();
+builder.Services.AddScoped<IOSInspectionAcceptanceCertificateService, OSInspectionAcceptanceCertificateService>();
+builder.Services.AddScoped<IOSAdditionalInspectionAcceptanceService, OSAdditionalInspectionAcceptanceService>();
 // Factoryler
 builder.Services.AddSingleton<ITeminApiExceptionFactory, TeminApiExceptionFactory>();
 
