@@ -86,6 +86,7 @@ builder.Services.AddScoped(sp => new MongoDBRepository<SharedProcurementEntry>(c
 builder.Services.AddScoped(sp => new MongoDBRepository<UserNotification>(cfg["MongoAPI"], cfg["MongoDBName"], "UserNotifications"));
 builder.Services.AddScoped(sp => new MongoDBRepository<BackupUserNotification>(cfg["MongoAPI"], cfg["MongoBackupDBName"], "BackupUserNotifications"));
 builder.Services.AddScoped(sp => new MongoDBRepository<Notification>(cfg["MongoAPI"], cfg["MongoDBName"], "Notifications"));
+builder.Services.AddScoped(sp => new MongoDBRepository<UserAvatar>(cfg["MongoAPI"], cfg["MongoDBName"], "UserAvatars"));
 builder.Services.AddScoped(sp => new MongoDBRepository<OSProcurementEntryDocuments>(cfg["MongoAPI"], cfg["MongoDBName"], "OSProcurementEntryDocuments"));
 builder.Services.AddScoped(sp => new MongoDBRepository<OSProcurementEntry>(cfg["MongoAPI"], cfg["MongoDBName"], "OSProcurementEntries"));
 builder.Services.AddScoped(sp => new MongoDBRepository<OSProcurementEntryEditor>(cfg["MongoAPI"], cfg["MongoDBName"], "OSProcurementEntryEditors"));
@@ -149,6 +150,7 @@ builder.Services.AddScoped<ISharedProcurementEntryService, SharedProcurementEntr
 builder.Services.AddScoped<IUserNotificationService, UserNotificationService>();
 builder.Services.AddScoped<IBackupUserNotificationService, BackupUserNotificationService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IUserAvatarService, UserAvatarService>();
 builder.Services.AddScoped<IOSProcurementEntryDocumentsService, OSProcurementEntryDocumentsService>();
 builder.Services.AddScoped<IOSProcurementEntryService, OSProcurementEntryService>();
 builder.Services.AddScoped<IOSProcurementEntryEditorService, OSProcurementEntryEditorService>();
