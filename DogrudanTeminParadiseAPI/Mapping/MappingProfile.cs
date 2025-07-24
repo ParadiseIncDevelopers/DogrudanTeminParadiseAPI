@@ -183,6 +183,10 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<BudgetItem, BudgetItemCountDto>();
             CreateMap<BudgetItem, BudgetItemPaymentDto>();
             CreateMap<BudgetItem, BudgetItemOfferStatDto>();
+
+            CreateMap<CreateOSProcurementEntryDocumentsDto, OSProcurementEntryDocuments>();
+            CreateMap<UpdateOSProcurementEntryDocumentsDto, OSProcurementEntryDocuments>();
+            CreateMap<OSProcurementEntryDocuments, OSProcurementEntryDocumentsDto>();
         }
     }
 }
