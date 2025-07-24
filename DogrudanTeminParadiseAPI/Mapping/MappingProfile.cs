@@ -215,7 +215,7 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<CreateOSProcurementEntryEditorDto, OSProcurementEntryEditor>();
             CreateMap<UpdateOSProcurementEntryEditorDto, OSProcurementEntryEditor>();
             CreateMap<OSProcurementEntryEditor, OSProcurementEntryEditorDto>();
-
+            
             CreateMap<CreateOSProcurementEntryDocumentsDto, OSProcurementEntryDocuments>();
             CreateMap<UpdateOSProcurementEntryDocumentsDto, OSProcurementEntryDocuments>();
             CreateMap<OSProcurementEntryDocuments, OSProcurementEntryDocumentsDto>();
