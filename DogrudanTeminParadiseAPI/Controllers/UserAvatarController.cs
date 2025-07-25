@@ -18,7 +18,6 @@ namespace DogrudanTeminParadiseAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
             => Ok(await _svc.GetAllAsync());
-
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateUserAvatarDto dto)
         {

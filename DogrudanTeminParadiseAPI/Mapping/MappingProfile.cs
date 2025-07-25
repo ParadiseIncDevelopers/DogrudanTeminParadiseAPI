@@ -82,6 +82,10 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<OSMarketResearchJury, OSMarketResearchJuryDto>();
             CreateMap<UpdateOSMarketResearchJuryDto, OSMarketResearchJury>();
 
+            CreateMap<CreateOSApproximateCostJuryDto, OSApproximateCostJury>();
+            CreateMap<OSApproximateCostJury, OSApproximateCostJuryDto>();
+            CreateMap<UpdateOSApproximateCostJuryDto, OSApproximateCostJury>();
+
             CreateMap<CreateApproximateCostJuryDto, ApproximateCostJury>();
             CreateMap<ApproximateCostJury, ApproximateCostJuryDto>();
             CreateMap<UpdateApproximateCostJuryDto, ApproximateCostJury>();
@@ -192,6 +196,10 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<CreateSharedProcurementEntryDto, SharedProcurementEntry>();
             CreateMap<UpdateSharedToUserIdsDto, SharedProcurementEntry>();
             CreateMap<SharedProcurementEntry, SharedProcurementEntryDto>();
+
+            CreateMap<CreateOSSharedProcurementEntryDto, OSSharedProcurementEntry>();
+            CreateMap<UpdateSharedToUserIdsDto, OSSharedProcurementEntry>();
+            CreateMap<OSSharedProcurementEntry, OSSharedProcurementEntryDto>();
 
             CreateMap<CreateUserNotificationDto, UserNotification>();
             CreateMap<UpdateUserNotificationDto, UserNotification>();
