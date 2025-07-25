@@ -35,6 +35,11 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             return _mapper.Map<UserAvatarDto>(entity);
         }
 
+        public async Task<IEnumerable<UserAvatarDto>> GetAllAsync()
+        {
+            var list = await _repo.GetAllAsync();
+            return list.Select(x => _mapper.Map<UserAvatarDto>(x));
+        }
         public async Task<UserAvatarDto?> GetByUserOrAdminIdAsync(Guid userOrAdminId)
         {
             var filter = Builders<UserAvatar>.Filter.Eq(x => x.UserOrAdminId, userOrAdminId);

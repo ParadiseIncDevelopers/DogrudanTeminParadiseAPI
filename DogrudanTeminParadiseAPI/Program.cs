@@ -153,9 +153,7 @@ builder.Services.AddScoped<ISharedProcurementEntryService, SharedProcurementEntr
 builder.Services.AddScoped<IUserNotificationService, UserNotificationService>();
 builder.Services.AddScoped<IBackupUserNotificationService, BackupUserNotificationService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
-
 builder.Services.AddScoped<IUserAvatarService, UserAvatarService>();
-
 builder.Services.AddScoped<IOSProcurementEntryDocumentsService, OSProcurementEntryDocumentsService>();
 builder.Services.AddScoped<IOSProcurementEntryService, OSProcurementEntryService>();
 builder.Services.AddScoped<IOSProcurementEntryEditorService, OSProcurementEntryEditorService>();

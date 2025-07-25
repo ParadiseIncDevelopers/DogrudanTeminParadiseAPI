@@ -15,6 +15,9 @@ namespace DogrudanTeminParadiseAPI.Controllers
         private readonly IUserAvatarService _svc;
         public UserAvatarController(IUserAvatarService svc) => _svc = svc;
 
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+            => Ok(await _svc.GetAllAsync());
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateUserAvatarDto dto)
         {
