@@ -16,6 +16,7 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
         private readonly MongoDBRepository<AdminUser> _repo;
         private readonly MongoDBRepository<User> _userRepo;
         private readonly MongoDBRepository<Title> _titleRepo;
+        private readonly MongoDBRepository<UserAvatar> _avatarRepo;
         private readonly IMapper _mapper;
         private readonly IConfiguration _cfg;
 
@@ -23,12 +24,14 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             MongoDBRepository<AdminUser> repo,
             MongoDBRepository<User> userRepo,
             MongoDBRepository<Title> titleRepo,
+            MongoDBRepository<UserAvatar> avatarRepo,
             IMapper mapper,
             IConfiguration cfg)
         {
             _repo = repo;
             _userRepo = userRepo;
             _titleRepo = titleRepo;
+            _avatarRepo = avatarRepo;
             _mapper = mapper;
             _cfg = cfg;
         }
@@ -70,6 +73,13 @@ namespace DogrudanTeminParadiseAPI.Service.Concrete
             };
 
             await _repo.InsertAsync(entity);
+            var avatar = new UserAvatar
+            {
+                Id = Guid.NewGuid(),
+                UserOrAdminId = entity.Id,
+                AvatarCode = 10
+            };
+            await _avatarRepo.InsertAsync(avatar);
 
             return new AdminUserDto
             {

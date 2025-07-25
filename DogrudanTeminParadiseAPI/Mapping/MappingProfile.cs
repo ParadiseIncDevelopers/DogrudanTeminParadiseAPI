@@ -212,6 +212,10 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<CreateNotificationDto, Notification>();
             CreateMap<Notification, NotificationDto>();
 
+            CreateMap<CreateUserAvatarDto, UserAvatar>();
+            CreateMap<UpdateUserAvatarDto, UserAvatar>();
+            CreateMap<UserAvatar, UserAvatarDto>();
+
             CreateMap<BudgetItem, BudgetItemCountDto>();
             CreateMap<BudgetItem, BudgetItemPaymentDto>();
             CreateMap<BudgetItem, BudgetItemOfferStatDto>();
@@ -223,7 +227,7 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<CreateOSProcurementEntryEditorDto, OSProcurementEntryEditor>();
             CreateMap<UpdateOSProcurementEntryEditorDto, OSProcurementEntryEditor>();
             CreateMap<OSProcurementEntryEditor, OSProcurementEntryEditorDto>();
-
+            
             CreateMap<CreateOSProcurementEntryDocumentsDto, OSProcurementEntryDocuments>();
             CreateMap<UpdateOSProcurementEntryDocumentsDto, OSProcurementEntryDocuments>();
             CreateMap<OSProcurementEntryDocuments, OSProcurementEntryDocumentsDto>();
