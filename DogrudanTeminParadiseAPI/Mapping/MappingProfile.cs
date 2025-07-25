@@ -56,8 +56,14 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<CreateOfferLetterDto, OfferLetter>();
             CreateMap<OfferLetter, OfferLetterDto>();
 
+            CreateMap<CreateOSOfferLetterDto, OSOfferLetter>();
+            CreateMap<OSOfferLetter, OSOfferLetterDto>();
+
             CreateMap<UpdateOfferLetterDto, OfferLetter>();
             CreateMap<OfferLetter, OfferLetterDto>();
+
+            CreateMap<UpdateOSOfferLetterDto, OSOfferLetter>();
+            CreateMap<OSOfferLetter, OSOfferLetterDto>();
 
             CreateMap<CreateCategoryDto, Category>();
             CreateMap<UpdateCategoryDto, Category>();
@@ -72,6 +78,13 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<CreateMarketResearchJuryDto, MarketResearchJury>();
             CreateMap<MarketResearchJury, MarketResearchJuryDto>();
             CreateMap<UpdateMarketResearchJuryDto, MarketResearchJury>();
+            CreateMap<CreateOSMarketResearchJuryDto, OSMarketResearchJury>();
+            CreateMap<OSMarketResearchJury, OSMarketResearchJuryDto>();
+            CreateMap<UpdateOSMarketResearchJuryDto, OSMarketResearchJury>();
+
+            CreateMap<CreateOSApproximateCostJuryDto, OSApproximateCostJury>();
+            CreateMap<OSApproximateCostJury, OSApproximateCostJuryDto>();
+            CreateMap<UpdateOSApproximateCostJuryDto, OSApproximateCostJury>();
 
             CreateMap<CreateApproximateCostJuryDto, ApproximateCostJury>();
             CreateMap<ApproximateCostJury, ApproximateCostJuryDto>();
@@ -85,9 +98,17 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<UpdateInspectionAcceptanceCertificateDto, InspectionAcceptanceCertificate>();
             CreateMap<InspectionAcceptanceCertificate, InspectionAcceptanceCertificateDto>();
 
+            CreateMap<CreateOSInspectionAcceptanceCertificateDto, OSInspectionAcceptanceCertificate>();
+            CreateMap<UpdateOSInspectionAcceptanceCertificateDto, OSInspectionAcceptanceCertificate>();
+            CreateMap<OSInspectionAcceptanceCertificate, OSInspectionAcceptanceCertificateDto>();
+
             CreateMap<CreateAdditionalInspectionAcceptanceCertificateDto, AdditionalInspectionAcceptanceCertificate>();
             CreateMap<UpdateAdditionalInspectionAcceptanceCertificateDto, AdditionalInspectionAcceptanceCertificate>();
             CreateMap<AdditionalInspectionAcceptanceCertificate, AdditionalInspectionAcceptanceCertificateDto>();
+
+            CreateMap<CreateOSAdditionalInspectionAcceptanceCertificateDto, OSAdditionalInspectionAcceptanceCertificate>();
+            CreateMap<UpdateOSAdditionalInspectionAcceptanceCertificateDto, OSAdditionalInspectionAcceptanceCertificate>();
+            CreateMap<OSAdditionalInspectionAcceptanceCertificate, OSAdditionalInspectionAcceptanceCertificateDto>();
 
             // Backup mappings
             CreateMap<CreateBackupInspectionAcceptanceCertificateDto, BackupInspectionAcceptanceCertificate>();
@@ -143,6 +164,13 @@ namespace DogrudanTeminParadiseAPI.Mapping
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.Parse(src.Id)))
                 .ForMember(dest => dest.ProcurementEntryId, opt => opt.MapFrom(src => Guid.Parse(src.ProcurementEntryId)));
 
+            CreateMap<CreateOSInspectionAcceptanceNoteDto, OSInspectionAcceptanceNote>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore());
+            CreateMap<UpdateOSInspectionAcceptanceNoteDto, OSInspectionAcceptanceNote>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.OneSourceProcurementEntryId, opt => opt.Ignore());
+            CreateMap<OSInspectionAcceptanceNote, OSInspectionAcceptanceNoteDto>();
+
             CreateMap<CreateUserOwnFeaturesListDto, UserOwnFeaturesList>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId.ToString()));
@@ -169,6 +197,10 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<UpdateSharedToUserIdsDto, SharedProcurementEntry>();
             CreateMap<SharedProcurementEntry, SharedProcurementEntryDto>();
 
+            CreateMap<CreateOSSharedProcurementEntryDto, OSSharedProcurementEntry>();
+            CreateMap<UpdateSharedToUserIdsDto, OSSharedProcurementEntry>();
+            CreateMap<OSSharedProcurementEntry, OSSharedProcurementEntryDto>();
+
             CreateMap<CreateUserNotificationDto, UserNotification>();
             CreateMap<UpdateUserNotificationDto, UserNotification>();
             CreateMap<UserNotification, UserNotificationDto>();
@@ -183,6 +215,18 @@ namespace DogrudanTeminParadiseAPI.Mapping
             CreateMap<BudgetItem, BudgetItemCountDto>();
             CreateMap<BudgetItem, BudgetItemPaymentDto>();
             CreateMap<BudgetItem, BudgetItemOfferStatDto>();
+
+            CreateMap<CreateOSProcurementEntryDto, OSProcurementEntry>();
+            CreateMap<UpdateOSProcurementEntryDto, OSProcurementEntry>();
+            CreateMap<OSProcurementEntry, OSProcurementEntryDto>();
+
+            CreateMap<CreateOSProcurementEntryEditorDto, OSProcurementEntryEditor>();
+            CreateMap<UpdateOSProcurementEntryEditorDto, OSProcurementEntryEditor>();
+            CreateMap<OSProcurementEntryEditor, OSProcurementEntryEditorDto>();
+
+            CreateMap<CreateOSProcurementEntryDocumentsDto, OSProcurementEntryDocuments>();
+            CreateMap<UpdateOSProcurementEntryDocumentsDto, OSProcurementEntryDocuments>();
+            CreateMap<OSProcurementEntryDocuments, OSProcurementEntryDocumentsDto>();
         }
     }
 }

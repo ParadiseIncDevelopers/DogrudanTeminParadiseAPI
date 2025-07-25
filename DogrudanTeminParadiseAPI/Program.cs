@@ -86,6 +86,16 @@ builder.Services.AddScoped(sp => new MongoDBRepository<SharedProcurementEntry>(c
 builder.Services.AddScoped(sp => new MongoDBRepository<UserNotification>(cfg["MongoAPI"], cfg["MongoDBName"], "UserNotifications"));
 builder.Services.AddScoped(sp => new MongoDBRepository<BackupUserNotification>(cfg["MongoAPI"], cfg["MongoBackupDBName"], "BackupUserNotifications"));
 builder.Services.AddScoped(sp => new MongoDBRepository<Notification>(cfg["MongoAPI"], cfg["MongoDBName"], "Notifications"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSProcurementEntryDocuments>(cfg["MongoAPI"], cfg["MongoDBName"], "OSProcurementEntryDocuments"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSProcurementEntry>(cfg["MongoAPI"], cfg["MongoDBName"], "OSProcurementEntries"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSProcurementEntryEditor>(cfg["MongoAPI"], cfg["MongoDBName"], "OSProcurementEntryEditors"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSOfferLetter>(cfg["MongoAPI"], cfg["MongoDBName"], "OSOfferLetters"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSMarketResearchJury>(cfg["MongoAPI"], cfg["MongoDBName"], "OSMarketResearchJuries"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSInspectionAcceptanceNote>(cfg["MongoAPI"], cfg["MongoDBName"], "OSInspectionAcceptanceNotes"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSInspectionAcceptanceCertificate>(cfg["MongoAPI"], cfg["MongoDBName"], "OSInspectionAcceptanceCertificates"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSAdditionalInspectionAcceptanceCertificate>(cfg["MongoAPI"], cfg["MongoDBName"], "OSAdditionalInspectionAcceptanceCertificates"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSApproximateCostJury>(cfg["MongoAPI"], cfg["MongoDBName"], "OSApproximateCostJuries"));
+builder.Services.AddScoped(sp => new MongoDBRepository<OSSharedProcurementEntry>(cfg["MongoAPI"], cfg["MongoDBName"], "OSSharedProcurementEntries"));
 
 builder.Services.AddSingleton<IMongoClient>(sp =>
     new MongoClient(cfg["MongoAPI"])
@@ -96,6 +106,7 @@ builder.Services.AddScoped(sp =>
     var client = sp.GetRequiredService<IMongoClient>();
     return client.GetDatabase(cfg["MongoDBName"]);
 });
+builder.Services.AddScoped(sp => new GridFSRepository(cfg["MongoAPI"], cfg["MongoDBName"]));
 
 // Servisler
 
@@ -140,6 +151,16 @@ builder.Services.AddScoped<ISharedProcurementEntryService, SharedProcurementEntr
 builder.Services.AddScoped<IUserNotificationService, UserNotificationService>();
 builder.Services.AddScoped<IBackupUserNotificationService, BackupUserNotificationService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IOSProcurementEntryDocumentsService, OSProcurementEntryDocumentsService>();
+builder.Services.AddScoped<IOSProcurementEntryService, OSProcurementEntryService>();
+builder.Services.AddScoped<IOSProcurementEntryEditorService, OSProcurementEntryEditorService>();
+builder.Services.AddScoped<IOSOfferLetterService, OSOfferLetterService>();
+builder.Services.AddScoped<IOSMarketResearchJuryService, OSMarketResearchJuryService>();
+builder.Services.AddScoped<IOSInspectionAcceptanceNoteService, OSInspectionAcceptanceNoteService>();
+builder.Services.AddScoped<IOSInspectionAcceptanceCertificateService, OSInspectionAcceptanceCertificateService>();
+builder.Services.AddScoped<IOSAdditionalInspectionAcceptanceService, OSAdditionalInspectionAcceptanceService>();
+builder.Services.AddScoped<IOSApproximateCostJuryService, OSApproximateCostJuryService>();
+builder.Services.AddScoped<IOSSharedProcurementEntryService, OSSharedProcurementEntryService>();
 // Factoryler
 builder.Services.AddSingleton<ITeminApiExceptionFactory, TeminApiExceptionFactory>();
 
